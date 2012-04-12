@@ -45,7 +45,7 @@ protected:
 // IMPLEMENTATION ///////////////////////////////////
 template <class DataType, class GlobalDataType>
 AbstractSimpleStartBlock<DataType, GlobalDataType>::AbstractSimpleStartBlock():
-Block("Abstract simple start block"),
+Block<DataType, GlobalDataType>("Abstract simple start block"),
 myOutput(NULL)
 {}
 
@@ -75,7 +75,7 @@ void AbstractSimpleStartBlock<DataType, GlobalDataType>::clearOutput(const int c
 }
 
 template <class DataType, class GlobalDataType>
-PipeBlock<DataType, GlobalDataType> * AbstractSimpleStartBlock<DataType, GlobalDataType>::getOutput(const size_t channel = 0) const
+PipeBlock<DataType, GlobalDataType> * AbstractSimpleStartBlock<DataType, GlobalDataType>::getOutput(const size_t channel) const
 {
 	PASSERT(channel == 0);
 

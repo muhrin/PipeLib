@@ -82,6 +82,17 @@ protected:
 
 private:
 
+	// Refine typedefs from LinkPipeline, unfortunately can't use the 'using' declaration
+	// because of a bug in GCC that wasn't fixed until recently:
+	// http://gcc.gnu.org/bugzilla/show_bug.cgi?id=14258#c15
+/*	typedef AbstractPipeline<
+		DataType,
+		GlobalDataType,
+		LinkPipelineMetadata,
+		LinkPipelineBlockMetadata> AbsPipeTyp;
+	typedef typename AbsPipeTyp::DataMap DataMap;
+	typedef typename AbsPipeTyp::BlocksMap BlocksMap;
+*/
 	void generatePosition(Block<DataType, GlobalDataType> & block, const size_t pos);
 };
 
@@ -94,8 +105,8 @@ AbstractLinkPipeline<DataType, GlobalDataType>::~AbstractLinkPipeline()
 {
 	using namespace std;
 
-	for(set<ILink<DataType, GlobalDataType> *>::iterator it = myLinks.begin(), end = myLinks.end();
-		it != end; ++it)
+	for(typename set<ILink<DataType, GlobalDataType> *>::iterator it = myLinks.begin(),
+            end = myLinks.end(); it != end; ++it)
 	{
 		delete *it;
 	}
@@ -157,7 +168,7 @@ bool AbstractLinkPipeline<DataType, GlobalDataType>::disconnect(Block<DataType, 
 	
 	if(link != NULL)
 	{
-		BlocksMap::iterator it;
+		typename BlocksMap::iterator it;
 
 		// Output
 		it = myBlocks.find(link->getOutput());
@@ -203,20 +214,21 @@ bool AbstractLinkPipeline<DataType, GlobalDataType>::hasBlock(Block<DataType, Gl
 }
 
 template <class DataType, class GlobalDataType>
-ILink<DataType, GlobalDataType> * AbstractLinkPipeline<DataType, GlobalDataType>::findLinkBetween(
+ILink<DataType, GlobalDataType> *
+AbstractLinkPipeline<DataType, GlobalDataType>::findLinkBetween(
 	const Block<DataType, GlobalDataType> * const outputter,
 	const Block<DataType, GlobalDataType> * const inputtee,
 	const channel_t channel) const
 {
-	using namespace std;
+	using std::set;
 
 	PASSERT(!(outputter == NULL && inputtee == NULL));
 	PASSERT(channel != CHANNEL_ALL);
 
 	bool found = false;
 	ILink<DataType, GlobalDataType> * link = NULL;
-	for(set<ILink<DataType, GlobalDataType> *>::const_iterator it = myLinks.begin(), end = myLinks.end();
-		it != end; ++it)
+	for(typename set<ILink<DataType, GlobalDataType> * >::const_iterator it =
+		myLinks.begin(), end = myLinks.end(); it != end; ++it)
 	{
 		link = *it;
 		bool matchedInOut = false;
@@ -256,7 +268,8 @@ ILink<DataType, GlobalDataType> * AbstractLinkPipeline<DataType, GlobalDataType>
 }
 
 template <class DataType, class GlobalDataType>
-ILink<DataType, GlobalDataType> * AbstractLinkPipeline<DataType, GlobalDataType>::findLinkByChannel(
+ILink<DataType, GlobalDataType> *
+AbstractLinkPipeline<DataType, GlobalDataType>::findLinkByChannel(
 	const Block<DataType, GlobalDataType> * const outputter,
 	const channel_t channel) const
 {
@@ -266,8 +279,8 @@ ILink<DataType, GlobalDataType> * AbstractLinkPipeline<DataType, GlobalDataType>
 
 	bool found = false;
 	ILink<DataType, GlobalDataType> * link = NULL;
-	for(set<ILink<DataType, GlobalDataType> *>::const_iterator it = myLinks.begin(), end = myLinks.end();
-		it != end; ++it)
+	for(typename set<ILink<DataType, GlobalDataType> *>::const_iterator it = 
+		myLinks.begin(), end = myLinks.end(); it != end; ++it)
 	{
 		ILink<DataType, GlobalDataType> * const ln = *it;
 		if(ln->getNumOutputs() > channel && ln->getOutput(channel))
@@ -287,11 +300,11 @@ void AbstractLinkPipeline<DataType, GlobalDataType>::linkCallback(
 {
 	// TODO: Send message that data is passing through
 
-	const BlocksMap::const_iterator it = myBlocks.find(link.getOutput());
+	const typename BlocksMap::const_iterator it = myBlocks.find(link.getOutput());
 	if(it != myBlocks.end())
 	{
 		// Get the metadata
-		const DataMap::iterator dataIt = myData.find(&data);
+		const typename DataMap::iterator dataIt(myData.find(&data));
 		if(dataIt != myData.end())
 		{
 			// Save the position of the data for when it moved on to the next block
@@ -301,9 +314,10 @@ void AbstractLinkPipeline<DataType, GlobalDataType>::linkCallback(
 }
 
 template <class DataType, class GlobalDataType>
-void AbstractLinkPipeline<DataType, GlobalDataType>::generatePosition(Block<DataType, GlobalDataType> & block, const size_t pos)
+void AbstractLinkPipeline<DataType, GlobalDataType>::generatePosition(
+	Block<DataType, GlobalDataType> & block, const size_t pos)
 {
-	const BlocksMap::iterator it = myBlocks.find(&block);
+	const typename BlocksMap::iterator it = myBlocks.find(&block);
 	
 	if(it != myBlocks.end())
 	{

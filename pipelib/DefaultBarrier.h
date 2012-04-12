@@ -16,10 +16,10 @@
 
 // FORWARD DECLARATIONS ////////////////////////////////////
 namespace pipelib {
-	template <class DataType, class GlobalDataType = EmptyGlobalData>
+	template <class DataType, class GlobalDataType>
 	class Block;
 
-	template <class DataType, class GlobalDataType = EmptyGlobalData>
+	template <class DataType, class GlobalDataType>
 	class PipeBlock;
 }
 
@@ -50,7 +50,7 @@ protected:
 
 template <class DataType, class GlobalDataType>
 DefaultBarrier<DataType, GlobalDataType>::DefaultBarrier():
-Block("Barrier block")
+Block<DataType, GlobalDataType>("Barrier block")
 {}
 
 template <class DataType, class GlobalDataType>
@@ -64,7 +64,7 @@ template <class DataType, class GlobalDataType>
 size_t DefaultBarrier<DataType, GlobalDataType>::release()
 {
 	const size_t bufferSize = myBuffer.size();
-	for(BufferVector::iterator it = myBuffer.begin(), end = myBuffer.end();
+	for(typename BufferVector::iterator it = myBuffer.begin(), end = myBuffer.end();
 		it != end; ++it)
 	{
 		myOutput->in(**it);

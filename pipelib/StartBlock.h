@@ -20,7 +20,7 @@ template <class DataType, class GlobalDataType = EmptyGlobalData>
 class StartBlock : public virtual Block<DataType, GlobalDataType>
 {
 public:
-	StartBlock() : Block("Start block") {}
+	StartBlock() : Block<DataType, GlobalDataType>("Start block") {}
 
 	virtual void start() = 0;
 };

@@ -20,7 +20,7 @@
 namespace pipelib {
 
 template <class DataType, class GlobalDataType = DefaultGlobalDataTyp>
-class AbstractSimpleBlock :	public virtual PipeBlock<DataType, GlobalDataType>
+class AbstractSimpleBlock : public virtual PipeBlock<DataType, GlobalDataType>
 {
 public:
 	AbstractSimpleBlock();
@@ -43,7 +43,7 @@ protected:
 // IMPLEMENTATION ///////////////////////////////////
 template <class DataType, class GlobalDataType>
 AbstractSimpleBlock<DataType, GlobalDataType>::AbstractSimpleBlock():
-Block("Abstract simple block"),
+Block<DataType, GlobalDataType>("Abstract simple block"),
 myOutput(NULL)
 {}
 

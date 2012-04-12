@@ -8,7 +8,7 @@
 using namespace pipelib;
 
 PrintStringBlock::PrintStringBlock(const int & num):
-Block("PrintStringBlock"),
+Block< ::std::string>("Print string block"),
 myNum(num)
 {}
 

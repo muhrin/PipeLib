@@ -20,7 +20,7 @@
 
 namespace pipelib {
 
-template <class DataType, class GlobalDataType = EmptyGlobalData>
+template <class DataType, class GlobalDataType = DefaultGlobalDataTyp>
 class SimpleLink : public AbstractSimpleBlock<DataType, GlobalDataType>, public ILink<DataType, GlobalDataType>
 {
 public:
@@ -64,7 +64,7 @@ protected:
 
 template <class DataType, class GlobalDataType>
 SimpleLink<DataType, GlobalDataType>::SimpleLink(AbstractLinkPipeline<DataType, GlobalDataType> & pipeline):
-Block("SimpleLink"),
+Block<DataType, GlobalDataType>("Simple link"),
 myLinkPipeline(pipeline),
 myInput(NULL),
 myLinkChannel(CHANNEL_NONE)
@@ -75,7 +75,7 @@ template <class DataType, class GlobalDataType>
 void SimpleLink<DataType, GlobalDataType>::link(
 	Block<DataType, GlobalDataType> & input,
 	PipeBlock<DataType, GlobalDataType> & output,
-	const size_t outChannel = 0)
+	const size_t outChannel)
 {
 	myInput = &input;
 	myLinkChannel = outChannel;

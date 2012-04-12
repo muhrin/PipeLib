@@ -30,11 +30,14 @@ class AbstractSimpleBarrier :
 {
 public:
 
-	AbstractSimpleBarrier() : Block("Abstract simple barrier") {}
+	AbstractSimpleBarrier() : Block<DataType, GlobalDataType>("Abstract simple barrier") {}
 
 	virtual void inserted(IPipeline<DataType, GlobalDataType> & pipeline);
 
 	virtual void removed();
+
+private:
+	typedef AbstractSimpleBlock<DataType, GlobalDataType> MyAbsSimBlockTyp;
 };
 
 // IMPLEMENTATION ///////////////////////////
@@ -44,7 +47,7 @@ void AbstractSimpleBarrier<DataType, GlobalDataType>::inserted(IPipeline<DataTyp
 {
 	PASSERT(!myPipeline);
 
-	AbstractSimpleBlock::inserted(pipeline);
+	MyAbsSimBlockTyp::inserted(pipeline);
 	myPipeline->registerBarrier(*this);
 }
 
@@ -54,7 +57,7 @@ void AbstractSimpleBarrier<DataType, GlobalDataType>::removed()
 	PASSERT(myPipeline);
 
 	myPipeline->deregisterBarrier(*this);
-	AbstractSimpleBlock::removed();
+	MyAbsSimBlockTyp::removed();
 }
 
 }

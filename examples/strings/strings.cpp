@@ -6,7 +6,6 @@
 
 #include "PrintStringBlock.h"
 #include "RandomStringBlock.h"
-#include "TestBlock.h"
 
 
 int main()
@@ -24,11 +23,6 @@ int main()
 	PrintStringBlock b1(1);
 	PrintStringBlock b2(2);
 	PrintStringBlock b3(3);
-
-	//DirectPipeline<string> dPipe;
-	//TestBlock testB;
-	//testB.inserted(pipe);
-	//((Block<::std::string> *)&testB)->inserted(pipe);
 
 	pipe.setStartBlock(start);
 	pipe.connect(start, b1);

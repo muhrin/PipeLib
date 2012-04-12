@@ -28,7 +28,7 @@ class Block
 {
 public:
 
-	Block(const ::std::string & name);
+	explicit Block(const ::std::string & name);
 	virtual ~Block() {}
 
 	const std::string & getName() const;

@@ -59,14 +59,14 @@ template <class DataType, class GlobalDataType>
 SingleThreadedPipeline<DataType, GlobalDataType>::~SingleThreadedPipeline()
 {
 	// First delete my children
-	for(ChildrenContainer::iterator it = myChildren.begin(), end = myChildren.end();
+	for(typename ChildrenContainer::iterator it = myChildren.begin(), end = myChildren.end();
 		it != end; ++it)
 	{
 		delete *it;
 	}
 	myChildren.clear();
 
-	for(EndBlocksContainer::iterator it = myEndBlocks.begin(), end = myEndBlocks.end();
+	for(typename EndBlocksContainer::iterator it = myEndBlocks.begin(), end = myEndBlocks.end();
 		it != end; ++it)
 	{
 		delete *it;

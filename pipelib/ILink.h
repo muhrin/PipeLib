@@ -14,18 +14,18 @@
 
 // FORWARD DECLARATIONS ////////////////////////////////////
 namespace pipelib {
-	template <class DataType, class GlobalDataType = EmptyGlobalData>
+	template <class DataType, class GlobalDataType>
 	class Block;
 }
 
 namespace pipelib {
 
-template <class DataType, class GlobalDataType = EmptyGlobalData>
+template <class DataType, class GlobalDataType = DefaultGlobalDataTyp>
 class ILink : public virtual PipeBlock<DataType, GlobalDataType>
 {
 public:
 
-	ILink() : Block("ILink") {}
+	ILink() : Block<DataType, GlobalDataType>("ILink") {}
 
 	virtual void link(
 		Block<DataType, GlobalDataType> & input,

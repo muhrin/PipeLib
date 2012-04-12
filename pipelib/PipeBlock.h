@@ -23,7 +23,7 @@ class PipeBlock : public virtual Block<DataType, GlobalDataType>
 {
 public:
 
-	PipeBlock(): Block("Pipe block") {}
+	PipeBlock(): Block<DataType, GlobalDataType>("Pipe block") {}
 
 	virtual void in(DataType & data) = 0;
 };

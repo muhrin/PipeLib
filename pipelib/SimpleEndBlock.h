@@ -51,7 +51,7 @@ protected:
 
 template <class DataType, class GlobalDataType>
 SimpleEndBlock<DataType, GlobalDataType>::SimpleEndBlock(IFinishNotifiable<DataType> & notifiable):
-Block("Simple end block"),
+Block<DataType, GlobalDataType>("Simple end block"),
 myNotifiable(notifiable)
 {}
 
@@ -69,13 +69,14 @@ void SimpleEndBlock<DataType, GlobalDataType>::setOutput(PipeBlock<DataType, Glo
 }
 
 template <class DataType, class GlobalDataType>
-PipeBlock<DataType, GlobalDataType> * SimpleEndBlock<DataType, GlobalDataType>::getOutput(const size_t channel = CHANNEL_DEFAULT) const
+PipeBlock<DataType, GlobalDataType> *
+SimpleEndBlock<DataType, GlobalDataType>::getOutput(const size_t channel) const
 {
 	return NULL;
 }
 
 template <class DataType, class GlobalDataType>
-void SimpleEndBlock<DataType, GlobalDataType>::clearOutput(const int channel = CHANNEL_DEFAULT)
+void SimpleEndBlock<DataType, GlobalDataType>::clearOutput(const int channel)
 {
 	throw "Cannot clear output on end block: it has no output";
 }

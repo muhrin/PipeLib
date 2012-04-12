@@ -18,10 +18,9 @@
 // FORWARD DECLARATIONS ////////////////////////////////////
 
 
-
 namespace pipelib {
 
-template <class DataType, class GlobalDataType = EmptyGlobalData>
+template <class DataType, class GlobalDataType = DefaultGlobalDataTyp>
 class DirectPipeline : public AbstractPipeline<DataType, GlobalDataType>
 {
 public:
@@ -38,10 +37,6 @@ public:
 
 	// End IPipeline ///////////////////////////
 
-protected:
-
-	std::vector<Block<DataType, GlobalDataType> *> myBlocks;
-
 };
 
 // IMPLEMENTATION ///////////////////////////
@@ -49,7 +44,7 @@ template <class DataType, class GlobalDataType>
 void DirectPipeline<DataType, GlobalDataType>::connect(
 	Block<DataType, GlobalDataType> & outputter,
 	PipeBlock<DataType, GlobalDataType> & inputtee,
-	const int outChannel = 0)
+	const int outChannel)
 {
 	PASSERT(outChannel != CHANNEL_ANY);
 
@@ -75,8 +70,8 @@ bool DirectPipeline<DataType, GlobalDataType>::initialise()
 {
 	using std::vector;
 
-	for(vector<Block<DataType, GlobalDataType> *>::iterator it = myBlocks.begin(), end = myBlocks.end();
-		it != end; ++it)
+	for(typename BlocksMap::iterator it = myBlocks.begin(), 
+		end = myBlocks.end(); it != end; ++it)
 	{
 		(*it)->pipelineInitialised();
 	}
@@ -85,7 +80,9 @@ bool DirectPipeline<DataType, GlobalDataType>::initialise()
 }
 
 template <class DataType, class GlobalDataType>
-bool DirectPipeline<DataType, GlobalDataType>::disconnect(Block<DataType, GlobalDataType> & outputter, const int outChannel = 0)
+bool DirectPipeline<DataType, GlobalDataType>::disconnect(
+	Block<DataType, GlobalDataType> & outputter,
+	const int outChannel)
 {
 	PASSERT(outChannel != CHANNEL_ANY);
 

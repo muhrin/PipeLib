@@ -21,7 +21,7 @@ template <class DataType, class GlobalDataType = DefaultGlobalDataTyp>
 class Barrier : public virtual PipeBlock<DataType, GlobalDataType>
 {
 public:
-	Barrier() : Block("Barrier") {}
+	Barrier() : Block<DataType, GlobalDataType>("Barrier") {}
 
 	virtual size_t release() = 0;
 

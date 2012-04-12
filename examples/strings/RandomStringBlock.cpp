@@ -7,7 +7,7 @@
 using namespace pipelib;
 
 RandomStringBlock::RandomStringBlock(const size_t numStrings):
-Block("Random string block"),
+Block< ::std::string>("Random string block"),
 myNumStrings(numStrings)
 {}
 

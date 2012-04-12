@@ -162,14 +162,14 @@ template ABSTRACT_PIPELINE_TPARAMS
 ABSTRACT_PIPELINE_TTYPE::~AbstractPipeline()
 {
 	// Clean up my end blocks
-	for(EndBlocksContainer::iterator it = myEndBlocks.begin(), end = myEndBlocks.end();
+	for(typename EndBlocksContainer::iterator it = myEndBlocks.begin(), end = myEndBlocks.end();
 		it != end; ++it)
 	{
 		delete *it;
 	}
 
 	// Clean up the data
-	for(DataMap::iterator it = myData.begin(), end = myData.end();
+	for(typename DataMap::iterator it = myData.begin(), end = myData.end();
 		it != end; ++it)
 	{
 		delete it->first;
@@ -242,7 +242,7 @@ bool ABSTRACT_PIPELINE_TTYPE::initialise()
 
 	// Go through all the blocks and add an end block to delete the data
 	// once the end is reached
-	for(BlocksMap::iterator it = myBlocks.begin(), end = myBlocks.end();
+	for(typename BlocksMap::iterator it = myBlocks.begin(), end = myBlocks.end();
 		it != end; ++it)
 	{
 		Block<DataType, GlobalDataType> * const block = it->first;
@@ -260,7 +260,7 @@ bool ABSTRACT_PIPELINE_TTYPE::initialise()
 	}
 
 	// Tell all the blocks that the pipeline is initialising
-	for(BlocksMap::iterator it = myBlocks.begin(), end = myBlocks.end();
+	for(typename BlocksMap::iterator it = myBlocks.begin(), end = myBlocks.end();
 		it != end; ++it)
 	{
 		it->first->pipelineInitialising();
@@ -269,7 +269,7 @@ bool ABSTRACT_PIPELINE_TTYPE::initialise()
 	myInitialised = true;
 
 	// Tell all the blocks that they have been intialised
-	for(BlocksMap::iterator it = myBlocks.begin(), end = myBlocks.end();
+	for(typename BlocksMap::iterator it = myBlocks.begin(), end = myBlocks.end();
 		it != end; ++it)
 	{
 		it->first->pipelineInitialised();
@@ -289,7 +289,7 @@ void ABSTRACT_PIPELINE_TTYPE::start()
 	}
 
 	// Tell all the blocks that we are starting
-	for(BlocksMap::iterator it = myBlocks.begin(), end = myBlocks.end();
+	for(typename BlocksMap::iterator it = myBlocks.begin(), end = myBlocks.end();
 		it != end; ++it)
 	{
 		it->first->pipelineStarting();
@@ -309,7 +309,7 @@ void ABSTRACT_PIPELINE_TTYPE::start()
 
 	// Tell the blocks that we are finishing
 	// Tell all the blocks that we are starting
-	for(BlocksMap::iterator it = myBlocks.begin(), end = myBlocks.end();
+	for(typename BlocksMap::iterator it = myBlocks.begin(), end = myBlocks.end();
 		it != end; ++it)
 	{
 		it->first->pipelineFinishing();
@@ -363,7 +363,8 @@ template ABSTRACT_PIPELINE_TPARAMS
 bool ABSTRACT_PIPELINE_TTYPE::deregisterBarrier(
 	Barrier<DataType, GlobalDataType> & barrier)
 {
-	BarriersContainer::iterator it = ::std::find(myBarriers.begin(), myBarriers.end(), &barrier);
+	typename BarriersContainer::iterator it =
+		::std::find(myBarriers.begin(), myBarriers.end(), &barrier);
 
 	bool found = false;
 	if(it != myBarriers.end())
@@ -386,7 +387,7 @@ void ABSTRACT_PIPELINE_TTYPE::setFinishedDataSink(IDataSink<DataType> & sink)
 template ABSTRACT_PIPELINE_TPARAMS
 void ABSTRACT_PIPELINE_TTYPE::dataFinished(DataType & data)
 {
-	DataMap::iterator it = myData.find(&data);
+	typename DataMap::iterator it = myData.find(&data);
 	if(it != myData.end())
 	{
 		it->second.state = DataMetadata::FINISHED;
@@ -426,7 +427,7 @@ void  ABSTRACT_PIPELINE_TTYPE::registerNewData(DataType * const data)
 template ABSTRACT_PIPELINE_TPARAMS
 void ABSTRACT_PIPELINE_TTYPE::dropData(DataType & data)
 {
-	DataMap::iterator it = myData.find(&data);
+	typename DataMap::iterator it = myData.find(&data);
 	if(it != myData.end())
 	{
 		it->second.state = DataMetadata::DROPPED;
@@ -437,7 +438,7 @@ void ABSTRACT_PIPELINE_TTYPE::dropData(DataType & data)
 template ABSTRACT_PIPELINE_TPARAMS
 void ABSTRACT_PIPELINE_TTYPE::flagData(const Block<DataType, GlobalDataType> & block, DataType & data)
 {
-	DataMap::iterator it = myData.find(&data);
+	typename DataMap::iterator it = myData.find(&data);
 	if(it !=  myData.end())
 	{
 		flagData(it);
@@ -448,7 +449,7 @@ void ABSTRACT_PIPELINE_TTYPE::flagData(const Block<DataType, GlobalDataType> & b
 template ABSTRACT_PIPELINE_TPARAMS
 void ABSTRACT_PIPELINE_TTYPE::unflagData(const Block<DataType, GlobalDataType> & block, DataType & data)
 {
-	DataMap::iterator it = myData.find(&data);
+	typename DataMap::iterator it = myData.find(&data);
 	if(it !=  myData.end())
 	{
 		unflagData(it);
@@ -456,11 +457,12 @@ void ABSTRACT_PIPELINE_TTYPE::unflagData(const Block<DataType, GlobalDataType> &
 }
 
 template ABSTRACT_PIPELINE_TPARAMS
-::std::pair<typename ABSTRACT_PIPELINE_TTYPE::BlocksMap::iterator, bool> ABSTRACT_PIPELINE_TTYPE::insertBlock(
+::std::pair<typename ABSTRACT_PIPELINE_TTYPE::BlocksMap::iterator, bool>
+ABSTRACT_PIPELINE_TTYPE::insertBlock(
 		Block<DataType, GlobalDataType> & block,
 		const BlockMetadataType & blockMetadata)
 {
-	::std::pair<BlocksMap::iterator, bool> result =
+	::std::pair<typename BlocksMap::iterator, bool> result =
 		myBlocks.insert(BlocksMapPair(&block, blockMetadata));
 	// Was the block newly inserted?
 	if(result.second)
@@ -472,7 +474,7 @@ template ABSTRACT_PIPELINE_TPARAMS
 void ABSTRACT_PIPELINE_TTYPE::removeBlock(
 		Block<DataType, GlobalDataType> & block)
 {
-	const BlocksMap::iterator it = myBlocks.find(&block);
+	const typename BlocksMap::iterator it = myBlocks.find(&block);
 	if(it == myBlocks.end())
 	{
 		throw "Trying to remove block that is not in the pipeline";
@@ -523,13 +525,13 @@ bool ABSTRACT_PIPELINE_TTYPE::releaseNextBarrier()
 	int minPosition = ::std::numeric_limits<int>::max();
 
 	// Find the barrier that has buffered data with the lowest position
-	for(BarriersContainer::iterator it = myBarriers.begin(), end = myBarriers.end();
+	for(typename BarriersContainer::iterator it = myBarriers.begin(), end = myBarriers.end();
 		it != end; ++it)
 	{
 		Barrier<DataType, GlobalDataType> * const bar = *it;
 		if(bar->hasData())
 		{
-			BlocksMap::iterator itBlocks = myBlocks.find(bar);
+			typename BlocksMap::iterator itBlocks = myBlocks.find(bar);
 			if(itBlocks != myBlocks.end())
 			{
 				if(itBlocks->second.position < minPosition)
