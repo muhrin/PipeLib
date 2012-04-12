@@ -25,7 +25,7 @@ namespace pipelib {
 
 namespace pipelib {
 
-template <class DataType, class GlobalDataType = EmptyGlobalData>
+template <class DataType, class GlobalDataType = DefaultGlobalDataTyp>
 class DefaultBarrier :	public AbstractSimpleBarrier<DataType, GlobalDataType>
 {
 public:

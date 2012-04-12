@@ -24,7 +24,7 @@ namespace pipelib {
 
 namespace pipelib {
 
-template <class DataType, class GlobalDataType = EmptyGlobalData>
+template <class DataType, class GlobalDataType = DefaultGlobalDataTyp>
 class IPipeline
 {
 public:

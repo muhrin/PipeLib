@@ -41,7 +41,7 @@ struct LinkPipelineBlockMetadata : public BlockMetadata
 	size_t numLinks;
 };
 
-template <class DataType, class GlobalDataType = EmptyGlobalData>
+template <class DataType, class GlobalDataType = DefaultGlobalDataTyp>
 class AbstractLinkPipeline :
 	public AbstractPipeline<DataType, GlobalDataType, LinkPipelineMetadata, LinkPipelineBlockMetadata>
 {

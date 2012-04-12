@@ -16,7 +16,7 @@
 
 namespace pipelib {
 
-template <class DataType, class GlobalDataType = EmptyGlobalData>
+template <class DataType, class GlobalDataType = DefaultGlobalDataTyp>
 class StartBlock : public virtual Block<DataType, GlobalDataType>
 {
 public:
