@@ -45,18 +45,20 @@ private:
 template <class DataType, class GlobalDataType>
 void AbstractSimpleBarrier<DataType, GlobalDataType>::inserted(IPipeline<DataType, GlobalDataType> & pipeline)
 {
-	PASSERT(!myPipeline);
+	// NOTE: Have to use this->(stuff) to access block members due to the way templates
+	// work.  See: http://stackoverflow.com/questions/3829040/scope-problems-in-template-c
+	PASSERT(!this->myPipeline);
 
 	MyAbsSimBlockTyp::inserted(pipeline);
-	myPipeline->registerBarrier(*this);
+	this->myPipeline->registerBarrier(*this);
 }
 
 template <class DataType, class GlobalDataType>
 void AbstractSimpleBarrier<DataType, GlobalDataType>::removed()
 {
-	PASSERT(myPipeline);
+	PASSERT(this->myPipeline);
 
-	myPipeline->deregisterBarrier(*this);
+	this->myPipeline->deregisterBarrier(*this);
 	MyAbsSimBlockTyp::removed();
 }
 
