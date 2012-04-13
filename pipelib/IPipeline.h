@@ -55,13 +55,13 @@ public:
 	virtual void connect(
 		Block<DataType, GlobalDataType> & outputter,
 		PipeBlock<DataType, GlobalDataType> & inputtee,
-		const int outChannel = CHANNEL_DEFAULT) = 0;
+		const ChannelTyp outChannel = CHANNEL_DEFAULT) = 0;
 
 	/**
 	/* Disconnect the output of one block from the input of another on an optional
 	/* output channel.
 	/**/
-	virtual bool disconnect(Block<DataType, GlobalDataType> & outputter, const int outChannel = CHANNEL_DEFAULT) = 0;
+	virtual bool disconnect(Block<DataType, GlobalDataType> & outputter, const ChannelTyp outChannel = CHANNEL_DEFAULT) = 0;
 
 	///////////////////////////////////////
 	// BARRIERS

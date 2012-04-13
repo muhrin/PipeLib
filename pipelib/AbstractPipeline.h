@@ -201,7 +201,7 @@ void ABSTRACT_PIPELINE_TTYPE::setStartBlock(StartBlock<DataType, GlobalDataType>
 		const size_t newOutputs = myStartBlock->getNumOutputs();
 		// Try to transfer the connections between the old start block and its outputs
 		// to the new start block
-		for(size_t i = 0; i < oldOutputs; ++i)
+		for(ChannelTyp i = 0; i < oldOutputs; ++i)
 		{
 			PipeBlock<DataType, GlobalDataType> * const output = oldStartBlock->getOutput(i);
 			if(output)
@@ -248,7 +248,7 @@ bool ABSTRACT_PIPELINE_TTYPE::initialise()
 		Block<DataType, GlobalDataType> * const block = it->first;
 
 		// Make sure we cover all outputs
-		for(size_t i = 0; i < block->getNumOutputs(); ++i)
+		for(ChannelTyp i = 0; i < block->getNumOutputs(); ++i)
 		{
 			if(!block->getOutput(i))
 			{
@@ -324,7 +324,7 @@ bool ABSTRACT_PIPELINE_TTYPE::hasPathBetween(
 {
 	bool pathFound = false;
 
-	for(size_t i = 0; i < from.getNumOutputs(); ++i)
+	for(ChannelTyp i = 0; i < from.getNumOutputs(); ++i)
 	{
 		const Block<DataType, GlobalDataType> * const output = from.getOutput(i);
 		if(output)

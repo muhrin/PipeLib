@@ -11,7 +11,9 @@
 
 // DEFINES /////////////////////////////////////////////////
 
-#define NULL	0
+#ifndef NULL
+	#define NULL	0
+#endif
 
 #define DEBUG	1
 
@@ -35,15 +37,14 @@
 #define CHANNEL_NONE	-3
 
 
-// TODO: Change code to use this type!
-typedef int channel_t;
-
 namespace pipelib {
+
 
 	// FORWARD DECLARES //////////////////////////////
 	class EmptyGlobalData;
 
 	// TYPEDEFS //////////////////////////////////////
+	typedef int				ChannelTyp;
 	typedef EmptyGlobalData DefaultGlobalDataTyp;
 	
 }

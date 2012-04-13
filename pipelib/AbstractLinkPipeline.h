@@ -50,9 +50,9 @@ public:
 
 	// From IPipeline /////////////////////////
 
-	virtual void connect(Block<DataType, GlobalDataType> & output, PipeBlock<DataType, GlobalDataType> & input, const int outChannel = CHANNEL_DEFAULT);
+	virtual void connect(Block<DataType, GlobalDataType> & output, PipeBlock<DataType, GlobalDataType> & input, const int ChannelTyp = CHANNEL_DEFAULT);
 
-	virtual bool disconnect(Block<DataType, GlobalDataType> & output, const int outChannel = CHANNEL_DEFAULT);
+	virtual bool disconnect(Block<DataType, GlobalDataType> & output, const ChannelTyp outChannel = CHANNEL_DEFAULT);
 
 	virtual bool hasBlock(Block<DataType, GlobalDataType> & block) const;
 
@@ -71,11 +71,11 @@ protected:
 	ILink<DataType, GlobalDataType> * findLinkBetween(
 		const Block<DataType, GlobalDataType> * const outputter,
 		const Block<DataType, GlobalDataType> * const inputtee,
-		const channel_t channel = CHANNEL_ANY) const;
+		const ChannelTyp channel = CHANNEL_ANY) const;
 
 	ILink<DataType, GlobalDataType> * findLinkByChannel(
 		const Block<DataType, GlobalDataType> * const outputter,
-		const channel_t channel = CHANNEL_DEFAULT) const;
+		const ChannelTyp channel = CHANNEL_DEFAULT) const;
 
 	/** A set of all the links that join blocks. */
 	::std::set<ILink<DataType, GlobalDataType> *>	myLinks;
@@ -112,7 +112,7 @@ template <class DataType, class GlobalDataType>
 void AbstractLinkPipeline<DataType, GlobalDataType>::connect(
 	Block<DataType, GlobalDataType> & outputter,
 	PipeBlock<DataType, GlobalDataType> & inputtee,
-	const int outChannel)
+	const ChannelTyp outChannel)
 {
 	using namespace std;
 
@@ -121,7 +121,7 @@ void AbstractLinkPipeline<DataType, GlobalDataType>::connect(
 	if(outChannel == CHANNEL_ALL)
 	{
 		// Need to connect on all output channels
-		for(size_t i = 0; i < outputter.getNumOutputs(); ++i)
+		for(ChannelTyp i = 0; i < outputter.getNumOutputs(); ++i)
 		{
 			connect(outputter, inputtee, i);
 		}
@@ -145,14 +145,14 @@ void AbstractLinkPipeline<DataType, GlobalDataType>::connect(
 }
 
 template <class DataType, class GlobalDataType>
-bool AbstractLinkPipeline<DataType, GlobalDataType>::disconnect(Block<DataType, GlobalDataType> & outputter, const int outChannel)
+bool AbstractLinkPipeline<DataType, GlobalDataType>::disconnect(Block<DataType, GlobalDataType> & outputter, const ChannelTyp outChannel)
 {
 	PASSERT(outChannel != CHANNEL_ANY);
 
 	if(outChannel == CHANNEL_ALL)
 	{
 		bool success = true;
-		for(size_t i = 0; i < outputter.getNumOutputs(); ++i)
+		for(ChannelTyp i = 0; i < outputter.getNumOutputs(); ++i)
 		{
 			success &= disconnect(outputter, i);
 		}
@@ -213,7 +213,7 @@ ILink<DataType, GlobalDataType> *
 AbstractLinkPipeline<DataType, GlobalDataType>::findLinkBetween(
 	const Block<DataType, GlobalDataType> * const outputter,
 	const Block<DataType, GlobalDataType> * const inputtee,
-	const channel_t channel) const
+	const ChannelTyp channel) const
 {
 	using std::set;
 
@@ -266,7 +266,7 @@ template <class DataType, class GlobalDataType>
 ILink<DataType, GlobalDataType> *
 AbstractLinkPipeline<DataType, GlobalDataType>::findLinkByChannel(
 	const Block<DataType, GlobalDataType> * const outputter,
-	const channel_t channel) const
+	const ChannelTyp channel) const
 {
 	using namespace std;
 

@@ -31,9 +31,9 @@ public:
 	// From Block ////////////////////////
 
 	virtual size_t getNumOutputs() const;
-	virtual void setOutput(PipeBlock<DataType, GlobalDataType> & output, const size_t channel = CHANNEL_DEFAULT);
-	virtual PipeBlock<DataType, GlobalDataType> * getOutput(const size_t channel = CHANNEL_DEFAULT) const;
-	virtual void clearOutput(const int channel = CHANNEL_DEFAULT);
+	virtual void setOutput(PipeBlock<DataType, GlobalDataType> & output, const ChannelTyp channel = CHANNEL_DEFAULT);
+	virtual PipeBlock<DataType, GlobalDataType> * getOutput(const ChannelTyp channel = CHANNEL_DEFAULT) const;
+	virtual void clearOutput(const ChannelTyp channel = CHANNEL_DEFAULT);
 
 	// End from Block ////////////////////////
 
@@ -63,20 +63,20 @@ size_t SimpleEndBlock<DataType, GlobalDataType>::getNumOutputs() const
 }
 
 template <class DataType, class GlobalDataType>
-void SimpleEndBlock<DataType, GlobalDataType>::setOutput(PipeBlock<DataType, GlobalDataType> & output, const size_t channel)
+void SimpleEndBlock<DataType, GlobalDataType>::setOutput(PipeBlock<DataType, GlobalDataType> & output, const ChannelTyp channel)
 {
 	throw "Can't set output on end block";
 }
 
 template <class DataType, class GlobalDataType>
 PipeBlock<DataType, GlobalDataType> *
-SimpleEndBlock<DataType, GlobalDataType>::getOutput(const size_t channel) const
+SimpleEndBlock<DataType, GlobalDataType>::getOutput(const ChannelTyp channel) const
 {
 	return NULL;
 }
 
 template <class DataType, class GlobalDataType>
-void SimpleEndBlock<DataType, GlobalDataType>::clearOutput(const int channel)
+void SimpleEndBlock<DataType, GlobalDataType>::clearOutput(const ChannelTyp channel)
 {
 	throw "Cannot clear output on end block: it has no output";
 }

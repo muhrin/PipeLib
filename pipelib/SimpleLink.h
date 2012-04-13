@@ -32,13 +32,13 @@ public:
 	virtual void link(
 		Block<DataType, GlobalDataType> & input,
 		PipeBlock<DataType, GlobalDataType> & output,
-		const size_t outChannel = CHANNEL_DEFAULT);
+		const ChannelTyp outChannel = CHANNEL_DEFAULT);
 
 	virtual void unlink();
 
 	virtual Block<DataType, GlobalDataType> & getInput() const;
 
-	int getLinkChannel() const;
+	ChannelTyp getLinkChannel() const;
 
 	// End ILink //////////////////////////////////////////////////
 
@@ -57,7 +57,7 @@ protected:
 	Block<DataType, GlobalDataType> *		myInput;
 
 	/** The output channel of the outputter that this link takes as an input */
-	int						myLinkChannel;
+	ChannelTyp						myLinkChannel;
 };
 
 // IMPLEMENTATION /////////////////////////
@@ -75,7 +75,7 @@ template <class DataType, class GlobalDataType>
 void SimpleLink<DataType, GlobalDataType>::link(
 	Block<DataType, GlobalDataType> & input,
 	PipeBlock<DataType, GlobalDataType> & output,
-	const size_t outChannel)
+	const ChannelTyp outChannel)
 {
 	myInput = &input;
 	myLinkChannel = outChannel;
@@ -110,7 +110,7 @@ void SimpleLink<DataType, GlobalDataType>::in(DataType & data)
 }
 
 template <class DataType, class GlobalDataType>
-int SimpleLink<DataType, GlobalDataType>::getLinkChannel() const
+ChannelTyp SimpleLink<DataType, GlobalDataType>::getLinkChannel() const
 {
 	return myLinkChannel;
 }

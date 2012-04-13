@@ -30,9 +30,9 @@ public:
 	// From Block /////////////////////////////////////
 
 	virtual size_t getNumOutputs() const;
-	virtual PipeBlock<DataType, GlobalDataType> * getOutput(const size_t channel = CHANNEL_DEFAULT) const;
-	virtual void setOutput(PipeBlock<DataType, GlobalDataType> & output, const size_t channel = CHANNEL_DEFAULT);
-	virtual void clearOutput(const int channel = CHANNEL_DEFAULT);
+	virtual PipeBlock<DataType, GlobalDataType> * getOutput(const ChannelTyp channel = CHANNEL_DEFAULT) const;
+	virtual void setOutput(PipeBlock<DataType, GlobalDataType> & output, const ChannelTyp channel = CHANNEL_DEFAULT);
+	virtual void clearOutput(const ChannelTyp channel = CHANNEL_DEFAULT);
 
 	// End from Block ////////////////////////////////
 
@@ -56,7 +56,7 @@ size_t AbstractSimpleStartBlock<DataType, GlobalDataType>::getNumOutputs() const
 }
 
 template <class DataType, class GlobalDataType>
-void AbstractSimpleStartBlock<DataType, GlobalDataType>::setOutput(PipeBlock<DataType, GlobalDataType> & output, const size_t channel)
+void AbstractSimpleStartBlock<DataType, GlobalDataType>::setOutput(PipeBlock<DataType, GlobalDataType> & output, const ChannelTyp channel)
 {
 	PASSERT(channel == 0);
 
@@ -64,7 +64,7 @@ void AbstractSimpleStartBlock<DataType, GlobalDataType>::setOutput(PipeBlock<Dat
 }
 
 template <class DataType, class GlobalDataType>
-void AbstractSimpleStartBlock<DataType, GlobalDataType>::clearOutput(const int channel)
+void AbstractSimpleStartBlock<DataType, GlobalDataType>::clearOutput(const ChannelTyp channel)
 {
 	if(!(channel == CHANNEL_DEFAULT || channel == CHANNEL_ALL))
 	{
@@ -75,7 +75,7 @@ void AbstractSimpleStartBlock<DataType, GlobalDataType>::clearOutput(const int c
 }
 
 template <class DataType, class GlobalDataType>
-PipeBlock<DataType, GlobalDataType> * AbstractSimpleStartBlock<DataType, GlobalDataType>::getOutput(const size_t channel) const
+PipeBlock<DataType, GlobalDataType> * AbstractSimpleStartBlock<DataType, GlobalDataType>::getOutput(const ChannelTyp channel) const
 {
 	PASSERT(channel == 0);
 

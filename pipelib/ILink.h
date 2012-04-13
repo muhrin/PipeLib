@@ -10,6 +10,7 @@
 #define I_LINK_H
 
 // INCLUDES /////////////////////////////////////////////
+#include "Pipeline.h"
 #include "PipeBlock.h"
 
 // FORWARD DECLARATIONS ////////////////////////////////////
@@ -30,13 +31,13 @@ public:
 	virtual void link(
 		Block<DataType, GlobalDataType> & input,
 		PipeBlock<DataType, GlobalDataType> & output,
-		const size_t outChannel = CHANNEL_DEFAULT) = 0;
+		const ChannelTyp outChannel = CHANNEL_DEFAULT) = 0;
 
 	virtual void unlink() = 0;
 
 	virtual Block<DataType, GlobalDataType> & getInput() const = 0;
 
-	virtual int getLinkChannel() const = 0;
+	virtual ChannelTyp getLinkChannel() const = 0;
 };
 
 }

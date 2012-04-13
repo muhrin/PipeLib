@@ -10,6 +10,7 @@
 #define BLOCK_H
 
 // INCLUDES /////////////////////////////////////////////
+#include "Pipeline.h"
 #include <string>
 
 // FORWARD DECLARATIONS ////////////////////////////////////
@@ -46,17 +47,17 @@ public:
 	/**
 	/* Set the output block for a particular channel.
 	/**/
-	virtual void setOutput(PipeBlock<DataType, GlobalDataType> & output, const size_t channel = CHANNEL_DEFAULT) = 0;
+	virtual void setOutput(PipeBlock<DataType, GlobalDataType> & output, const ChannelTyp channel = CHANNEL_DEFAULT) = 0;
 
 	/**
 	/* Clear the output on a particular channel.
 	/**/
-	virtual void clearOutput(const int channel = CHANNEL_DEFAULT) = 0;
+	virtual void clearOutput(const ChannelTyp channel = CHANNEL_DEFAULT) = 0;
 
 	/**
 	/* Get the output on a particular channel.  Can be NULL if not set.
 	/**/
-	virtual PipeBlock<DataType, GlobalDataType> * getOutput(const size_t channel = CHANNEL_DEFAULT) const = 0;
+	virtual PipeBlock<DataType, GlobalDataType> * getOutput(const ChannelTyp channel = CHANNEL_DEFAULT) const = 0;
 
 	////////////////////////////////////////////
 	// Pipeline messages to blocks
