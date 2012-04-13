@@ -67,7 +67,8 @@ size_t DefaultBarrier<DataType, GlobalDataType>::release()
 	for(typename BufferVector::iterator it = myBuffer.begin(), end = myBuffer.end();
 		it != end; ++it)
 	{
-		myOutput->in(**it);
+		// Have to use this-> for template reasons
+		this->myOutput->in(**it);
 	}
 
 	// Done our job, so clear the buffer

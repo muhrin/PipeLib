@@ -37,6 +37,10 @@ public:
 
 	// End IPipeline ///////////////////////////
 
+private:
+
+	typedef AbstractPipeline<DataType, GlobalDataType> MyAbsPipeTyp;
+
 };
 
 // IMPLEMENTATION ///////////////////////////
@@ -58,8 +62,8 @@ void DirectPipeline<DataType, GlobalDataType>::connect(
 		return;
 	}
 
-	myBlocks.push_back(&outputter);
-	myBlocks.push_back(&inputtee);
+	MyAbsPipeTyp::myBlocks.push_back(&outputter);
+	MyAbsPipeTyp::myBlocks.push_back(&inputtee);
 	outputter.setOutput(inputtee, outChannel);
 	outputter.inserted(*this);
 	inputtee.inserted(*this);
@@ -70,8 +74,8 @@ bool DirectPipeline<DataType, GlobalDataType>::initialise()
 {
 	using std::vector;
 
-	for(typename BlocksMap::iterator it = myBlocks.begin(), 
-		end = myBlocks.end(); it != end; ++it)
+	for(typename MyAbsPipeTyp::BlocksMap::iterator it = MyAbsPipeTyp::myBlocks.begin(),
+		end = MyAbsPipeTyp::myBlocks.end(); it != end; ++it)
 	{
 		(*it)->pipelineInitialised();
 	}

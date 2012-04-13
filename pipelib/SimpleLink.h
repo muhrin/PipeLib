@@ -86,7 +86,8 @@ void SimpleLink<DataType, GlobalDataType>::link(
 template <class DataType, class GlobalDataType>
 void SimpleLink<DataType, GlobalDataType>::unlink()
 {
-	clearOutput();
+    // Have to use this-> as we're calling this in a template base class
+	this->clearOutput();
 	myInput->clearOutput(myLinkChannel);
 	myLinkChannel = CHANNEL_NONE;
 	myInput = NULL;
@@ -105,7 +106,7 @@ void SimpleLink<DataType, GlobalDataType>::in(DataType & data)
 	myLinkPipeline.linkCallback(*this, data);
 
 	// Pass the data on to the next block
-	myOutput->in(data);
+	this->myOutput->in(data);
 }
 
 template <class DataType, class GlobalDataType>

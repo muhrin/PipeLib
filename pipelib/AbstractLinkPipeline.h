@@ -82,17 +82,12 @@ protected:
 
 private:
 
-	// Refine typedefs from LinkPipeline, unfortunately can't use the 'using' declaration
-	// because of a bug in GCC that wasn't fixed until recently:
-	// http://gcc.gnu.org/bugzilla/show_bug.cgi?id=14258#c15
-/*	typedef AbstractPipeline<
+	typedef AbstractPipeline<
 		DataType,
 		GlobalDataType,
 		LinkPipelineMetadata,
-		LinkPipelineBlockMetadata> AbsPipeTyp;
-	typedef typename AbsPipeTyp::DataMap DataMap;
-	typedef typename AbsPipeTyp::BlocksMap BlocksMap;
-*/
+		LinkPipelineBlockMetadata> MyAbsPipeTyp;
+
 	void generatePosition(Block<DataType, GlobalDataType> & block, const size_t pos);
 };
 
@@ -165,14 +160,14 @@ bool AbstractLinkPipeline<DataType, GlobalDataType>::disconnect(Block<DataType, 
 	}
 
 	ILink<DataType, GlobalDataType> * link = findLinkByChannel(&outputter, outChannel);
-	
+
 	if(link != NULL)
 	{
-		typename BlocksMap::iterator it;
+		typename MyAbsPipeTyp::BlocksMap::iterator it;
 
 		// Output
-		it = myBlocks.find(link->getOutput());
-		if(it == myBlocks.end())
+		it = MyAbsPipeTyp::myBlocks.find(link->getOutput());
+		if(it == MyAbsPipeTyp::myBlocks.end())
 		{
 			throw "Link output not found";
 		}
@@ -182,8 +177,8 @@ bool AbstractLinkPipeline<DataType, GlobalDataType>::disconnect(Block<DataType, 
 		}
 
 		// Input
-		it = myBlocks.find(&link->getInput());
-		if(it == myBlocks.end())
+		it = MyAbsPipeTyp::myBlocks.find(&link->getInput());
+		if(it == MyAbsPipeTyp::myBlocks.end())
 		{
 			throw "Link input not found";
 		}
@@ -210,7 +205,7 @@ bool AbstractLinkPipeline<DataType, GlobalDataType>::disconnect(Block<DataType, 
 template <class DataType, class GlobalDataType>
 bool AbstractLinkPipeline<DataType, GlobalDataType>::hasBlock(Block<DataType, GlobalDataType> & block) const
 {
-	return myBlocks.count(&block) > 0;
+	return MyAbsPipeTyp::myBlocks.count(&block) > 0;
 }
 
 template <class DataType, class GlobalDataType>
@@ -244,7 +239,7 @@ AbstractLinkPipeline<DataType, GlobalDataType>::findLinkBetween(
 		{
 			matchedInOut = (&link->getInput() == outputter && link->getOutput() == inputtee);
 		}
-	
+
 		if(matchedInOut)
 		{
 			// Check if the channel criterium is also met
@@ -260,7 +255,7 @@ AbstractLinkPipeline<DataType, GlobalDataType>::findLinkBetween(
 				}
 			}
 		}
-			
+
 		if(found) break;
 	}
 
@@ -279,7 +274,7 @@ AbstractLinkPipeline<DataType, GlobalDataType>::findLinkByChannel(
 
 	bool found = false;
 	ILink<DataType, GlobalDataType> * link = NULL;
-	for(typename set<ILink<DataType, GlobalDataType> *>::const_iterator it = 
+	for(typename set<ILink<DataType, GlobalDataType> *>::const_iterator it =
 		myLinks.begin(), end = myLinks.end(); it != end; ++it)
 	{
 		ILink<DataType, GlobalDataType> * const ln = *it;
@@ -300,12 +295,12 @@ void AbstractLinkPipeline<DataType, GlobalDataType>::linkCallback(
 {
 	// TODO: Send message that data is passing through
 
-	const typename BlocksMap::const_iterator it = myBlocks.find(link.getOutput());
-	if(it != myBlocks.end())
+	const typename MyAbsPipeTyp::BlocksMap::const_iterator it = MyAbsPipeTyp::myBlocks.find(link.getOutput());
+	if(it != MyAbsPipeTyp::myBlocks.end())
 	{
 		// Get the metadata
-		const typename DataMap::iterator dataIt(myData.find(&data));
-		if(dataIt != myData.end())
+		const typename MyAbsPipeTyp::DataMap::iterator dataIt(MyAbsPipeTyp::myData.find(&data));
+		if(dataIt != MyAbsPipeTyp::myData.end())
 		{
 			// Save the position of the data for when it moved on to the next block
 			dataIt->second.position = it->second.position;
@@ -317,9 +312,9 @@ template <class DataType, class GlobalDataType>
 void AbstractLinkPipeline<DataType, GlobalDataType>::generatePosition(
 	Block<DataType, GlobalDataType> & block, const size_t pos)
 {
-	const typename BlocksMap::iterator it = myBlocks.find(&block);
-	
-	if(it != myBlocks.end())
+	const typename MyAbsPipeTyp::BlocksMap::iterator it = MyAbsPipeTyp::myBlocks.find(&block);
+
+	if(it != MyAbsPipeTyp::myBlocks.end())
 	{
 		// If the position is currently -1 then it hasn't been set yet
 		if(it->second.position == -1)
