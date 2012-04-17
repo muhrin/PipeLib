@@ -35,5 +35,7 @@ set(pipelib_Files
   build/Dummy.cpp      # Have to have a cpp file to make add_library work
 )
 
+# Tell the IDE not to build Dummy by telling it that it's a header file
+set_source_files_properties(build/Dummy.cpp PROPERTIES HEADER_FILE_ONLY TRUE)
 
 add_library(pipelib ${pipelib_Files})
