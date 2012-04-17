@@ -1,0 +1,11 @@
+# Visual Studio files solution/project and build files
+*.sln
+*.ncb
+*.suo
+*.vcproj*
+Debug
+Release
+# CMake build files
+CMakeFiles
+CMakeCache.txt
+cmake_install.cmake
