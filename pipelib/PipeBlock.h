@@ -10,7 +10,7 @@
 #define PIPE_BLOCK_H
 
 // INCLUDES /////////////////////////////////////////////
-#include "Block.h"
+#include "pipelib/Block.h"
 
 #include <string>
 
@@ -18,14 +18,18 @@
 
 namespace pipelib {
 
-template <class DataType, class GlobalDataType = DefaultGlobalDataTyp>
-class PipeBlock : public virtual Block<DataType, GlobalDataType>
+template <
+  typename PipelineData,
+  typename SharedData = DefaultSharedData,
+  typename GlobalData = SharedData
+>
+class PipeBlock : public virtual Block<PipelineData, SharedData, GlobalData>
 {
 public:
 
-	PipeBlock(): Block<DataType, GlobalDataType>("Pipe block") {}
+	PipeBlock(): Block<PipelineData, SharedData, GlobalData>("Pipe block") {}
 
-	virtual void in(DataType & data) = 0;
+	virtual void in(PipelineData & data) = 0;
 };
 
 }

@@ -10,18 +10,22 @@
 #define BARRIER_H
 
 // INCLUDES /////////////////////////////////////////////
-#include "PipeBlock.h"
+#include "pipelib/PipeBlock.h"
 
 
 // FORWARD DECLARATIONS ////////////////////////////////////
 
 namespace pipelib {
 
-template <class DataType, class GlobalDataType = DefaultGlobalDataTyp>
-class Barrier : public virtual PipeBlock<DataType, GlobalDataType>
+template <
+  typename PipelineData,
+  typename SharedData = DefaultSharedData,
+  typename GlobalData = SharedData
+>
+class Barrier : public virtual PipeBlock<PipelineData, SharedData, GlobalData>
 {
 public:
-	Barrier() : Block<DataType, GlobalDataType>("Barrier") {}
+	Barrier() : Block<PipelineData, SharedData, GlobalData>("Barrier") {}
 
 	virtual size_t release() = 0;
 

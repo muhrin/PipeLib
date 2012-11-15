@@ -13,14 +13,14 @@
 
 // FORWARD DECLARATIONS ////////////////////////////////////
 
-template <class DataType>
+template <typename PipelineData>
 class IFinishNotifiable
 {
 public:
 
 	virtual ~IFinishNotifiable() {}
 
-	virtual void dataFinished(DataType & data) = 0;
+	virtual void dataFinished(PipelineData & data) = 0;
 };
 
 #endif /* I_FINISH_NOTIFIABLE_H */

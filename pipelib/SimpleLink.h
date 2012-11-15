@@ -10,33 +10,37 @@
 #define SIMPLE_LINK_H
 
 // INCLUDES /////////////////////////////////////////////
-#include "Pipeline.h"
+#include "pipelib/Pipeline.h"
 
-#include "AbstractLinkPipeline.h"
-#include "AbstractSimpleBlock.h"
-#include "ILink.h"
+#include "pipelib/AbstractLinkPipeline.h"
+#include "pipelib/AbstractSimpleBlock.h"
+#include "pipelib/ILink.h"
 
 // FORWARD DECLARATIONS ////////////////////////////////////
 
 namespace pipelib {
 
-template <class DataType, class GlobalDataType = DefaultGlobalDataTyp>
-class SimpleLink : public AbstractSimpleBlock<DataType, GlobalDataType>, public ILink<DataType, GlobalDataType>
+template <
+  typename PipelineData,
+  typename SharedData = DefaultSharedData,
+  typename GlobalData = SharedData
+>
+class SimpleLink : public AbstractSimpleBlock<PipelineData, SharedData, GlobalData>, public ILink<PipelineData, SharedData, GlobalData>
 {
 public:
-	SimpleLink(AbstractLinkPipeline<DataType, GlobalDataType> & pipeline);
+	SimpleLink(AbstractLinkPipeline<PipelineData, SharedData, GlobalData> & pipeline);
 
 
 	// From ILink ////////////////////////////////////////////////
 
 	virtual void link(
-		Block<DataType, GlobalDataType> & input,
-		PipeBlock<DataType, GlobalDataType> & output,
+		Block<PipelineData, SharedData, GlobalData> & input,
+		PipeBlock<PipelineData, SharedData, GlobalData> & output,
 		const ChannelTyp outChannel = CHANNEL_DEFAULT);
 
 	virtual void unlink();
 
-	virtual Block<DataType, GlobalDataType> & getInput() const;
+	virtual Block<PipelineData, SharedData, GlobalData> & getInput() const;
 
 	ChannelTyp getLinkChannel() const;
 
@@ -44,17 +48,17 @@ public:
 
 	// From PipeBlock ////////////////////////////////////////////
 
-	virtual void in(DataType & data);
+	virtual void in(PipelineData & data);
 
 	// End PipeBlock /////////////////////////////////////////////
 
 protected:
 
 	/** The pipeline that this link comminucates with. */
-	AbstractLinkPipeline<DataType, GlobalDataType> &	myLinkPipeline;
+	AbstractLinkPipeline<PipelineData, SharedData, GlobalData> &	myLinkPipeline;
 
 	/** The blocks that is attached to the input of this link. */
-	Block<DataType, GlobalDataType> *		myInput;
+	Block<PipelineData, SharedData, GlobalData> *		myInput;
 
 	/** The output channel of the outputter that this link takes as an input */
 	ChannelTyp						myLinkChannel;
@@ -62,19 +66,19 @@ protected:
 
 // IMPLEMENTATION /////////////////////////
 
-template <class DataType, class GlobalDataType>
-SimpleLink<DataType, GlobalDataType>::SimpleLink(AbstractLinkPipeline<DataType, GlobalDataType> & pipeline):
-Block<DataType, GlobalDataType>("Simple link"),
+template <typename PipelineData, typename SharedData, typename GlobalData>
+SimpleLink<PipelineData, SharedData, GlobalData>::SimpleLink(AbstractLinkPipeline<PipelineData, SharedData, GlobalData> & pipeline):
+Block<PipelineData, SharedData, GlobalData>("Simple link"),
 myLinkPipeline(pipeline),
 myInput(NULL),
 myLinkChannel(CHANNEL_NONE)
 {
 }
 
-template <class DataType, class GlobalDataType>
-void SimpleLink<DataType, GlobalDataType>::link(
-	Block<DataType, GlobalDataType> & input,
-	PipeBlock<DataType, GlobalDataType> & output,
+template <typename PipelineData, typename SharedData, typename GlobalData>
+void SimpleLink<PipelineData, SharedData, GlobalData>::link(
+	Block<PipelineData, SharedData, GlobalData> & input,
+	PipeBlock<PipelineData, SharedData, GlobalData> & output,
 	const ChannelTyp outChannel)
 {
 	myInput = &input;
@@ -83,8 +87,8 @@ void SimpleLink<DataType, GlobalDataType>::link(
 	setOutput(output);
 }
 
-template <class DataType, class GlobalDataType>
-void SimpleLink<DataType, GlobalDataType>::unlink()
+template <typename PipelineData, typename SharedData, typename GlobalData>
+void SimpleLink<PipelineData, SharedData, GlobalData>::unlink()
 {
     // Have to use this-> as we're calling this in a template base class
 	this->clearOutput();
@@ -93,14 +97,14 @@ void SimpleLink<DataType, GlobalDataType>::unlink()
 	myInput = NULL;
 }
 
-template <class DataType, class GlobalDataType>
-Block<DataType, GlobalDataType> & SimpleLink<DataType, GlobalDataType>::getInput() const
+template <typename PipelineData, typename SharedData, typename GlobalData>
+Block<PipelineData, SharedData, GlobalData> & SimpleLink<PipelineData, SharedData, GlobalData>::getInput() const
 {
 	return *myInput;
 }
 
-template <class DataType, class GlobalDataType>
-void SimpleLink<DataType, GlobalDataType>::in(DataType & data)
+template <typename PipelineData, typename SharedData, typename GlobalData>
+void SimpleLink<PipelineData, SharedData, GlobalData>::in(PipelineData & data)
 {
 	// Tell the pipeline that this link is passing data
 	myLinkPipeline.linkCallback(*this, data);
@@ -109,8 +113,8 @@ void SimpleLink<DataType, GlobalDataType>::in(DataType & data)
 	this->myOutput->in(data);
 }
 
-template <class DataType, class GlobalDataType>
-ChannelTyp SimpleLink<DataType, GlobalDataType>::getLinkChannel() const
+template <typename PipelineData, typename SharedData, typename GlobalData>
+ChannelTyp SimpleLink<PipelineData, SharedData, GlobalData>::getLinkChannel() const
 {
 	return myLinkChannel;
 }

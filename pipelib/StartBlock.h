@@ -10,17 +10,21 @@
 #define START_BLOCK_H
 
 // INCLUDES /////////////////////////////////////////////
-#include "Block.h"
+#include "pipelib/Block.h"
 
 // FORWARD DECLARATIONS ////////////////////////////////////
 
 namespace pipelib {
 
-template <class DataType, class GlobalDataType = DefaultGlobalDataTyp>
-class StartBlock : public virtual Block<DataType, GlobalDataType>
+template <
+  typename PipelineData,
+  typename SharedData = DefaultSharedData,
+  typename GlobalData = SharedData
+>
+class StartBlock : public virtual Block<PipelineData, SharedData, GlobalData>
 {
 public:
-	StartBlock() : Block<DataType, GlobalDataType>("Start block") {}
+	StartBlock() : Block<PipelineData, SharedData, GlobalData>("Start block") {}
 
 	virtual void start() = 0;
 };

@@ -10,19 +10,17 @@
 #define ABSTRACT_LINK_PIPELINE_H
 
 // INCLUDES /////////////////////////////////////////////
-#include "AbstractPipeline.h"
-#include "ILink.h"
-#include "StartBlock.h"
+#include "pipelib/AbstractPipeline.h"
+#include "pipelib/Block.h"
+#include "pipelib/ILink.h"
+#include "pipelib/StartBlock.h"
 
 #include <set>
 
 // FORWARD DECLARATIONS ////////////////////////////////////
-namespace pipelib {
-	template <class DataType, class GlobalDataType>
-	class Block;
-}
 
-namespace pipelib {
+namespace pipelib
+{
 
 struct LinkPipelineMetadata : public DataMetadata
 {
@@ -41,66 +39,76 @@ struct LinkPipelineBlockMetadata : public BlockMetadata
 	size_t numLinks;
 };
 
-template <class DataType, class GlobalDataType = DefaultGlobalDataTyp>
+template <
+  typename PipelineData,
+  typename SharedData = DefaultSharedData,
+  typename GlobalData = SharedData
+>
 class AbstractLinkPipeline :
-	public AbstractPipeline<DataType, GlobalDataType, LinkPipelineMetadata, LinkPipelineBlockMetadata>
+	public AbstractPipeline<PipelineData, SharedData, GlobalData, LinkPipelineMetadata, LinkPipelineBlockMetadata>
 {
 public:
+
+  AbstractLinkPipeline() {}
 	virtual ~AbstractLinkPipeline();
 
 	// From IPipeline /////////////////////////
 
-	virtual void connect(Block<DataType, GlobalDataType> & output, PipeBlock<DataType, GlobalDataType> & input, const int ChannelTyp = CHANNEL_DEFAULT);
+	virtual void connect(Block<PipelineData, SharedData, GlobalData> & output, PipeBlock<PipelineData, SharedData, GlobalData> & input, const int ChannelTyp = CHANNEL_DEFAULT);
 
-	virtual bool disconnect(Block<DataType, GlobalDataType> & output, const ChannelTyp outChannel = CHANNEL_DEFAULT);
+	virtual bool disconnect(Block<PipelineData, SharedData, GlobalData> & output, const ChannelTyp outChannel = CHANNEL_DEFAULT);
 
-	virtual bool hasBlock(Block<DataType, GlobalDataType> & block) const;
+	virtual bool hasBlock(Block<PipelineData, SharedData, GlobalData> & block) const;
 
 	// End IPipeline ///////////////////////////
 
 	/** When a link has data pass through it this callback is called. */
-	void linkCallback(const ILink<DataType, GlobalDataType> & link, DataType & data);
+	void linkCallback(const ILink<PipelineData, SharedData, GlobalData> & link, PipelineData & data);
 
 protected:
 
+  typedef AbstractPipeline<PipelineData, SharedData, GlobalData, LinkPipelineMetadata, LinkPipelineBlockMetadata> Parent;
 
-	virtual ILink<DataType, GlobalDataType> * createLink() = 0;
+  AbstractLinkPipeline(GlobalData * const globalData);
 
-	virtual void destroyLink(ILink<DataType, GlobalDataType> * const link) = 0;
+	virtual ILink<PipelineData, SharedData, GlobalData> * createLink() = 0;
 
-	ILink<DataType, GlobalDataType> * findLinkBetween(
-		const Block<DataType, GlobalDataType> * const outputter,
-		const Block<DataType, GlobalDataType> * const inputtee,
+	virtual void destroyLink(ILink<PipelineData, SharedData, GlobalData> * const link) = 0;
+
+	ILink<PipelineData, SharedData, GlobalData> * findLinkBetween(
+		const Block<PipelineData, SharedData, GlobalData> * const outputter,
+		const Block<PipelineData, SharedData, GlobalData> * const inputtee,
 		const ChannelTyp channel = CHANNEL_ANY) const;
 
-	ILink<DataType, GlobalDataType> * findLinkByChannel(
-		const Block<DataType, GlobalDataType> * const outputter,
+	ILink<PipelineData, SharedData, GlobalData> * findLinkByChannel(
+		const Block<PipelineData, SharedData, GlobalData> * const outputter,
 		const ChannelTyp channel = CHANNEL_DEFAULT) const;
 
 	/** A set of all the links that join blocks. */
-	::std::set<ILink<DataType, GlobalDataType> *>	myLinks;
+	::std::set<ILink<PipelineData, SharedData, GlobalData> *>	myLinks;
 
 private:
 
 	typedef AbstractPipeline<
-		DataType,
-		GlobalDataType,
+		PipelineData,
+    SharedData,
+		GlobalData,
 		LinkPipelineMetadata,
 		LinkPipelineBlockMetadata> MyAbsPipeTyp;
 
-	void generatePosition(Block<DataType, GlobalDataType> & block, const size_t pos);
+	void generatePosition(Block<PipelineData, SharedData, GlobalData> & block, const size_t pos);
 };
 
 // IMPLEMENTATION //////////////////////////////////////////
 
 // AbstractLinkPipeline implementation ////
 
-template <class DataType, class GlobalDataType>
-AbstractLinkPipeline<DataType, GlobalDataType>::~AbstractLinkPipeline()
+template <typename PipelineData, typename SharedData, typename GlobalData>
+AbstractLinkPipeline<PipelineData, SharedData, GlobalData>::~AbstractLinkPipeline()
 {
 	using namespace std;
 
-	for(typename set<ILink<DataType, GlobalDataType> *>::iterator it = myLinks.begin(),
+	for(typename set<ILink<PipelineData, SharedData, GlobalData> *>::iterator it = myLinks.begin(),
             end = myLinks.end(); it != end; ++it)
 	{
 		delete *it;
@@ -108,10 +116,10 @@ AbstractLinkPipeline<DataType, GlobalDataType>::~AbstractLinkPipeline()
 	myLinks.clear();
 }
 
-template <class DataType, class GlobalDataType>
-void AbstractLinkPipeline<DataType, GlobalDataType>::connect(
-	Block<DataType, GlobalDataType> & outputter,
-	PipeBlock<DataType, GlobalDataType> & inputtee,
+template <typename PipelineData, typename SharedData, typename GlobalData>
+void AbstractLinkPipeline<PipelineData, SharedData, GlobalData>::connect(
+	Block<PipelineData, SharedData, GlobalData> & outputter,
+	PipeBlock<PipelineData, SharedData, GlobalData> & inputtee,
 	const ChannelTyp outChannel)
 {
 	using namespace std;
@@ -132,7 +140,7 @@ void AbstractLinkPipeline<DataType, GlobalDataType>::connect(
 	if(!findLinkBetween(&outputter, &inputtee, outChannel))
 	{
 		// Create the link
-		ILink<DataType, GlobalDataType> * const link = createLink();
+		ILink<PipelineData, SharedData, GlobalData> * const link = createLink();
 
 		// Insert the blocks into the pipeline and up the number of links
 		++(insertBlock(outputter, LinkPipelineBlockMetadata(-1, 0)).first->second.numLinks);
@@ -144,8 +152,8 @@ void AbstractLinkPipeline<DataType, GlobalDataType>::connect(
 	}
 }
 
-template <class DataType, class GlobalDataType>
-bool AbstractLinkPipeline<DataType, GlobalDataType>::disconnect(Block<DataType, GlobalDataType> & outputter, const ChannelTyp outChannel)
+template <typename PipelineData, typename SharedData, typename GlobalData>
+bool AbstractLinkPipeline<PipelineData, SharedData, GlobalData>::disconnect(Block<PipelineData, SharedData, GlobalData> & outputter, const ChannelTyp outChannel)
 {
 	PASSERT(outChannel != CHANNEL_ANY);
 
@@ -159,7 +167,7 @@ bool AbstractLinkPipeline<DataType, GlobalDataType>::disconnect(Block<DataType, 
 		return success;
 	}
 
-	ILink<DataType, GlobalDataType> * link = findLinkByChannel(&outputter, outChannel);
+	ILink<PipelineData, SharedData, GlobalData> * link = findLinkByChannel(&outputter, outChannel);
 
 	if(link != NULL)
 	{
@@ -202,17 +210,22 @@ bool AbstractLinkPipeline<DataType, GlobalDataType>::disconnect(Block<DataType, 
 	}
 }
 
-template <class DataType, class GlobalDataType>
-bool AbstractLinkPipeline<DataType, GlobalDataType>::hasBlock(Block<DataType, GlobalDataType> & block) const
+template <typename PipelineData, typename SharedData, typename GlobalData>
+bool AbstractLinkPipeline<PipelineData, SharedData, GlobalData>::hasBlock(Block<PipelineData, SharedData, GlobalData> & block) const
 {
 	return MyAbsPipeTyp::myBlocks.count(&block) > 0;
 }
 
-template <class DataType, class GlobalDataType>
-ILink<DataType, GlobalDataType> *
-AbstractLinkPipeline<DataType, GlobalDataType>::findLinkBetween(
-	const Block<DataType, GlobalDataType> * const outputter,
-	const Block<DataType, GlobalDataType> * const inputtee,
+template <typename PipelineData, typename SharedData, typename GlobalData>
+AbstractLinkPipeline<PipelineData, SharedData, GlobalData>::AbstractLinkPipeline(GlobalData * const globalData):
+AbstractPipeline<PipelineData, SharedData, GlobalData, LinkPipelineMetadata, LinkPipelineBlockMetadata>(globalData)
+{}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+ILink<PipelineData, SharedData, GlobalData> *
+AbstractLinkPipeline<PipelineData, SharedData, GlobalData>::findLinkBetween(
+	const Block<PipelineData, SharedData, GlobalData> * const outputter,
+	const Block<PipelineData, SharedData, GlobalData> * const inputtee,
 	const ChannelTyp channel) const
 {
 	using std::set;
@@ -221,8 +234,8 @@ AbstractLinkPipeline<DataType, GlobalDataType>::findLinkBetween(
 	PASSERT(channel != CHANNEL_ALL);
 
 	bool found = false;
-	ILink<DataType, GlobalDataType> * link = NULL;
-	for(typename set<ILink<DataType, GlobalDataType> * >::const_iterator it =
+	ILink<PipelineData, SharedData, GlobalData> * link = NULL;
+	for(typename set<ILink<PipelineData, SharedData, GlobalData> * >::const_iterator it =
 		myLinks.begin(), end = myLinks.end(); it != end; ++it)
 	{
 		link = *it;
@@ -262,10 +275,10 @@ AbstractLinkPipeline<DataType, GlobalDataType>::findLinkBetween(
 	return found == true ? link : NULL;
 }
 
-template <class DataType, class GlobalDataType>
-ILink<DataType, GlobalDataType> *
-AbstractLinkPipeline<DataType, GlobalDataType>::findLinkByChannel(
-	const Block<DataType, GlobalDataType> * const outputter,
+template <typename PipelineData, typename SharedData, typename GlobalData>
+ILink<PipelineData, SharedData, GlobalData> *
+AbstractLinkPipeline<PipelineData, SharedData, GlobalData>::findLinkByChannel(
+	const Block<PipelineData, SharedData, GlobalData> * const outputter,
 	const ChannelTyp channel) const
 {
 	using namespace std;
@@ -273,11 +286,11 @@ AbstractLinkPipeline<DataType, GlobalDataType>::findLinkByChannel(
 	PASSERT(outputter != NULL);
 
 	bool found = false;
-	ILink<DataType, GlobalDataType> * link = NULL;
-	for(typename set<ILink<DataType, GlobalDataType> *>::const_iterator it =
+	ILink<PipelineData, SharedData, GlobalData> * link = NULL;
+	for(typename set<ILink<PipelineData, SharedData, GlobalData> *>::const_iterator it =
 		myLinks.begin(), end = myLinks.end(); it != end; ++it)
 	{
-		ILink<DataType, GlobalDataType> * const ln = *it;
+		ILink<PipelineData, SharedData, GlobalData> * const ln = *it;
 		if(ln->getNumOutputs() > channel && ln->getOutput(channel))
 		{
 			link = ln;
@@ -288,10 +301,10 @@ AbstractLinkPipeline<DataType, GlobalDataType>::findLinkByChannel(
 	return link;
 }
 
-template <class DataType, class GlobalDataType>
-void AbstractLinkPipeline<DataType, GlobalDataType>::linkCallback(
-	const ILink<DataType, GlobalDataType> & link,
-	DataType & data)
+template <typename PipelineData, typename SharedData, typename GlobalData>
+void AbstractLinkPipeline<PipelineData, SharedData, GlobalData>::linkCallback(
+	const ILink<PipelineData, SharedData, GlobalData> & link,
+	PipelineData & data)
 {
 	// TODO: Send message that data is passing through
 
@@ -308,9 +321,9 @@ void AbstractLinkPipeline<DataType, GlobalDataType>::linkCallback(
 	}
 }
 
-template <class DataType, class GlobalDataType>
-void AbstractLinkPipeline<DataType, GlobalDataType>::generatePosition(
-	Block<DataType, GlobalDataType> & block, const size_t pos)
+template <typename PipelineData, typename SharedData, typename GlobalData>
+void AbstractLinkPipeline<PipelineData, SharedData, GlobalData>::generatePosition(
+	Block<PipelineData, SharedData, GlobalData> & block, const size_t pos)
 {
 	const typename MyAbsPipeTyp::BlocksMap::iterator it = MyAbsPipeTyp::myBlocks.find(&block);
 
@@ -322,12 +335,12 @@ void AbstractLinkPipeline<DataType, GlobalDataType>::generatePosition(
 			it->second.position = pos;
 			for(size_t i = 0; i < block.getNumOutputs(); ++i)
 			{
-				Block<DataType, GlobalDataType> * const link = block.getOutput(i);
+				Block<PipelineData, SharedData, GlobalData> * const link = block.getOutput(i);
 				if(link)
 				{
 					for(size_t j = 0; j < link->getNumOutputs(); ++j)
 					{
-						Block<DataType, GlobalDataType> * const out = link->getOutput(j);
+						Block<PipelineData, SharedData, GlobalData> * const out = link->getOutput(j);
 						generatePosition(*out, pos + 1);
 					}
 				}

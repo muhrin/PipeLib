@@ -37,15 +37,16 @@
 #define CHANNEL_NONE	-3
 
 
-namespace pipelib {
+namespace pipelib
+{
 
 
-	// FORWARD DECLARES //////////////////////////////
-	class EmptyGlobalData;
+// FORWARD DECLARES //////////////////////////////
+class EmptyGlobalData;
 
-	// TYPEDEFS //////////////////////////////////////
-	typedef int				ChannelTyp;
-	typedef EmptyGlobalData DefaultGlobalDataTyp;
+// TYPEDEFS //////////////////////////////////////
+typedef int				      ChannelTyp;
+typedef EmptyGlobalData DefaultSharedData;
 	
 }
 
