@@ -10,8 +10,8 @@
 #define DIRECT_PIPELINE_H
 
 // INCLUDES /////////////////////////////////////////////
-#include "Pipeline.h"
-#include "AbstractPipeline.h"
+#include "pipelib/Pipeline.h"
+#include "pipelib/AbstractPipeline.h"
 
 #include <vector>
 
@@ -20,34 +20,38 @@
 
 namespace pipelib {
 
-template <class DataType, class GlobalDataType = DefaultGlobalDataTyp>
-class DirectPipeline : public AbstractPipeline<DataType, GlobalDataType>
+template <
+  typename PipelineData,
+  typename SharedData = DefaultSharedData,
+  typename GlobalData = SharedData
+>
+class DirectPipeline : public AbstractPipeline<PipelineData, SharedData, GlobalData>
 {
 public:
 
 	// From IPipeline /////////////////////////
 
-	virtual void connect(Block<DataType, GlobalDataType> & output, PipeBlock<DataType, GlobalDataType> & input, const int outChannel = CHANNEL_DEFAULT);
+	virtual void connect(Block<PipelineData, SharedData, GlobalData> & output, PipeBlock<PipelineData, SharedData, GlobalData> & input, const int outChannel = CHANNEL_DEFAULT);
 
 	virtual bool initialise();
 
-	virtual bool disconnect(Block<DataType, GlobalDataType> & output, const int outChannel = CHANNEL_DEFAULT);
+	virtual bool disconnect(Block<PipelineData, SharedData, GlobalData> & output, const int outChannel = CHANNEL_DEFAULT);
 
-	virtual bool hasBlock(Block<DataType, GlobalDataType> & block) const;
+	virtual bool hasBlock(Block<PipelineData, SharedData, GlobalData> & block) const;
 
 	// End IPipeline ///////////////////////////
 
 private:
 
-	typedef AbstractPipeline<DataType, GlobalDataType> MyAbsPipeTyp;
+	typedef AbstractPipeline<PipelineData, SharedData, GlobalData> MyAbsPipeTyp;
 
 };
 
 // IMPLEMENTATION ///////////////////////////
-template <class DataType, class GlobalDataType>
-void DirectPipeline<DataType, GlobalDataType>::connect(
-	Block<DataType, GlobalDataType> & outputter,
-	PipeBlock<DataType, GlobalDataType> & inputtee,
+template <typename PipelineData, typename SharedData, typename GlobalData>
+void DirectPipeline<PipelineData, SharedData, GlobalData>::connect(
+	Block<PipelineData, SharedData, GlobalData> & outputter,
+	PipeBlock<PipelineData, SharedData, GlobalData> & inputtee,
 	const int outChannel)
 {
 	PASSERT(outChannel != CHANNEL_ANY);
@@ -69,8 +73,8 @@ void DirectPipeline<DataType, GlobalDataType>::connect(
 	inputtee.inserted(*this);
 }
 
-template <class DataType, class GlobalDataType>
-bool DirectPipeline<DataType, GlobalDataType>::initialise()
+template <typename PipelineData, typename SharedData, typename GlobalData>
+bool DirectPipeline<PipelineData, SharedData, GlobalData>::initialise()
 {
 	using std::vector;
 
@@ -83,9 +87,9 @@ bool DirectPipeline<DataType, GlobalDataType>::initialise()
 	return true;
 }
 
-template <class DataType, class GlobalDataType>
-bool DirectPipeline<DataType, GlobalDataType>::disconnect(
-	Block<DataType, GlobalDataType> & outputter,
+template <typename PipelineData, typename SharedData, typename GlobalData>
+bool DirectPipeline<PipelineData, SharedData, GlobalData>::disconnect(
+	Block<PipelineData, SharedData, GlobalData> & outputter,
 	const int outChannel)
 {
 	PASSERT(outChannel != CHANNEL_ANY);
@@ -105,8 +109,8 @@ bool DirectPipeline<DataType, GlobalDataType>::disconnect(
 	return true;
 }
 
-template <class DataType, class GlobalDataType>
-bool DirectPipeline<DataType, GlobalDataType>::hasBlock(Block<DataType, GlobalDataType> &block) const
+template <typename PipelineData, typename SharedData, typename GlobalData>
+bool DirectPipeline<PipelineData, SharedData, GlobalData>::hasBlock(Block<PipelineData, SharedData, GlobalData> &block) const
 {
 	// TODO: Write this
 	return false;

@@ -10,9 +10,9 @@
 #define ABSTRACT_SIMPLE_START_BLOCK_H
 
 // INCLUDES /////////////////////////////////////////////
-#include "Pipeline.h"
+#include "pipelib/Pipeline.h"
 
-#include "StartBlock.h"
+#include "pipelib/StartBlock.h"
 
 #include <string>
 
@@ -21,8 +21,12 @@
 
 namespace pipelib {
 
-template <class DataType, class GlobalDataType = DefaultGlobalDataTyp>
-class AbstractSimpleStartBlock : public StartBlock<DataType, GlobalDataType>
+template <
+  typename PipelineData,
+  typename SharedData = DefaultSharedData,
+  typename GlobalData = SharedData
+>
+class AbstractSimpleStartBlock : public StartBlock<PipelineData, SharedData, GlobalData>
 {
 public:
 	AbstractSimpleStartBlock();
@@ -30,41 +34,41 @@ public:
 	// From Block /////////////////////////////////////
 
 	virtual size_t getNumOutputs() const;
-	virtual PipeBlock<DataType, GlobalDataType> * getOutput(const ChannelTyp channel = CHANNEL_DEFAULT) const;
-	virtual void setOutput(PipeBlock<DataType, GlobalDataType> & output, const ChannelTyp channel = CHANNEL_DEFAULT);
+	virtual PipeBlock<PipelineData, SharedData, GlobalData> * getOutput(const ChannelTyp channel = CHANNEL_DEFAULT) const;
+	virtual void setOutput(PipeBlock<PipelineData, SharedData, GlobalData> & output, const ChannelTyp channel = CHANNEL_DEFAULT);
 	virtual void clearOutput(const ChannelTyp channel = CHANNEL_DEFAULT);
 
 	// End from Block ////////////////////////////////
 
 protected:
 
-	PipeBlock<DataType, GlobalDataType> *	myOutput;
+	PipeBlock<PipelineData, SharedData, GlobalData> *	myOutput;
 };
 
 
 // IMPLEMENTATION ///////////////////////////////////
-template <class DataType, class GlobalDataType>
-AbstractSimpleStartBlock<DataType, GlobalDataType>::AbstractSimpleStartBlock():
-Block<DataType, GlobalDataType>("Abstract simple start block"),
+template <typename PipelineData, typename SharedData, typename GlobalData>
+AbstractSimpleStartBlock<PipelineData, SharedData, GlobalData>::AbstractSimpleStartBlock():
+Block<PipelineData, SharedData, GlobalData>("Abstract simple start block"),
 myOutput(NULL)
 {}
 
-template <class DataType, class GlobalDataType>
-size_t AbstractSimpleStartBlock<DataType, GlobalDataType>::getNumOutputs() const
+template <typename PipelineData, typename SharedData, typename GlobalData>
+size_t AbstractSimpleStartBlock<PipelineData, SharedData, GlobalData>::getNumOutputs() const
 {
 	return 1;
 }
 
-template <class DataType, class GlobalDataType>
-void AbstractSimpleStartBlock<DataType, GlobalDataType>::setOutput(PipeBlock<DataType, GlobalDataType> & output, const ChannelTyp channel)
+template <typename PipelineData, typename SharedData, typename GlobalData>
+void AbstractSimpleStartBlock<PipelineData, SharedData, GlobalData>::setOutput(PipeBlock<PipelineData, SharedData, GlobalData> & output, const ChannelTyp channel)
 {
 	PASSERT(channel == 0);
 
 	myOutput = &output;
 }
 
-template <class DataType, class GlobalDataType>
-void AbstractSimpleStartBlock<DataType, GlobalDataType>::clearOutput(const ChannelTyp channel)
+template <typename PipelineData, typename SharedData, typename GlobalData>
+void AbstractSimpleStartBlock<PipelineData, SharedData, GlobalData>::clearOutput(const ChannelTyp channel)
 {
 	if(!(channel == CHANNEL_DEFAULT || channel == CHANNEL_ALL))
 	{
@@ -74,8 +78,8 @@ void AbstractSimpleStartBlock<DataType, GlobalDataType>::clearOutput(const Chann
 	myOutput = NULL;
 }
 
-template <class DataType, class GlobalDataType>
-PipeBlock<DataType, GlobalDataType> * AbstractSimpleStartBlock<DataType, GlobalDataType>::getOutput(const ChannelTyp channel) const
+template <typename PipelineData, typename SharedData, typename GlobalData>
+PipeBlock<PipelineData, SharedData, GlobalData> * AbstractSimpleStartBlock<PipelineData, SharedData, GlobalData>::getOutput(const ChannelTyp channel) const
 {
 	PASSERT(channel == 0);
 

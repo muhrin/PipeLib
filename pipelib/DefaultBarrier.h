@@ -10,29 +10,33 @@
 #define DEFAULT_BARRIER_H
 
 // INCLUDES /////////////////////////////////////////////
-#include "AbstractSimpleBarrier.h"
+#include <pipelib/AbstractSimpleBarrier.h>
 
 #include <vector>
 
 // FORWARD DECLARATIONS ////////////////////////////////////
 namespace pipelib {
-	template <class DataType, class GlobalDataType>
+	template <typename PipelineData, typename SharedData, typename GlobalData>
 	class Block;
 
-	template <class DataType, class GlobalDataType>
+	template <typename PipelineData, typename SharedData, typename GlobalData>
 	class PipeBlock;
 }
 
 namespace pipelib {
 
-template <class DataType, class GlobalDataType = DefaultGlobalDataTyp>
-class DefaultBarrier :	public AbstractSimpleBarrier<DataType, GlobalDataType>
+template <
+  typename PipelineData,
+  typename SharedData = DefaultSharedData,
+  typename GlobalData = SharedData
+>
+class DefaultBarrier :	public AbstractSimpleBarrier<PipelineData, SharedData, GlobalData>
 {
 public:
 
 	DefaultBarrier();
 
-	virtual void in(DataType & data);
+	virtual void in(PipelineData & data);
 
 	virtual size_t release();
 
@@ -40,7 +44,7 @@ public:
 
 protected:
 
-	typedef ::std::vector<DataType *>	BufferVector;
+	typedef ::std::vector<PipelineData *>	BufferVector;
 
 	BufferVector	myBuffer;
 
@@ -48,20 +52,20 @@ protected:
 
 // IMPLEMENTATION //////////////////////////////
 
-template <class DataType, class GlobalDataType>
-DefaultBarrier<DataType, GlobalDataType>::DefaultBarrier():
-Block<DataType, GlobalDataType>("Barrier block")
+template <typename PipelineData, typename SharedData, typename GlobalData>
+DefaultBarrier<PipelineData, SharedData, GlobalData>::DefaultBarrier():
+Block<PipelineData, SharedData, GlobalData>("Barrier block")
 {}
 
-template <class DataType, class GlobalDataType>
-void DefaultBarrier<DataType, GlobalDataType>::in(DataType & data)
+template <typename PipelineData, typename SharedData, typename GlobalData>
+void DefaultBarrier<PipelineData, SharedData, GlobalData>::in(PipelineData & data)
 {
 	myBuffer.push_back(&data);
 	// Just return, don't pass it on:  This will be done upon release()
 }
 
-template <class DataType, class GlobalDataType>
-size_t DefaultBarrier<DataType, GlobalDataType>::release()
+template <typename PipelineData, typename SharedData, typename GlobalData>
+size_t DefaultBarrier<PipelineData, SharedData, GlobalData>::release()
 {
 	const size_t bufferSize = myBuffer.size();
 	for(typename BufferVector::iterator it = myBuffer.begin(), end = myBuffer.end();
@@ -77,8 +81,8 @@ size_t DefaultBarrier<DataType, GlobalDataType>::release()
 	return bufferSize;
 }
 
-template <class DataType, class GlobalDataType>
-bool DefaultBarrier<DataType, GlobalDataType>::hasData() const
+template <typename PipelineData, typename SharedData, typename GlobalData>
+bool DefaultBarrier<PipelineData, SharedData, GlobalData>::hasData() const
 {
 	return !myBuffer.empty();
 }

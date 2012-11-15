@@ -10,11 +10,11 @@
 #define SINGLE_THREADED_PIPELINE_H
 
 // INCLUDES /////////////////////////////////////////////
-#include "Pipeline.h"
+#include "pipelib/Pipeline.h"
 
-#include "AbstractLinkPipeline.h"
-#include "SimpleEndBlock.h"
-#include "SimpleLink.h"
+#include "pipelib/AbstractLinkPipeline.h"
+#include "pipelib/SimpleEndBlock.h"
+#include "pipelib/SimpleLink.h"
 
 #include <vector>
 
@@ -22,32 +22,46 @@
 
 namespace pipelib {
 
-template <class DataType, class GlobalDataType = DefaultGlobalDataTyp>
-class SingleThreadedPipeline : public AbstractLinkPipeline<DataType, GlobalDataType>
+template <
+  typename PipelineData,
+  typename SharedData = DefaultSharedData,
+  typename GlobalData = SharedData
+>
+class SingleThreadedPipeline : public AbstractLinkPipeline<PipelineData, SharedData, GlobalData>
 {
 public:
 
+  typedef SingleThreadedPipeline<PipelineData, SharedData, GlobalData> PipelineTyp;
+
+  SingleThreadedPipeline();
 	virtual ~SingleThreadedPipeline();
 
 	// From IPipeline ////////////////
 
-	virtual SingleThreadedPipeline<DataType, GlobalDataType> & spawnChild();
+  virtual bool initialise();
+	virtual SingleThreadedPipeline<PipelineData, SharedData, GlobalData> & spawnChild();
+
+  virtual const PipelineTyp * getParent() const;
 
 	// End from IPipeline ////////////
 
 protected:
 
-	virtual ILink<DataType, GlobalDataType> * createLink();
+  SingleThreadedPipeline(PipelineTyp * const parent, GlobalData * const globalData);
 
-	virtual void destroyLink(ILink<DataType, GlobalDataType> * const link);
+	virtual ILink<PipelineData, SharedData, GlobalData> * createLink();
+
+	virtual void destroyLink(ILink<PipelineData, SharedData, GlobalData> * const link);
 
 private:
 
-	typedef ::std::vector<SingleThreadedPipeline<DataType, GlobalDataType> * > ChildrenContainer;
+	typedef ::std::vector<SingleThreadedPipeline<PipelineData, SharedData, GlobalData> * > ChildrenContainer;
 
-	typedef ::std::vector<SimpleEndBlock<DataType, GlobalDataType> * > EndBlocksContainer;
+	typedef ::std::vector<SimpleEndBlock<PipelineData, SharedData, GlobalData> * > EndBlocksContainer;
 
-	ChildrenContainer	myChildren;
+  PipelineTyp * const myParent;
+
+	ChildrenContainer   myChildren;
 
 	EndBlocksContainer	myEndBlocks;
 
@@ -55,8 +69,13 @@ private:
 
 // IMPLEMENTATION //////////////////////////////////////////
 
-template <class DataType, class GlobalDataType>
-SingleThreadedPipeline<DataType, GlobalDataType>::~SingleThreadedPipeline()
+template <typename PipelineData, typename SharedData, typename GlobalData>
+SingleThreadedPipeline<PipelineData, SharedData, GlobalData>::SingleThreadedPipeline():
+myParent(NULL)
+{}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+SingleThreadedPipeline<PipelineData, SharedData, GlobalData>::~SingleThreadedPipeline()
 {
 	// First delete my children
 	for(typename ChildrenContainer::iterator it = myChildren.begin(), end = myChildren.end();
@@ -74,23 +93,62 @@ SingleThreadedPipeline<DataType, GlobalDataType>::~SingleThreadedPipeline()
 	myEndBlocks.clear();
 }
 
-template <class DataType, class GlobalDataType>
-SingleThreadedPipeline<DataType, GlobalDataType> &
-SingleThreadedPipeline<DataType, GlobalDataType>::spawnChild()
+template <typename PipelineData, typename SharedData, typename GlobalData>
+bool SingleThreadedPipeline<PipelineData, SharedData, GlobalData>::initialise()
 {
-	SingleThreadedPipeline<DataType, GlobalDataType> * child = new SingleThreadedPipeline<DataType, GlobalDataType>();
+  if(!AbstractLinkPipeline<PipelineData, SharedData, GlobalData>::Parent::initialise())
+    return false;
+
+  // Now initialise out children
+  bool childrenInitialised = true;
+  for(typename ChildrenContainer::iterator it = myChildren.begin(), end = myChildren.end();
+    it != end; ++it)
+  {
+    if(!(*it)->initialise())
+    {
+      childrenInitialised = false;
+      break;
+    }
+  }
+
+  return childrenInitialised;
+}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+SingleThreadedPipeline<PipelineData, SharedData, GlobalData> &
+SingleThreadedPipeline<PipelineData, SharedData, GlobalData>::spawnChild()
+{
+	SingleThreadedPipeline<PipelineData, SharedData, GlobalData> * child =
+    new SingleThreadedPipeline<PipelineData, SharedData, GlobalData>(
+    this,
+    AbstractLinkPipeline<PipelineData, SharedData, GlobalData>::myGlobalData);
 	myChildren.push_back(child);
 	return *child;
 }
 
-template <class DataType, class GlobalDataType>
-ILink<DataType, GlobalDataType> * SingleThreadedPipeline<DataType, GlobalDataType>::createLink()
+template <typename PipelineData, typename SharedData, typename GlobalData>
+const SingleThreadedPipeline<PipelineData, SharedData, GlobalData> *
+SingleThreadedPipeline<PipelineData, SharedData, GlobalData>::getParent() const
 {
-	return new SimpleLink<DataType, GlobalDataType>(*this);
+  return myParent;
 }
 
-template <class DataType, class GlobalDataType>
-void SingleThreadedPipeline<DataType, GlobalDataType>::destroyLink(ILink<DataType, GlobalDataType> * const link)
+template <typename PipelineData, typename SharedData, typename GlobalData>
+ILink<PipelineData, SharedData, GlobalData> * SingleThreadedPipeline<PipelineData, SharedData, GlobalData>::createLink()
+{
+	return new SimpleLink<PipelineData, SharedData, GlobalData>(*this);
+}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+SingleThreadedPipeline<PipelineData, SharedData, GlobalData>::SingleThreadedPipeline(
+  SingleThreadedPipeline<PipelineData, SharedData, GlobalData> * const parent,
+  GlobalData * const globalData):
+AbstractLinkPipeline<PipelineData, SharedData, GlobalData>(globalData),
+myParent(parent)
+{}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+void SingleThreadedPipeline<PipelineData, SharedData, GlobalData>::destroyLink(ILink<PipelineData, SharedData, GlobalData> * const link)
 {
 	PASSERT(link != NULL);
 

@@ -10,26 +10,28 @@
 #define ABSTRACT_PIPELINE_H
 
 // INCLUDES /////////////////////////////////////////////
-#include "Pipeline.h"
-#include "EmptyGlobalData.h"
-#include "IDataSink.h"
-#include "IFinishNotifiable.h"
-#include "IPipeline.h"
-#include "SimpleEndBlock.h"
-#include "DefaultBarrier.h"
-
 #include <algorithm>
 #include <limits>
 #include <map>
 #include <vector>
 
+
+#include "pipelib/DefaultBarrier.h"
+#include "pipelib/EmptyGlobalData.h"
+#include "pipelib/IDataSink.h"
+#include "pipelib/IFinishNotifiable.h"
+#include "pipelib/IPipeline.h"
+#include "pipelib/Pipeline.h"
+#include "pipelib/PipelineState.h"
+#include "pipelib/SimpleEndBlock.h"
+#include "pipelib/event/EventSupport.h"
+#include "pipelib/event/IPipeListener.h"
+#include "pipelib/event/PipeStateChanged.h"
+
+
+
 // DEFINES ///////////////////////////////////////////////
 #define MAX_BARRIERS 10000
-
-// FORWARD DECLARATIONS ////////////////////////////////////
-namespace pipelib {
-	class GlobalDataType;
-}
 
 namespace pipelib {
 
@@ -55,66 +57,80 @@ struct BlockMetadata
 
 
 template <
-	class DataType,
-	class GlobalDataType	= DefaultGlobalDataTyp,
-	class MetadataType		= DataMetadata,
+	typename PipelineData,
+  typename SharedData     = DefaultSharedData,
+	typename GlobalData     = SharedData,
+	class MetadataType		  = DataMetadata,
 	class BlockMetadataType	= BlockMetadata>
 class AbstractPipeline :
-	public IPipeline<DataType, GlobalDataType>,
-	public IFinishNotifiable<DataType>
+	public IPipeline<PipelineData, SharedData, GlobalData>,
+	public IFinishNotifiable<PipelineData>
 {
 public:
 	AbstractPipeline();
 	virtual ~AbstractPipeline();
+	
+  typedef IPipeline<PipelineData, SharedData, GlobalData> IPipelineTyp;
 
 	// Blocks ////////////////////
-	virtual StartBlock<DataType, GlobalDataType> * getStartBlock() const;
-	virtual void setStartBlock(StartBlock<DataType, GlobalDataType> & startBlock);
+	virtual StartBlock<PipelineData, SharedData, GlobalData> * getStartBlock() const;
+	virtual void setStartBlock(StartBlock<PipelineData, SharedData, GlobalData> & startBlock);
 	virtual bool clearStartBlock();
-	virtual bool hasPathBetween(const Block<DataType, GlobalDataType> & from, const Block<DataType, GlobalDataType> & to) const;
+	virtual bool hasPathBetween(const Block<PipelineData, SharedData, GlobalData> & from, const Block<PipelineData, SharedData, GlobalData> & to) const;
 
 	// Pipeline methods ///////////
-	virtual bool isConstructed() const;
+  virtual PipelineState::Value getState() const;
+	virtual bool isInitialised() const;
 	virtual bool initialise();
 	virtual void start();
 
 	// Barriers /////////////
-	virtual Barrier<DataType, GlobalDataType> * createBarrier();
-	virtual void registerBarrier(Barrier<DataType, GlobalDataType> & barrier);
-	virtual bool deregisterBarrier(Barrier<DataType, GlobalDataType> & barrier);
+	virtual void registerBarrier(Barrier<PipelineData, SharedData, GlobalData> & barrier);
+	virtual bool deregisterBarrier(Barrier<PipelineData, SharedData, GlobalData> & barrier);
 
 	// Data //////////////////////
-	virtual GlobalDataType & getSharedData();
-	virtual DataType & newData();
-	virtual void registerNewData(DataType * const data);
-	virtual void dropData(DataType & data);
-	virtual void flagData(const Block<DataType, GlobalDataType> & block, DataType & data);
-	virtual void unflagData(const Block<DataType, GlobalDataType> & block, DataType & data);
-	virtual void setFinishedDataSink(IDataSink<DataType> & sink);
+	virtual SharedData & getSharedData();
+  virtual const SharedData & getSharedData() const;
+  virtual GlobalData & getGlobalData();
+  virtual const GlobalData & getGlobalData() const;
+	virtual PipelineData & newData();
+	virtual void registerNewData(PipelineData * const data);
+	virtual void dropData(PipelineData & data);
+	virtual void flagData(const Block<PipelineData, SharedData, GlobalData> & block, PipelineData & data);
+	virtual void unflagData(const Block<PipelineData, SharedData, GlobalData> & block, PipelineData & data);
+	virtual void setFinishedDataSink(IDataSink<PipelineData> & sink);
 
 	// From IFinishNotifiable
-	virtual void dataFinished(DataType & data);
+	virtual void dataFinished(PipelineData & data);
+
+  // Event ///////////////////////
+  virtual void addPipeListener(event::IPipeListener<IPipelineTyp> & listener);
+  virtual bool removePipeListener(event::IPipeListener<IPipelineTyp> & listener);
 
 protected:
 
 	// TYPEDEFS //////////////////////////////////////
 
 	/** Data container types */
-	typedef typename ::std::map<DataType *, MetadataType> DataMap;
-	typedef typename ::std::pair<DataType *, MetadataType> DataMapPair;
+	typedef typename ::std::map<PipelineData *, MetadataType> DataMap;
 	/** Block metadata container types */
-	typedef typename ::std::map<Block<DataType, GlobalDataType> *, BlockMetadataType> BlocksMap;
-	typedef typename ::std::pair<Block<DataType, GlobalDataType> *, BlockMetadataType> BlocksMapPair;
+	typedef typename ::std::map<Block<PipelineData, SharedData, GlobalData> *, BlockMetadataType> BlocksMap;
 	/** Barrier container types */
-	typedef typename ::std::vector<Barrier<DataType, GlobalDataType> *> BarriersContainer;
+	typedef typename ::std::vector<Barrier<PipelineData, SharedData, GlobalData> *> BarriersContainer;
 	/** End blocks container type */
-	typedef typename ::std::vector<SimpleEndBlock<DataType, GlobalDataType> * > EndBlocksContainer;
+	typedef typename ::std::vector<SimpleEndBlock<PipelineData, SharedData, GlobalData> * > EndBlocksContainer;
+
+  /**
+  /* This constructor is to be used by derived classes when they want to spawn a child.  The children
+  /* and the parent must all shared the same global data.
+  /**/
+  AbstractPipeline(GlobalData * const globalData);
 
 	// Blocks ///////////////////////////////
 	virtual ::std::pair<typename BlocksMap::iterator, bool> insertBlock(
-		Block<DataType, GlobalDataType> & block,
+		Block<PipelineData, SharedData, GlobalData> & block,
 		const BlockMetadataType & blockMetadata);
-	virtual void removeBlock(Block<DataType, GlobalDataType> & block);
+	virtual void removeBlock(Block<PipelineData, SharedData, GlobalData> & block);
 
 	// Data ////////////////////////////////
 	virtual void flagData(const typename DataMap::iterator & it);
@@ -123,39 +139,46 @@ protected:
 	// Barriers /////////////////////////////
 	virtual bool releaseNextBarrier();
 
-	/** The pipeline start block */
-	StartBlock<DataType, GlobalDataType> *	myStartBlock;
+  // State ////////////////////////////////
+  void changeState(const PipelineState::Value newState);
 
-	GlobalDataType						mySharedData;
+  PipelineState::Value      myState;
+
+	/** The pipeline start block */
+	StartBlock<PipelineData, SharedData, GlobalData> *	myStartBlock;
+
+	SharedData						    mySharedData;
+  GlobalData * const        myGlobalData;
 
 	/** A map containing all the blocks and block metadata. */
-	BlocksMap							myBlocks;
+	BlocksMap							    myBlocks;
 
-	DataMap								myData;
+	DataMap								    myData;
 
 	BarriersContainer					myBarriers;
 
-	IDataSink<DataType> *				myFinishedDataSink;
+	IDataSink<PipelineData> *				myFinishedDataSink;
 
 	EndBlocksContainer					myEndBlocks;
 
-private:
-	bool	myInitialised;
+  // Event ///////////////////////////////////
+  event::EventSupport<event::IPipeListener<IPipelineTyp> >    myPipeListenerSupport;
 };
 
 // IMPLEMENTATION ///////////////////////////
 
 // DEFINES //////////////////////////////////
-#define ABSTRACT_PIPELINE_TPARAMS	<class DataType, class GlobalDataType, class MetadataType, class BlockMetadataType>
-#define ABSTRACT_PIPELINE_TTYPE		AbstractPipeline<DataType, GlobalDataType, MetadataType, BlockMetadataType>
+#define ABSTRACT_PIPELINE_TPARAMS	<typename PipelineData, typename SharedData, typename GlobalData, class MetadataType, class BlockMetadataType>
+#define ABSTRACT_PIPELINE_TTYPE		AbstractPipeline<PipelineData, SharedData, GlobalData, MetadataType, BlockMetadataType>
 
 // AbstractPipeline implementation
 
 template ABSTRACT_PIPELINE_TPARAMS
 ABSTRACT_PIPELINE_TTYPE::AbstractPipeline():
+myState(PipelineState::UNINITIALISED),
 myStartBlock(NULL),
 myFinishedDataSink(NULL),
-myInitialised(false)
+myGlobalData(new GlobalData())
 {}
 
 template ABSTRACT_PIPELINE_TPARAMS
@@ -177,21 +200,21 @@ ABSTRACT_PIPELINE_TTYPE::~AbstractPipeline()
 }
 
 template ABSTRACT_PIPELINE_TPARAMS
-StartBlock<DataType, GlobalDataType> * ABSTRACT_PIPELINE_TTYPE::getStartBlock() const
+StartBlock<PipelineData, SharedData, GlobalData> * ABSTRACT_PIPELINE_TTYPE::getStartBlock() const
 {
 	return myStartBlock;
 }
 
 
 template ABSTRACT_PIPELINE_TPARAMS
-void ABSTRACT_PIPELINE_TTYPE::setStartBlock(StartBlock<DataType, GlobalDataType> & startBlock)
+void ABSTRACT_PIPELINE_TTYPE::setStartBlock(StartBlock<PipelineData, SharedData, GlobalData> & startBlock)
 {
-	if(isConstructed())
+	if(isInitialised())
 	{
 		throw "Cannot set start block after pipeline has been initialised.";
 	}
 
-	StartBlock<DataType, GlobalDataType> * const oldStartBlock = myStartBlock;
+	StartBlock<PipelineData, SharedData, GlobalData> * const oldStartBlock = myStartBlock;
 	insertBlock(startBlock, BlockMetadataType());
 	myStartBlock = &startBlock;
 
@@ -203,7 +226,7 @@ void ABSTRACT_PIPELINE_TTYPE::setStartBlock(StartBlock<DataType, GlobalDataType>
 		// to the new start block
 		for(ChannelTyp i = 0; i < oldOutputs; ++i)
 		{
-			PipeBlock<DataType, GlobalDataType> * const output = oldStartBlock->getOutput(i);
+			PipeBlock<PipelineData, SharedData, GlobalData> * const output = oldStartBlock->getOutput(i);
 			if(output)
 			{
 				disconnect(*oldStartBlock, i);
@@ -219,7 +242,7 @@ void ABSTRACT_PIPELINE_TTYPE::setStartBlock(StartBlock<DataType, GlobalDataType>
 template ABSTRACT_PIPELINE_TPARAMS
 bool ABSTRACT_PIPELINE_TTYPE::clearStartBlock()
 {
-	if(isConstructed())
+	if(isInitialised())
 	{
 		throw "Cannot set start block after pipeline has been initialised.";
 	}
@@ -235,24 +258,26 @@ bool ABSTRACT_PIPELINE_TTYPE::clearStartBlock()
 template ABSTRACT_PIPELINE_TPARAMS
 bool ABSTRACT_PIPELINE_TTYPE::initialise()
 {
-	if(isConstructed())
+	if(isInitialised())
 	{
 		throw "Cannot initialise the pipeline more than once";
 	}
+
+  changeState(PipelineState::INITIALISING);
 
 	// Go through all the blocks and add an end block to delete the data
 	// once the end is reached
 	for(typename BlocksMap::iterator it = myBlocks.begin(), end = myBlocks.end();
 		it != end; ++it)
 	{
-		Block<DataType, GlobalDataType> * const block = it->first;
+		Block<PipelineData, SharedData, GlobalData> * const block = it->first;
 
 		// Make sure we cover all outputs
 		for(ChannelTyp i = 0; i < block->getNumOutputs(); ++i)
 		{
 			if(!block->getOutput(i))
 			{
-				SimpleEndBlock<DataType, GlobalDataType> * const end = new SimpleEndBlock<DataType, GlobalDataType>(*this);
+				SimpleEndBlock<PipelineData, SharedData, GlobalData> * const end = new SimpleEndBlock<PipelineData, SharedData, GlobalData>(*this);
 				myEndBlocks.push_back(end);
 				connect(*block, *end, i);
 			}
@@ -266,7 +291,6 @@ bool ABSTRACT_PIPELINE_TTYPE::initialise()
 		it->first->pipelineInitialising();
 	}
 
-	myInitialised = true;
 
 	// Tell all the blocks that they have been intialised
 	for(typename BlocksMap::iterator it = myBlocks.begin(), end = myBlocks.end();
@@ -275,18 +299,20 @@ bool ABSTRACT_PIPELINE_TTYPE::initialise()
 		it->first->pipelineInitialised();
 	}
 
-	return true;
+  changeState(PipelineState::INITIALISED);
 
-	return myInitialised;
+	return true;
 }
 
 template ABSTRACT_PIPELINE_TPARAMS
 void ABSTRACT_PIPELINE_TTYPE::start()
 {
-	if(!isConstructed())
+	if(!isInitialised())
 	{
 		throw "Pipeline cannot be started before it is initialised.";
 	}
+
+  changeState(PipelineState::RUNNING);
 
 	// Tell all the blocks that we are starting
 	for(typename BlocksMap::iterator it = myBlocks.begin(), end = myBlocks.end();
@@ -308,25 +334,26 @@ void ABSTRACT_PIPELINE_TTYPE::start()
 	}
 
 	// Tell the blocks that we are finishing
-	// Tell all the blocks that we are starting
 	for(typename BlocksMap::iterator it = myBlocks.begin(), end = myBlocks.end();
 		it != end; ++it)
 	{
 		it->first->pipelineFinishing();
 	}
+
+  changeState(PipelineState::FINISHED);
 }
 
 
 template ABSTRACT_PIPELINE_TPARAMS
 bool ABSTRACT_PIPELINE_TTYPE::hasPathBetween(
-	const Block<DataType, GlobalDataType> & from,
-	const Block<DataType, GlobalDataType> & to) const
+	const Block<PipelineData, SharedData, GlobalData> & from,
+	const Block<PipelineData, SharedData, GlobalData> & to) const
 {
 	bool pathFound = false;
 
 	for(ChannelTyp i = 0; i < from.getNumOutputs(); ++i)
 	{
-		const Block<DataType, GlobalDataType> * const output = from.getOutput(i);
+		const Block<PipelineData, SharedData, GlobalData> * const output = from.getOutput(i);
 		if(output)
 		{
 			if(output == &to)
@@ -346,22 +373,15 @@ bool ABSTRACT_PIPELINE_TTYPE::hasPathBetween(
 }
 
 template ABSTRACT_PIPELINE_TPARAMS
-pipelib::Barrier<DataType, GlobalDataType> * ABSTRACT_PIPELINE_TTYPE::createBarrier()
-{
-	DefaultBarrier<DataType, GlobalDataType> * const barrier = new DefaultBarrier<DataType, GlobalDataType>();
-	return barrier;
-}
-
-template ABSTRACT_PIPELINE_TPARAMS
 void ABSTRACT_PIPELINE_TTYPE::registerBarrier(
-	Barrier<DataType, GlobalDataType> & barrier)
+	Barrier<PipelineData, SharedData, GlobalData> & barrier)
 {
 	myBarriers.push_back(&barrier);	
 }
 
 template ABSTRACT_PIPELINE_TPARAMS
 bool ABSTRACT_PIPELINE_TTYPE::deregisterBarrier(
-	Barrier<DataType, GlobalDataType> & barrier)
+	Barrier<PipelineData, SharedData, GlobalData> & barrier)
 {
 	typename BarriersContainer::iterator it =
 		::std::find(myBarriers.begin(), myBarriers.end(), &barrier);
@@ -376,16 +396,16 @@ bool ABSTRACT_PIPELINE_TTYPE::deregisterBarrier(
 }
 
 template ABSTRACT_PIPELINE_TPARAMS
-void ABSTRACT_PIPELINE_TTYPE::setFinishedDataSink(IDataSink<DataType> & sink)
+void ABSTRACT_PIPELINE_TTYPE::setFinishedDataSink(IDataSink<PipelineData> & sink)
 {
-	if(isConstructed())
-		throw "Cannot set data sink after the pipeline has been constructed";
+	if(isInitialised())
+		throw "Cannot set data sink after the pipeline has been initialised";
 
 	myFinishedDataSink = &sink;
 }
 
 template ABSTRACT_PIPELINE_TPARAMS
-void ABSTRACT_PIPELINE_TTYPE::dataFinished(DataType & data)
+void ABSTRACT_PIPELINE_TTYPE::dataFinished(PipelineData & data)
 {
 	typename DataMap::iterator it = myData.find(&data);
 	if(it != myData.end())
@@ -396,36 +416,72 @@ void ABSTRACT_PIPELINE_TTYPE::dataFinished(DataType & data)
 }
 
 template ABSTRACT_PIPELINE_TPARAMS
-GlobalDataType & ABSTRACT_PIPELINE_TTYPE::getSharedData()
+void ABSTRACT_PIPELINE_TTYPE::addPipeListener(event::IPipeListener<IPipelineTyp> & listener)
+{
+  myPipeListenerSupport.insert(listener);
+}
+
+template ABSTRACT_PIPELINE_TPARAMS
+bool ABSTRACT_PIPELINE_TTYPE::removePipeListener(event::IPipeListener<IPipelineTyp> & listener)
+{
+  return myPipeListenerSupport.remove(listener);
+}
+
+template ABSTRACT_PIPELINE_TPARAMS
+SharedData & ABSTRACT_PIPELINE_TTYPE::getSharedData()
 {
 	return mySharedData;
 }
 
 template ABSTRACT_PIPELINE_TPARAMS
-bool ABSTRACT_PIPELINE_TTYPE::isConstructed() const
+const SharedData & ABSTRACT_PIPELINE_TTYPE::getSharedData() const
 {
-	return myInitialised;
+	return mySharedData;
 }
 
 template ABSTRACT_PIPELINE_TPARAMS
-DataType & ABSTRACT_PIPELINE_TTYPE::newData()
+GlobalData & ABSTRACT_PIPELINE_TTYPE::getGlobalData()
+{
+	return *myGlobalData;
+}
+
+template ABSTRACT_PIPELINE_TPARAMS
+const GlobalData & ABSTRACT_PIPELINE_TTYPE::getGlobalData() const
+{
+	return *myGlobalData;
+}
+
+template ABSTRACT_PIPELINE_TPARAMS
+PipelineState::Value ABSTRACT_PIPELINE_TTYPE::getState() const
+{
+  return myState;
+}
+
+template ABSTRACT_PIPELINE_TPARAMS
+bool ABSTRACT_PIPELINE_TTYPE::isInitialised() const
+{
+  return myState != PipelineState::UNINITIALISED;
+}
+
+template ABSTRACT_PIPELINE_TPARAMS
+PipelineData & ABSTRACT_PIPELINE_TTYPE::newData()
 {
 	// Create data
-	DataType * const data = new DataType();
+	PipelineData * const data = new PipelineData();
 	// Register it
 	registerNewData(data);
 	return *data;
 }
 
 template ABSTRACT_PIPELINE_TPARAMS
-void  ABSTRACT_PIPELINE_TTYPE::registerNewData(DataType * const data)
+void  ABSTRACT_PIPELINE_TTYPE::registerNewData(PipelineData * const data)
 {
 	// Create metadata
-	myData.insert(DataMapPair(data, MetadataType()));
+  myData.insert(typename DataMap::value_type(data, MetadataType()));
 }
 
 template ABSTRACT_PIPELINE_TPARAMS
-void ABSTRACT_PIPELINE_TTYPE::dropData(DataType & data)
+void ABSTRACT_PIPELINE_TTYPE::dropData(PipelineData & data)
 {
 	typename DataMap::iterator it = myData.find(&data);
 	if(it != myData.end())
@@ -436,7 +492,7 @@ void ABSTRACT_PIPELINE_TTYPE::dropData(DataType & data)
 }
 
 template ABSTRACT_PIPELINE_TPARAMS
-void ABSTRACT_PIPELINE_TTYPE::flagData(const Block<DataType, GlobalDataType> & block, DataType & data)
+void ABSTRACT_PIPELINE_TTYPE::flagData(const Block<PipelineData, SharedData, GlobalData> & block, PipelineData & data)
 {
 	typename DataMap::iterator it = myData.find(&data);
 	if(it !=  myData.end())
@@ -447,7 +503,7 @@ void ABSTRACT_PIPELINE_TTYPE::flagData(const Block<DataType, GlobalDataType> & b
 
 
 template ABSTRACT_PIPELINE_TPARAMS
-void ABSTRACT_PIPELINE_TTYPE::unflagData(const Block<DataType, GlobalDataType> & block, DataType & data)
+void ABSTRACT_PIPELINE_TTYPE::unflagData(const Block<PipelineData, SharedData, GlobalData> & block, PipelineData & data)
 {
 	typename DataMap::iterator it = myData.find(&data);
 	if(it !=  myData.end())
@@ -457,13 +513,21 @@ void ABSTRACT_PIPELINE_TTYPE::unflagData(const Block<DataType, GlobalDataType> &
 }
 
 template ABSTRACT_PIPELINE_TPARAMS
+ABSTRACT_PIPELINE_TTYPE::AbstractPipeline(GlobalData * const globalData):
+myState(PipelineState::UNINITIALISED),
+myStartBlock(NULL),
+myFinishedDataSink(NULL),
+myGlobalData(globalData)
+{}
+
+template ABSTRACT_PIPELINE_TPARAMS
 ::std::pair<typename ABSTRACT_PIPELINE_TTYPE::BlocksMap::iterator, bool>
 ABSTRACT_PIPELINE_TTYPE::insertBlock(
-		Block<DataType, GlobalDataType> & block,
+		Block<PipelineData, SharedData, GlobalData> & block,
 		const BlockMetadataType & blockMetadata)
 {
 	::std::pair<typename BlocksMap::iterator, bool> result =
-		myBlocks.insert(BlocksMapPair(&block, blockMetadata));
+    myBlocks.insert(typename BlocksMap::value_type(&block, blockMetadata));
 	// Was the block newly inserted?
 	if(result.second)
 		block.inserted(*this);
@@ -472,7 +536,7 @@ ABSTRACT_PIPELINE_TTYPE::insertBlock(
 
 template ABSTRACT_PIPELINE_TPARAMS
 void ABSTRACT_PIPELINE_TTYPE::removeBlock(
-		Block<DataType, GlobalDataType> & block)
+		Block<PipelineData, SharedData, GlobalData> & block)
 {
 	const typename BlocksMap::iterator it = myBlocks.find(&block);
 	if(it == myBlocks.end())
@@ -521,14 +585,14 @@ void ABSTRACT_PIPELINE_TTYPE::unflagData(const typename DataMap::iterator & it)
 template ABSTRACT_PIPELINE_TPARAMS
 bool ABSTRACT_PIPELINE_TTYPE::releaseNextBarrier()
 {
-	Barrier<DataType, GlobalDataType> * toRelease = NULL;
+	Barrier<PipelineData, SharedData, GlobalData> * toRelease = NULL;
 	int minPosition = ::std::numeric_limits<int>::max();
 
 	// Find the barrier that has buffered data with the lowest position
 	for(typename BarriersContainer::iterator it = myBarriers.begin(), end = myBarriers.end();
 		it != end; ++it)
 	{
-		Barrier<DataType, GlobalDataType> * const bar = *it;
+		Barrier<PipelineData, SharedData, GlobalData> * const bar = *it;
 		if(bar->hasData())
 		{
 			typename BlocksMap::iterator itBlocks = myBlocks.find(bar);
@@ -547,6 +611,17 @@ bool ABSTRACT_PIPELINE_TTYPE::releaseNextBarrier()
 		toRelease->release();
 
 	return toRelease != NULL;
+}
+
+template ABSTRACT_PIPELINE_TPARAMS
+void ABSTRACT_PIPELINE_TTYPE::changeState(const PipelineState::Value newState)
+{
+  const PipelineState::Value oldState = myState;
+  myState = newState;
+
+  // Create the message to send out
+  event::PipeStateChanged<IPipelineTyp> evt(*this, oldState, newState);
+  myPipeListenerSupport.notify(evt);
 }
 
 }

@@ -10,32 +10,36 @@
 #define I_LINK_H
 
 // INCLUDES /////////////////////////////////////////////
-#include "Pipeline.h"
-#include "PipeBlock.h"
+#include "pipelib/Pipeline.h"
+#include "pipelib/PipeBlock.h"
 
 // FORWARD DECLARATIONS ////////////////////////////////////
 namespace pipelib {
-	template <class DataType, class GlobalDataType>
+	template <typename PipelineData, typename SharedData, typename GlobalData>
 	class Block;
 }
 
 namespace pipelib {
 
-template <class DataType, class GlobalDataType = DefaultGlobalDataTyp>
-class ILink : public virtual PipeBlock<DataType, GlobalDataType>
+template <
+  typename PipelineData,
+  typename SharedData = DefaultSharedData,
+  typename GlobalData = SharedData
+>
+class ILink : public virtual PipeBlock<PipelineData, SharedData, GlobalData>
 {
 public:
 
-	ILink() : Block<DataType, GlobalDataType>("ILink") {}
+	ILink() : Block<PipelineData, SharedData, GlobalData>("ILink") {}
 
 	virtual void link(
-		Block<DataType, GlobalDataType> & input,
-		PipeBlock<DataType, GlobalDataType> & output,
+		Block<PipelineData, SharedData, GlobalData> & input,
+		PipeBlock<PipelineData, SharedData, GlobalData> & output,
 		const ChannelTyp outChannel = CHANNEL_DEFAULT) = 0;
 
 	virtual void unlink() = 0;
 
-	virtual Block<DataType, GlobalDataType> & getInput() const = 0;
+	virtual Block<PipelineData, SharedData, GlobalData> & getInput() const = 0;
 
 	virtual ChannelTyp getLinkChannel() const = 0;
 };

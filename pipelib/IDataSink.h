@@ -13,16 +13,17 @@
 
 
 // FORWARD DECLARATIONS ////////////////////////////////////
-namespace pipelib {
+namespace pipelib
+{
 
-template <class DataType>
+template <class PipelineData>
 class IDataSink
 {
 public:
 
 	virtual ~IDataSink() {}
 
-	virtual void in(DataType * const data) = 0;
+	virtual void in(PipelineData * const data) = 0;
 };
 
 }

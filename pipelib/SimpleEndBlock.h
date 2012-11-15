@@ -11,8 +11,8 @@
 
 // INCLUDES /////////////////////////////////////////////
 
-#include "IFinishNotifiable.h"
-#include "PipeBlock.h"
+#include "pipelib/IFinishNotifiable.h"
+#include "pipelib/PipeBlock.h"
 
 
 #include <string>
@@ -21,68 +21,72 @@
 
 namespace pipelib {
 
-template <class DataType, class GlobalDataType = DefaultGlobalDataTyp>
-class SimpleEndBlock :	public PipeBlock<DataType, GlobalDataType>
+template <
+  typename PipelineData,
+  typename SharedData = DefaultSharedData,
+  typename GlobalData = SharedData
+>
+class SimpleEndBlock :	public PipeBlock<PipelineData, SharedData, GlobalData>
 {
 public:
 
-	SimpleEndBlock(IFinishNotifiable<DataType> & notifiable);
+	SimpleEndBlock(IFinishNotifiable<PipelineData> & notifiable);
 
 	// From Block ////////////////////////
 
 	virtual size_t getNumOutputs() const;
-	virtual void setOutput(PipeBlock<DataType, GlobalDataType> & output, const ChannelTyp channel = CHANNEL_DEFAULT);
-	virtual PipeBlock<DataType, GlobalDataType> * getOutput(const ChannelTyp channel = CHANNEL_DEFAULT) const;
+	virtual void setOutput(PipeBlock<PipelineData, SharedData, GlobalData> & output, const ChannelTyp channel = CHANNEL_DEFAULT);
+	virtual PipeBlock<PipelineData, SharedData, GlobalData> * getOutput(const ChannelTyp channel = CHANNEL_DEFAULT) const;
 	virtual void clearOutput(const ChannelTyp channel = CHANNEL_DEFAULT);
 
 	// End from Block ////////////////////////
 
 	// From PipeBlock ////////////////////////
 
-	virtual void in(DataType & data);
+	virtual void in(PipelineData & data);
 
 	// End from PipeBlock ////////////////////
 
 protected:
-	IFinishNotifiable<DataType> &	myNotifiable;
+	IFinishNotifiable<PipelineData> &	myNotifiable;
 };
 
 // IMPLEMENTATION //////////////////////////////////////////
 
-template <class DataType, class GlobalDataType>
-SimpleEndBlock<DataType, GlobalDataType>::SimpleEndBlock(IFinishNotifiable<DataType> & notifiable):
-Block<DataType, GlobalDataType>("Simple end block"),
+template <typename PipelineData, typename SharedData, typename GlobalData>
+SimpleEndBlock<PipelineData, SharedData, GlobalData>::SimpleEndBlock(IFinishNotifiable<PipelineData> & notifiable):
+Block<PipelineData, SharedData, GlobalData>("Simple end block"),
 myNotifiable(notifiable)
 {}
 
 
-template <class DataType, class GlobalDataType>
-size_t SimpleEndBlock<DataType, GlobalDataType>::getNumOutputs() const
+template <typename PipelineData, typename SharedData, typename GlobalData>
+size_t SimpleEndBlock<PipelineData, SharedData, GlobalData>::getNumOutputs() const
 {
 	return 0;	// End block - no outputs
 }
 
-template <class DataType, class GlobalDataType>
-void SimpleEndBlock<DataType, GlobalDataType>::setOutput(PipeBlock<DataType, GlobalDataType> & output, const ChannelTyp channel)
+template <typename PipelineData, typename SharedData, typename GlobalData>
+void SimpleEndBlock<PipelineData, SharedData, GlobalData>::setOutput(PipeBlock<PipelineData, SharedData, GlobalData> & output, const ChannelTyp channel)
 {
 	throw "Can't set output on end block";
 }
 
-template <class DataType, class GlobalDataType>
-PipeBlock<DataType, GlobalDataType> *
-SimpleEndBlock<DataType, GlobalDataType>::getOutput(const ChannelTyp channel) const
+template <typename PipelineData, typename SharedData, typename GlobalData>
+PipeBlock<PipelineData, SharedData, GlobalData> *
+SimpleEndBlock<PipelineData, SharedData, GlobalData>::getOutput(const ChannelTyp channel) const
 {
 	return NULL;
 }
 
-template <class DataType, class GlobalDataType>
-void SimpleEndBlock<DataType, GlobalDataType>::clearOutput(const ChannelTyp channel)
+template <typename PipelineData, typename SharedData, typename GlobalData>
+void SimpleEndBlock<PipelineData, SharedData, GlobalData>::clearOutput(const ChannelTyp channel)
 {
 	throw "Cannot clear output on end block: it has no output";
 }
 
-template <class DataType, class GlobalDataType>
-void SimpleEndBlock<DataType, GlobalDataType>::in(DataType & data)
+template <typename PipelineData, typename SharedData, typename GlobalData>
+void SimpleEndBlock<PipelineData, SharedData, GlobalData>::in(PipelineData & data)
 {
 	myNotifiable.dataFinished(data);
 }
