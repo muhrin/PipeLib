@@ -1,6 +1,8 @@
 
 cmake_minimum_required(VERSION 2.6)
 
+project(Pipelib)
+
 set(pipelib_Header_Files__
   include/pipelib/AbstractLinkPipeline.h
   include/pipelib/AbstractPipeline.h
@@ -43,6 +45,11 @@ set(pipelib_Files
   src/Dummy.cpp      # Have to have a cpp file to make add_library work
 )
 
-include_directories(include)
+set(PIPELIB_INCLUDE_DIRS
+  ${PROJECT_SOURCE_DIR}/include
+  CACHE FILEPATH INTERNAL FORCE
+)
+
+include_directories(${PIPELIB_INCLUDE_DIRS})
 
 add_library(pipelib ${pipelib_Files})
