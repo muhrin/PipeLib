@@ -50,7 +50,7 @@ class SingleThreadedRunner :
   typedef pipelib::RunnerAccess<PipelineData, SharedData, GlobalData> AccessBase;
   typedef pipelib::MemoryAccess<SharedData, GlobalData> MemoryAccessBase;
   typedef pipelib::RunnerSetup<PipelineData, SharedData, GlobalData> SetupBase;
-  typedef OwningPtr<RunnerBase, SingleThreadedRunner> ChildRunnerOwningPtr;
+  typedef LoaningPtr<RunnerBase, SingleThreadedRunner> ChildRunnerOwningPtr;
 
   static const unsigned int DEFAULT_MAX_RELEASES = 10000;
 public:

@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.6)
 project(Pipelib)
 
 set(PIPELIB_VERSION_MAJOR 0)
-set(PIPELIB_VERSION_MINOR 2)
+set(PIPELIB_VERSION_MINOR 3)
 set(PIPELIB_VERSION_PATCH 0)
 set(PIPELIB_VERSION "${PIPELIB_VERSION_MAJOR}.${PIPELIB_VERSION_MINOR}.${PIPELIB_VERSION_PATCH}")
 message(STATUS "Configuring Pipelib ${PIPELIB_VERSION}")
@@ -38,7 +38,7 @@ set(pipelib_Header_Files__
   include/pipelib/Block.h
   include/pipelib/BlockConnector.h
   include/pipelib/BlockIterator.h
-  include/pipelib/NotifyingPtr.h
+  include/pipelib/LoaningPtr.h
   include/pipelib/pipelib.h
   include/pipelib/PipelineState.h
   include/pipelib/PipeBlock.h
@@ -57,7 +57,7 @@ set(pipelib_Header_Files__detail
   include/pipelib/detail/Block.h
   include/pipelib/detail/BlockConnector.h
   include/pipelib/detail/BlockIterator.h
-  include/pipelib/detail/NotifyingPtr.h
+  include/pipelib/detail/LoaningPtr.h
   include/pipelib/detail/SimpleBarrier.h
   include/pipelib/detail/SingleThreadedEngine.h
 )

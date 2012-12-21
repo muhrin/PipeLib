@@ -11,7 +11,7 @@
 
 // INCLUDES /////////////////////////////////////////////
 #include "pipelib/Pipeline.h"
-#include "pipelib/NotifyingPtr.h"
+#include "pipelib/LoaningPtr.h"
 #include "pipelib/Sinks.h"
 
 namespace pipelib {
@@ -102,7 +102,7 @@ public:
   typedef PipeRunner<PipelineData, SharedData, GlobalData> RunnerType;
   typedef StartBlock<PipelineData, SharedData, GlobalData> StartBlockType;
   typedef Barrier<PipelineData, SharedData, GlobalData> BarrierType;
-  typedef LoaningPtr<RunnerType> ChildRunnerPtr;
+  typedef LoanPtr<RunnerType> ChildRunnerPtr;
 
   virtual ~RunnerSetup() {}
 
