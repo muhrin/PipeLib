@@ -14,7 +14,7 @@
 
 #include <pipelib/pipelib.h>
 
-typedef ::pipelib::NoSharedGlobal< ::std::string>::StartBlock StringStartBlock;
+typedef ::pipelib::NoSharedGlobal< ::std::string>::StartBlockType StringStartBlock;
 
 class RandomStringBlock : public StringStartBlock
 {

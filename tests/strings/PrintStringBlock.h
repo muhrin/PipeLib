@@ -18,7 +18,7 @@
 
 // TYPEDEFS //////////////////////////////////////////////
 
-typedef ::pipelib::NoSharedGlobal< ::std::string>::PipeBlock StringPipeBlock;
+typedef ::pipelib::NoSharedGlobal< ::std::string>::PipeBlockType StringPipeBlock;
 
 class PrintStringBlock : public StringPipeBlock
 {

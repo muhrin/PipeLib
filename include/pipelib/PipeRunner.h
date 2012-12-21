@@ -70,7 +70,6 @@ class RunnerAccess
 {
 public:
   typedef Block<PipelineData, SharedData, GlobalData> BlockType;
-  typedef MemoryAccess<SharedData, GlobalData> MemoryAccess;
   typedef typename UniquePtr<PipelineData>::Type PipelineDataPtr;
 
   virtual ~RunnerAccess() {}
@@ -87,8 +86,8 @@ public:
   virtual PipelineData & getData(PipelineDataHandle & handle) = 0;
 
   // Memory methods
-  virtual MemoryAccess & memory() = 0;
-  virtual const MemoryAccess & memory() const = 0;
+  virtual MemoryAccess<SharedData, GlobalData> & memory() = 0;
+  virtual const MemoryAccess<SharedData, GlobalData> & memory() const = 0;
 };
 
 /**

@@ -12,7 +12,7 @@ int main()
 	using std::string;
 
 	// Create the pipeline
-  NoSharedGlobal<string>::SingleThreadedEngine engine;
+  NoSharedGlobal<string>::SingleThreadedEngineType engine;
 
 	// Create the start block
 	RandomStringBlock start(10);
