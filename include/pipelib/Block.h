@@ -48,8 +48,8 @@ private:
 
 protected:
 
-  typedef typename PipeRunnerTypes<Block>::Setup RunnerSetup;
-  typedef typename PipeRunnerTypes<Block>::Access RunnerAccess;
+  typedef typename PipeRunnerTypes<Block>::Setup RunnerSetupType;
+  typedef typename PipeRunnerTypes<Block>::Access RunnerAccessType;
 
 public:
   typedef BlockIterator<Block, PreorderIncrementer<Block> > PreorderIterator;
@@ -93,35 +93,35 @@ public:
   ConstPreorderIterator beginPreorder() const;
   ConstPreorderIterator endPreorder() const;
 
-	////////////////////////////////////////////
-	// Pipeline runner messages to blocks
-	////////////////////////////////////////////
-  void notifyAttached(RunnerSetup & setup);
-  void notifyInitialising(RunnerAccess & access);
+  ////////////////////////////////////////////
+  // Pipeline runner messages to blocks
+  ////////////////////////////////////////////
+  void notifyAttached(RunnerSetupType & setup);
+  void notifyInitialising(RunnerAccessType & access);
   void notifyInitialised();
   void notifyStarting();
   void notifyFinishing();
-  void notifyFinished(RunnerAccess & access);
+  void notifyFinished(RunnerAccessType & access);
   void notifyDetached();
 
-	/**
-	/* Set the output block for a particular channel.
-	/**/
-	void setOutput(PipeBlockType & output, const Channel channel = CHANNEL_DEFAULT);
+  /**
+  /* Set the output block for a particular channel.
+  /**/
+  void setOutput(PipeBlockType & output, const Channel channel = CHANNEL_DEFAULT);
 
 protected:
 
-	/**
-	/* Get the PipeRunner driving this block.  Can return NULL if not running.
-	/**/
-	RunnerAccess * getRunner();
+  /**
+  /* Get the PipeRunner driving this block.  Can return NULL if not running.
+  /**/
+  RunnerAccessType * getRunner();
 
   void out(PipelineData & data, const Channel channel = CHANNEL_DEFAULT) const;
 
-	////////////////////////////////////////////
-	// Pipeline runner messages to blocks
-	////////////////////////////////////////////
-  virtual void runnerAttached(RunnerSetup & /*setup*/) {}
+  ////////////////////////////////////////////
+  // Pipeline runner messages to blocks
+  ////////////////////////////////////////////
+  virtual void runnerAttached(RunnerSetupType & /*setup*/) {}
   virtual void pipelineInitialising() {}
   virtual void pipelineInitialised() {}
   virtual void pipelineStarting() {}
@@ -131,8 +131,8 @@ protected:
 
 private:
 
-	const ::std::string myName;
-	RunnerAccess * myRunner;
+  const ::std::string myName;
+  RunnerAccessType * myRunner;
   const size_t myNumOutputs;
   Outputs myOutputs;
 };

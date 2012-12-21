@@ -20,19 +20,21 @@ namespace pipelib {
 template <typename PipelineData, typename SharedData, typename GlobalData>
 class Barrier : public virtual PipeBlock<PipelineData, SharedData, GlobalData>
 {
+  typedef Block<PipelineData, SharedData, GlobalData> BlockType;
+  typedef typename BlockType::RunnerSetupType RunnerSetupType;
 public:
-	Barrier() : Block<PipelineData, SharedData, GlobalData>("Barrier") {}
+  Barrier() : BlockType("Barrier") {}
 
   /**
   /* Release all the data that this barrier is holding back.
   /*
   /**/
-	virtual size_t release() = 0;
+  virtual size_t release() = 0;
 
-	virtual bool hasData() const = 0;
+  virtual bool hasData() const = 0;
 
 protected:
-	virtual void runnerAttached(RunnerSetup & setup)
+  virtual void runnerAttached(RunnerSetupType & setup)
   {
     setup.registerBarrier(*this);
   }

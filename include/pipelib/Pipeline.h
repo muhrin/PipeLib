@@ -20,8 +20,14 @@
 	#define NULL	0
 #endif
 
-#define PIPELIB_ASSERT(x) BOOST_ASSERT(x)
-#define PIPELIB_ASSERT_MSG(x,msg) BOOST_ASSERT_MSG(x,msg)
+#define PIPELIB_ASSERT( B ) BOOST_ASSERT( B )
+
+#ifdef BOOST_ASSERT_MSG
+#  define PIPELIB_ASSERT_MSG( B, Msg ) BOOST_ASSERT_MSG(B, Msg)
+#else
+#  define PIPELIB_ASSERT_MSG( B, Msg ) BOOST_ASSERT( B )
+#endif
+
 
 
 #endif /* PIPELINE_H */

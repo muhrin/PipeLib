@@ -95,7 +95,7 @@ Block<PipelineData, SharedData, GlobalData>::endOutputs() const
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
-typename Block<PipelineData, SharedData, GlobalData> &
+Block<PipelineData, SharedData, GlobalData> &
 Block<PipelineData, SharedData, GlobalData>::operator |= (
   PipeBlockType & toConnect)
 {
@@ -142,14 +142,14 @@ Block<PipelineData, SharedData, GlobalData>::endPreorder() const
 // PipeRunner messages //////////////
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
-void Block<PipelineData, SharedData, GlobalData>::notifyAttached(RunnerSetup & setup)
+void Block<PipelineData, SharedData, GlobalData>::notifyAttached(RunnerSetupType & setup)
 {
   // Pass on the message
   runnerAttached(setup);
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
-void Block<PipelineData, SharedData, GlobalData>::notifyInitialising(RunnerAccess & access)
+void Block<PipelineData, SharedData, GlobalData>::notifyInitialising(RunnerAccessType & access)
 {
   myRunner = &access;
   pipelineInitialised();
@@ -177,7 +177,7 @@ void Block<PipelineData, SharedData, GlobalData>::notifyFinishing()
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
-void Block<PipelineData, SharedData, GlobalData>::notifyFinished(RunnerAccess & access)
+void Block<PipelineData, SharedData, GlobalData>::notifyFinished(RunnerAccessType & access)
 {
   PIPELIB_ASSERT(myRunner == &access);
   
@@ -195,7 +195,7 @@ void Block<PipelineData, SharedData, GlobalData>::notifyDetached()
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
-typename Block<PipelineData, SharedData, GlobalData>::RunnerAccess *
+typename Block<PipelineData, SharedData, GlobalData>::RunnerAccessType *
 Block<PipelineData, SharedData, GlobalData>::getRunner()
 {
 	return myRunner;

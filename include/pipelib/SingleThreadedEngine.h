@@ -44,6 +44,7 @@ class SingleThreadedRunner :
   public pipelib::RunnerSetup<PipelineData, SharedData, GlobalData>,
   public pipelib::RunnerAccess<PipelineData, SharedData, GlobalData>
 {
+  typedef Block<PipelineData, SharedData, GlobalData> BlockType;
   typedef PipeRunner<PipelineData, SharedData, GlobalData> RunnerBase;
   typedef SingleThreadedEngine<PipelineData, SharedData, GlobalData> EngineType;
   typedef pipelib::RunnerAccess<PipelineData, SharedData, GlobalData> AccessBase;
@@ -59,8 +60,8 @@ public:
   typedef typename SetupBase::BarrierType BarrierType;
   typedef typename SetupBase::ChildRunnerPtr ChildRunnerPtr;
   typedef typename AccessBase::PipelineDataPtr PipelineDataPtr;
-  typedef FinishedSink<PipelineData> FinishedSink;
-  typedef DroppedSink<PipelineData> DroppedSink;
+  typedef FinishedSink<PipelineData> FinishedSinkType;
+  typedef DroppedSink<PipelineData> DroppedSinkType;
 
   SingleThreadedRunner(
     StartBlockType & startBlock,
@@ -74,8 +75,8 @@ public:
   virtual bool isAttached() const;
   virtual void run();
   virtual void run(StartBlockType & pipe);
-  virtual void setFinishedDataSink(FinishedSink * sink);
-  virtual void setDroppedDataSink(DroppedSink * sink);
+  virtual void setFinishedDataSink(FinishedSinkType * sink);
+  virtual void setDroppedDataSink(DroppedSinkType * sink);
   // End from PipeRunner ////////////////////
 
   // From MemoryAccess ////////////////////////
@@ -161,8 +162,8 @@ private:
   PipelineState::Value myState;
 
   // Sinks
-  FinishedSink * myFinishedSink;
-  DroppedSink * myDroppedSink;
+  FinishedSinkType * myFinishedSink;
+  DroppedSinkType * myDroppedSink;
 };
 
 }

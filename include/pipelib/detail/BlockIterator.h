@@ -102,14 +102,14 @@ PreorderIncrementer<BlockType>::operator() (
   Visited & visited) const
 {
   typedef detail::NotVisitedPredicate<BlockType> NotVisitedPred;
-  typedef ::boost::filter_iterator<NotVisitedPred, BlockType::OutputIterator> FilterIter;
+  typedef ::boost::filter_iterator<NotVisitedPred, typename BlockType::OutputIterator> FilterIter;
   NotVisitedPred filter(visited);
 
   // Save pointer to the one we're visiting
   BlockType * const block = *visiting;
 
   // Erase it from the to visit list
-  ToVisit::iterator it = toVisit.erase(visiting);
+  typename ToVisit::iterator it = toVisit.erase(visiting);
 
   // Add it to the visited list
   visited.insert(block);

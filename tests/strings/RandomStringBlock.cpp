@@ -9,10 +9,10 @@ myNumStrings(numStrings)
 
 void RandomStringBlock::start()
 {
-	for(size_t i = 0; i < myNumStrings; ++i)
-	{
-		std::string & str = getRunner()->createData();
-		str = "random";
-		out(str);
-	}
+  for(size_t i = 0; i < myNumStrings; ++i)
+  {
+    std::string & str = getRunner()->createData();
+    str = "random";
+    out(str);
+  }
 }

@@ -41,7 +41,7 @@ myLastHandle(0)
 template <typename PipelineData, typename SharedData, typename GlobalData>
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::~SingleThreadedRunner()
 {
-  BOOST_FOREACH(DataStore::value_type & data, myDataStore)
+  BOOST_FOREACH(typename DataStore::value_type & data, myDataStore)
   {
     delete data.first;
   }
@@ -54,7 +54,7 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::attach(StartBlo
     detach();
 
   myPipeline = &pipe;
-  for(BlockType::PreorderIterator it = myPipeline->beginPreorder(),
+  for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
     end = myPipeline->endPreorder(); it != end; ++it)
   {
     it->notifyAttached(*this);
@@ -65,7 +65,7 @@ template <typename PipelineData, typename SharedData, typename GlobalData>
 typename SingleThreadedRunner<PipelineData, SharedData, GlobalData>::StartBlockType *
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::detach()
 {
-  for(BlockType::PreorderIterator it = myPipeline->beginPreorder(),
+  for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
     end = myPipeline->endPreorder(); it != end; ++it)
   {
     it->notifyDetached();
@@ -100,7 +100,7 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::run(StartBlockT
 template <typename PipelineData, typename SharedData, typename GlobalData>
 void
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::setFinishedDataSink(
-  FinishedSink * sink)
+  FinishedSinkType * sink)
 {
   myFinishedSink = sink;
 }
@@ -108,7 +108,7 @@ SingleThreadedRunner<PipelineData, SharedData, GlobalData>::setFinishedDataSink(
 template <typename PipelineData, typename SharedData, typename GlobalData>
 void
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::setDroppedDataSink(
-  DroppedSink * sink)
+  DroppedSinkType * sink)
 {
   myDroppedSink = sink;
 }
@@ -156,7 +156,7 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::out(
   else
   {
     // So this data is finished, check if we have a sink, otherwise delete
-    DataStore::iterator it = findData(data);
+    typename DataStore::iterator it = findData(data);
     
     PIPELIB_ASSERT_MSG(it != myDataStore.end(), "Couldn't find date in data store");
 
@@ -176,7 +176,7 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::dropData(
   PipelineData & data)
 {
   // So this data is finished, check if we have a sink, otherwise delete
-  DataStore::iterator it = findData(data);
+  typename DataStore::iterator it = findData(data);
   
   PIPELIB_ASSERT_MSG(it != myDataStore.end(), "Couldn't find date in data store");
 
@@ -197,7 +197,7 @@ PipelineDataHandle
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::createDataHandle(
   PipelineData & data)
 {
-  DataStore::iterator it = findData(data);
+  typename DataStore::iterator it = findData(data);
 
   PIPELIB_ASSERT_MSG(it != myDataStore.end(), "Cannot create data handle: data not found.");
 
@@ -213,11 +213,11 @@ void
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::releaseDataHandle(
   PipelineDataHandle & handle)
 {
-  const HandleMap::iterator it = myHandles.find(handle);
+  const typename HandleMap::iterator it = myHandles.find(handle);
   
   PIPELIB_ASSERT_MSG(it != myHandles.end(), "Cannot release data handle: handle not found.");
 
-  DataStore::iterator storeIt = findData(*it->second);
+  typename DataStore::iterator storeIt = findData(*it->second);
 
   PIPELIB_ASSERT_MSG(storeIt != myDataStore.end(), "Cannot release data handle: data not found.");
 
@@ -230,7 +230,7 @@ PipelineData &
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::getData(
   PipelineDataHandle & handle)
 {
-  HandleMap::iterator it = myHandles.find(handle);
+  typename HandleMap::iterator it = myHandles.find(handle);
   
   PIPELIB_ASSERT_MSG(it != myHandles.end(), "Cannot get data: handle not found.");
 
@@ -278,7 +278,7 @@ void
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::loanReturned(ChildRunnerOwningPtr & childRunner)
 {
   bool found = false;
-  for(ChildRunners::iterator it = myChildren.begin(), end = myChildren.end();
+  for(typename ChildRunners::iterator it = myChildren.begin(), end = myChildren.end();
     it != end; ++it)
   {
     if(&(*it) == &childRunner)
@@ -339,13 +339,13 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::changeState(
   {
   case PipelineState::INITIALISED:
 
-    for(BlockType::PreorderIterator it = myPipeline->beginPreorder(),
+    for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
       end = myPipeline->endPreorder(); it != end; ++it)
     {
       it->notifyInitialising(*this);
     }
     myState = PipelineState::INITIALISED;
-    for(BlockType::PreorderIterator it = myPipeline->beginPreorder(),
+    for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
       end = myPipeline->endPreorder(); it != end; ++it)
     {
       it->notifyInitialised();
@@ -354,7 +354,7 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::changeState(
 
   case PipelineState::RUNNING:
 
-    for(BlockType::PreorderIterator it = myPipeline->beginPreorder(),
+    for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
       end = myPipeline->endPreorder(); it != end; ++it)
     {
       it->notifyStarting();
@@ -368,13 +368,13 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::changeState(
     break;
   case PipelineState::FINISHED:
 
-    for(BlockType::PreorderIterator it = myPipeline->beginPreorder(),
+    for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
       end = myPipeline->endPreorder(); it != end; ++it)
     {
       it->notifyFinishing();
     }
     myState = PipelineState::FINISHED;
-    for(BlockType::PreorderIterator it = myPipeline->beginPreorder(),
+    for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
       end = myPipeline->endPreorder(); it != end; ++it)
     {
       it->notifyFinished(*this);
@@ -391,7 +391,7 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::clear()
     myGlobalData.reset(new GlobalData());
   mySharedData.reset(new SharedData());
   myState = PipelineState::UNINITIALISED;
-  BOOST_FOREACH(const DataStore::value_type & data, myDataStore)
+  BOOST_FOREACH(const typename DataStore::value_type & data, myDataStore)
   {
     delete data.first;
   }
@@ -418,7 +418,7 @@ template <typename PipelineData, typename SharedData, typename GlobalData>
 typename SingleThreadedRunner<PipelineData, SharedData, GlobalData>::DataStore::iterator
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::findData(const PipelineData & data)
 {
-  DataStore::iterator it, end = myDataStore.end();
+  typename DataStore::iterator it, end = myDataStore.end();
   for(it = myDataStore.begin(); it != end; ++it)
   {
     if(it->first == &data)
@@ -431,9 +431,8 @@ template <typename PipelineData, typename SharedData, typename GlobalData>
 typename SingleThreadedRunner<PipelineData, SharedData, GlobalData>::DataStore::const_iterator
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::findData(const PipelineData & data) const
 {
-  DataStore::const_iterator it;
-  for(it = myDataStore.begin(), end = myDataStore.end();
-    it != end; ++it)
+  typename DataStore::const_iterator it, end = myDataStore.end();
+  for(it = myDataStore.begin(); it != end; ++it)
   {
     if(&(*it) = &data)
       break;
@@ -464,7 +463,7 @@ SingleThreadedRunner<PipelineData, SharedData, GlobalData>::decreaseReferenceCou
   if(--it->second.referenceCount == 0)
   {
     PipelineData * tmpPtr = it->first;
-    const DataState::Value state = it->second.dataState;
+    const typename DataState::Value state = it->second.dataState;
     myDataStore.erase(it);
 
     if(state == DataState::FINISHED && myFinishedSink)

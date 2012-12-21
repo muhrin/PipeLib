@@ -19,7 +19,7 @@ typedef ::pipelib::NoSharedGlobal< ::std::string>::StartBlockType StringStartBlo
 class RandomStringBlock : public StringStartBlock
 {
   typedef StringStartBlock Base;
-  typedef Base::Block BlockType;
+  typedef Base::BlockType BlockType;
 public:
 	RandomStringBlock(const size_t numStrings);
 

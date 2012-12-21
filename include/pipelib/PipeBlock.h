@@ -28,9 +28,9 @@ public:
   PipeBlock(const size_t numOutputs = 1): BlockType("Pipe block", numOutputs) {}
 
   // Hide Block's operator |= so that we can return a PipeBlock reference
-  PipeBlock & operator |= (PipeBlockType & toConnect)
+  PipeBlock & operator |= (PipeBlock & toConnect)
   {
-    Block::operator |= (toConnect);
+    BlockType::operator |= (toConnect);
     return *this;
   }
 
