@@ -31,7 +31,7 @@ template <typename T>
 class OwningPtrBase : private ::boost::noncopyable
 {
 public:
-  typedef LoaningPtr<T> LoaningPtr;
+  typedef LoaningPtr<T> LoaningPtrType;
 
   explicit OwningPtrBase(T * const ptr);
   virtual ~OwningPtrBase();
@@ -39,7 +39,7 @@ public:
   T & operator* () const;
   T * operator-> () const;
   void reset(T * const ptr = 0);
-  LoaningPtr loan();
+  LoaningPtrType loan();
 
 protected:
   virtual void loanReturned() = 0;
@@ -48,10 +48,10 @@ private:
   typedef ::boost::scoped_ptr<T> Ptr;
 
   void returnLoan();
-  void transferLoan(LoaningPtr & newLoanee);
+  void transferLoan(LoaningPtrType & newLoanee);
 
   const Ptr myPtr;
-  LoaningPtr * myLoanee;
+  LoaningPtrType * myLoanee;
 
   friend class pipelib::LoaningPtr<T>;
 };
@@ -83,7 +83,7 @@ public:
 
   T & operator* () const;
   T * operator-> () const;
-  LoaningPtr & operator= (LoaningPtr & rhs);
+  LoaningPtr<T> & operator= (LoaningPtr<T> & rhs);
   void reset();
 
 private:

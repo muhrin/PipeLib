@@ -42,9 +42,9 @@ typedef size_t PipelineDataHandle;
 template <typename PipelineData>
 struct NoSharedGlobal
 {
-  typedef PipeBlock<PipelineData, const void *, const void *> PipeBlock;
-  typedef StartBlock<PipelineData, const void *, const void *> StartBlock;
-  typedef SingleThreadedEngine<PipelineData, const void *, const void *> SingleThreadedEngine;
+  typedef PipeBlock<PipelineData, const void *, const void *> PipeBlockType;
+  typedef StartBlock<PipelineData, const void *, const void *> StartBlockType;
+  typedef SingleThreadedEngine<PipelineData, const void *, const void *> SingleThreadedEngineType;
 };
 
 // If C++11 is available then use std::unique_ptr, otherwise

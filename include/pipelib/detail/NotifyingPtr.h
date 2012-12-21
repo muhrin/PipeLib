@@ -40,7 +40,7 @@ T * OwningPtrBase<T>::operator-> () const
 }
 
 template <typename T>
-void OwningPtrBase<T>::reset(T * const ptr = 0)
+void OwningPtrBase<T>::reset(T * const ptr)
 {
   if(myLoanee)
     myLoanee->recall();
@@ -48,9 +48,9 @@ void OwningPtrBase<T>::reset(T * const ptr = 0)
 }
 
 template <typename T>
-typename OwningPtrBase<T>::LoaningPtr OwningPtrBase<T>::loan()
+typename OwningPtrBase<T>::LoaningPtrType OwningPtrBase<T>::loan()
 {
-  return LoaningPtr(*this);
+  return LoaningPtrType(*this);
 }
 
 template <typename T>
@@ -64,7 +64,7 @@ void OwningPtrBase<T>::returnLoan()
 
 template <typename T, class Notifiee>
 OwningPtr<T, Notifiee>::OwningPtr(T * const ptr, Notifiee * notifiee):
-OwningPtrBase<T>(ptr),
+detail::OwningPtrBase<T>(ptr),
 myNotifiee(notifiee)
 {}
 
@@ -76,7 +76,7 @@ void OwningPtr<T, Notifiee>::loanReturned()
 }
 
 template <typename T>
-LoaningPtr<T>::LoaningPtr(LoaningPtr & rhs):
+LoaningPtr<T>::LoaningPtr(LoaningPtr<T> & rhs):
 myOwningPtr(rhs.myOwningPtr)
 {
   // Transfer ownership by clearing values in rhs
@@ -116,7 +116,7 @@ T * LoaningPtr<T>::operator-> () const
 
 template <typename T>
 LoaningPtr<T> &
-LoaningPtr<T>::operator= (LoaningPtr & rhs)
+LoaningPtr<T>::operator= (LoaningPtr<T> & rhs)
 {
   myOwningPtr = rhs.myOwningPtr;
   rhs.myOwningPtr = NULL;
