@@ -1,5 +1,5 @@
 
-#include "Pipeline.h"
+#include <pipelib/Pipeline.h>
 
 #include "PrintStringBlock.h"
 
@@ -8,7 +8,7 @@
 using namespace pipelib;
 
 PrintStringBlock::PrintStringBlock(const int & num):
-Block< ::std::string>("Print string block"),
+BlockType("Print string"),
 myNum(num)
 {}
 
@@ -18,5 +18,5 @@ void PrintStringBlock::in(std::string & data)
 
 	data += " " + myNum;
 
-	myOutput->in(data);
+  out(data);
 }

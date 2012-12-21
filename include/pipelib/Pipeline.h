@@ -9,46 +9,19 @@
 #ifndef PIPELINE_H
 #define PIPELINE_H
 
+// INCLUDES ////////////////////////////////////////////////
+#include <boost/assert.hpp>
+
+#include "pipelib/Types.h"
+
 // DEFINES /////////////////////////////////////////////////
 
 #ifndef NULL
 	#define NULL	0
 #endif
 
-#define DEBUG	1
-
-#if !DEBUG
-	#define PASSERT(x)
-#else
-	#include <iostream>
-
-	#define PASSERT(x) \
-	if (! (x)) \
-	{ \
-		std::cout << "ERROR!! Assert " << #x << " failed\n"; \
-		std::cout << " on line " << __LINE__  << "\n"; \
-		std::cout << " in file " << __FILE__ << "\n";  \
-	}
-#endif
-
-#define CHANNEL_DEFAULT 0
-#define CHANNEL_ALL		-1
-#define CHANNEL_ANY		-2
-#define CHANNEL_NONE	-3
-
-
-namespace pipelib
-{
-
-
-// FORWARD DECLARES //////////////////////////////
-class EmptyGlobalData;
-
-// TYPEDEFS //////////////////////////////////////
-typedef int				      ChannelTyp;
-typedef EmptyGlobalData DefaultSharedData;
-	
-}
+#define PIPELIB_ASSERT(x) BOOST_ASSERT(x)
+#define PIPELIB_ASSERT_MSG(x,msg) BOOST_ASSERT_MSG(x,msg)
 
 
 #endif /* PIPELINE_H */

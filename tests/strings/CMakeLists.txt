@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 2.6)
+
 project(Strings)
 
 # Add the pipelib header directory
-include_directories(../../pipelib)
+include_directories(${PIPELIB_INCLUDE_DIRS})
 
 # Set all the input files for this examples
 set(strings_SRCS
