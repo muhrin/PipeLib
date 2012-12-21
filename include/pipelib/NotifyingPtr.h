@@ -18,13 +18,6 @@ namespace pipelib {
 template <typename T>
 class LoaningPtr;
 
-template<typename T>
-struct LoaningPtrRef
-{
-  explicit LoaningPtrRef(T * rhs): ref(rhs) {}
-	T * ref;
-};
-
 namespace detail {
 
 template <typename T>
@@ -71,6 +64,14 @@ private:
   Notifiee * myNotifiee;
 };
 
+template<typename T>
+struct LoaningPtrRef
+{
+  typedef detail::OwningPtrBase<T> OwningPtrBase;
+  explicit LoaningPtrRef(OwningPtrBase * rhs): ref(rhs) {}
+	OwningPtrBase * ref;
+};
+
 template <typename T>
 class LoaningPtr
 {
@@ -78,13 +79,16 @@ class LoaningPtr
 public:
   
   LoaningPtr(LoaningPtr & rhs);
-  LoaningPtr(LoaningPtrRef<T> & rhs);
+  LoaningPtr(LoaningPtrRef<T> rhs);
   ~LoaningPtr();
 
   T & operator* () const;
   T * operator-> () const;
   LoaningPtr<T> & operator= (LoaningPtr<T> & rhs);
+  LoaningPtr<T> & operator= (LoaningPtrRef<T> & rhs);
   void reset();
+
+  operator LoaningPtrRef<T>();
 
 private:
   explicit LoaningPtr(OwningPtrBase & owner);
