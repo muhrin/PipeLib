@@ -85,7 +85,7 @@ public:
   T & operator* () const;
   T * operator-> () const;
   LoanPtr<T> & operator= (LoanPtr<T> & rhs);
-  LoanPtr<T> & operator= (LoanPtrRef<T> & rhs);
+  LoanPtr<T> & operator= (LoanPtrRef<T> rhs);
   void reset();
 
   operator LoanPtrRef<T>();

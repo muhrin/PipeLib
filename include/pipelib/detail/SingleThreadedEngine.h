@@ -31,11 +31,10 @@ template <typename PipelineData, typename SharedData, typename GlobalData>
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::SingleThreadedRunner(
   StartBlockType & startBlock,
   unsigned int maxReleases):
+myRoot(this),   // The top most pipe is its own root but has no parent
+myParent(NULL),
 myMaxReleases(maxReleases)
 {
-  // The top most pipe is its own root but has no parent
-  myRoot = this;
-  myParent = NULL;
   init();
   attach(startBlock);
 }
@@ -290,7 +289,7 @@ SingleThreadedRunner<PipelineData, SharedData, GlobalData>::createChildRunner()
 {
   return myChildren.insert(
     myChildren.end(),
-    new ChildRunnerOwningPtr(new SingleThreadedRunner(*myRoot, *this), this, myMaxReleases)
+    new ChildRunnerOwningPtr(new SingleThreadedRunner(*myRoot, *this, myMaxReleases))
   )->loan();
 }
 
@@ -301,7 +300,7 @@ SingleThreadedRunner<PipelineData, SharedData, GlobalData>::createChildRunner(
 {
   return myChildren.insert(
     myChildren.end(),
-    new ChildRunnerOwningPtr(new SingleThreadedRunner(*myRoot, *this, subpipe, myMaxReleases), this)
+    new ChildRunnerOwningPtr(new SingleThreadedRunner(*myRoot, *this, subpipe, myMaxReleases))
   )->loan();
 }
 
@@ -335,7 +334,7 @@ SingleThreadedRunner<PipelineData, SharedData, GlobalData>::SingleThreadedRunner
   SingleThreadedRunner & root,
   SingleThreadedRunner & parent,
   const unsigned int maxReleases):
-myRoot(&rootRunner),
+myRoot(&root),
 myParent(&parent),
 myMaxReleases(maxReleases)
 {
@@ -348,7 +347,7 @@ SingleThreadedRunner<PipelineData, SharedData, GlobalData>::SingleThreadedRunner
   SingleThreadedRunner & parent,
   StartBlockType & pipe,
   const unsigned int maxReleases):
-myRoot(&rootRunner),
+myRoot(&root),
 myParent(&parent),
 myMaxReleases(maxReleases)
 {
@@ -359,7 +358,7 @@ myMaxReleases(maxReleases)
 template <typename PipelineData, typename SharedData, typename GlobalData>
 void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::init()
 {
-  myFinishedSink = NULL;,
+  myFinishedSink = NULL;
   myDroppedSink = NULL;
   myLastHandle = 0;
   clear();
@@ -402,7 +401,7 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::changeState(
       it->notifyInitialised();
     }
     // Tell any listeners
-    myRunnerEventSupport.notify(PipeRunnerStateChanged(*this, oldState, myState));
+    myRunnerEventSupport.notify(event::makeStateChangedEvent(*this, oldState, myState));
     break;
 
   case PipelineState::RUNNING:
@@ -413,14 +412,14 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::changeState(
       it->notifyStarting();
     }
     myState = PipelineState::RUNNING;
-    myRunnerEventSupport.notify(PipeRunnerStateChanged(*this, oldState, myState));
+    myRunnerEventSupport.notify(event::makeStateChangedEvent(*this, oldState, myState));
     doRun();
 
     break;
   case PipelineState::STOPPED:
     myState = PipelineState::STOPPED;
     // Tell any listeners
-    myRunnerEventSupport.notify(PipeRunnerStateChanged(*this, oldState, myState));
+    myRunnerEventSupport.notify(event::makeStateChangedEvent(*this, oldState, myState));
     break;
   case PipelineState::FINISHED:
 
@@ -436,7 +435,7 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::changeState(
       it->notifyFinished(*this);
     }
     // Tell any listeners
-    myRunnerEventSupport.notify(PipeRunnerStateChanged(*this, oldState, myState));
+    myRunnerEventSupport.notify(event::makeStateChangedEvent(*this, oldState, myState));
     break;
   }
 }

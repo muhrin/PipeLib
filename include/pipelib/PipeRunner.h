@@ -30,8 +30,10 @@ class StartBlock;
 template <typename PipelineData, typename SharedData, typename GlobalData>
 class PipeBlock;
 
+namespace event {
 template <typename Runner>
 class PipeRunnerListener;
+}
 
 /**
 /*  Methods needed to access a runner's memory.
@@ -54,7 +56,7 @@ class PipeRunner
 {
 public:
   typedef StartBlock<PipelineData, SharedData, GlobalData> StartBlockType;
-  typedef PipeRunnerListener<PipeRunner> ListenerType;
+  typedef event::PipeRunnerListener<PipeRunner> ListenerType;
 
   virtual ~PipeRunner() {}
 
@@ -89,7 +91,7 @@ public:
   typedef Block<PipelineData, SharedData, GlobalData> BlockType;
   typedef typename UniquePtr<PipelineData>::Type PipelineDataPtr;
   typedef PipeRunner<PipelineData, SharedData, GlobalData> RunnerType;
-  typedef PipeRunnerListener<RunnerType> ListenerType;
+  typedef event::PipeRunnerListener<RunnerType> ListenerType;
 
   virtual ~RunnerAccess() {}
 

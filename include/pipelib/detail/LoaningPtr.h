@@ -140,7 +140,7 @@ LoanPtr<T>::operator= (LoanPtr<T> & rhs)
 
 template <typename T>
 LoanPtr<T> &
-LoanPtr<T>::operator= (LoanPtrRef<T> & rhs)
+LoanPtr<T>::operator= (LoanPtrRef<T> rhs)
 {
   myOwningPtr = rhs.ref;
   rhs.ref = NULL;

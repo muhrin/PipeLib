@@ -13,6 +13,10 @@
 #include "pipelib/PipelineState.h"
 
 namespace pipelib {
+
+template <typename T, typename U, typename V>
+class PipeRunner;
+
 namespace event {
 
 
@@ -21,7 +25,7 @@ class PipeRunnerStateChanged
 {
 public:
   PipeRunnerStateChanged(
-    const Runner & pipeline,
+    const Runner & runner,
     const ::pipelib::PipelineState::Value  oldState,
     const ::pipelib::PipelineState::Value  newState);
 
@@ -39,35 +43,45 @@ private:
 
 // IMPLEMENTATION ///////////////////////////////////////////////////
 
-template <class Pipeline>
-PipeRunnerStateChanged<Pipeline>::PipeRunnerStateChanged(
-  const Pipeline & pipeline,
+template <class Runner>
+PipeRunnerStateChanged<Runner>::PipeRunnerStateChanged(
+  const Runner & runner,
   const ::pipelib::PipelineState::Value oldState,
   const ::pipelib::PipelineState::Value newState):
-myPipeline(pipeline),
+myRunner(runner),
 myOldState(oldState),
 myNewState(newState)
 {}
 
-template <class Pipeline>
-const Pipeline &
-PipeRunnerStateChanged<Pipeline>::getRunner() const
+template <class Runner>
+const Runner &
+PipeRunnerStateChanged<Runner>::getRunner() const
 {
   return myRunner;
 }
 
-template <class Pipeline>
+template <class Runner>
 ::pipelib::PipelineState::Value
-PipeRunnerStateChanged<Pipeline>::getOldState() const
+PipeRunnerStateChanged<Runner>::getOldState() const
 {
   return myOldState;
 }
 
-template <class Pipeline>
+template <class Runner>
 ::pipelib::PipelineState::Value
-PipeRunnerStateChanged<Pipeline>::getNewState() const
+PipeRunnerStateChanged<Runner>::getNewState() const
 {
   return myNewState;
+}
+
+template <class T, class U, class V>
+PipeRunnerStateChanged<PipeRunner<T, U, V> >
+makeStateChangedEvent(
+  const PipeRunner<T, U, V> & runner,
+  const ::pipelib::PipelineState::Value  oldState,
+  const ::pipelib::PipelineState::Value  newState)
+{
+  return PipeRunnerStateChanged<PipeRunner<T, U, V> >(runner, oldState, newState);
 }
 
 }

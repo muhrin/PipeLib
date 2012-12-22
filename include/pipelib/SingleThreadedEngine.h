@@ -65,7 +65,7 @@ public:
   typedef FinishedSink<PipelineData> FinishedSinkType;
   typedef DroppedSink<PipelineData> DroppedSinkType;
   // Event
-  typedef PipeRunnerListener<PipeRunner> ListenerType;
+  typedef event::PipeRunnerListener<RunnerBase> ListenerType;
 
   SingleThreadedRunner(
     StartBlockType & startBlock,
@@ -140,7 +140,6 @@ private:
   typedef ::std::map<PipelineData *, Metadata> DataStore;
   typedef ::std::set<BarrierType *> Barriers;
   typedef ::std::map<PipelineDataHandle, PipelineData *> HandleMap;
-  typedef RunnerBase::ListenerType ListenerType;
   typedef event::EventSupport<ListenerType> RunnerEventSupport;
   
   SingleThreadedRunner(
