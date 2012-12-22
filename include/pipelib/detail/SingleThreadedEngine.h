@@ -13,6 +13,9 @@
 #include <boost/foreach.hpp>
 
 #include "pipelib/Barrier.h"
+#include "pipelib/event/EventSupport.h"
+#include "pipelib/event/PipeRunnerListener.h"
+#include "pipelib/event/PipeRunnerStateChanged.h"
 
 namespace pipelib {
 
@@ -28,13 +31,12 @@ template <typename PipelineData, typename SharedData, typename GlobalData>
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::SingleThreadedRunner(
   StartBlockType & startBlock,
   unsigned int maxReleases):
-myRoot(NULL),
-myMaxReleases(maxReleases),
-myFinishedSink(NULL),
-myDroppedSink(NULL),
-myLastHandle(0)
+myMaxReleases(maxReleases)
 {
-  clear();
+  // The top most pipe is its own root but has no parent
+  myRoot = this;
+  myParent = NULL;
+  init();
   attach(startBlock);
 }
 
@@ -98,6 +100,12 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::run(StartBlockT
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
+PipelineState::Value SingleThreadedRunner<PipelineData, SharedData, GlobalData>::getState() const
+{
+  return myState;
+}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
 void
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::setFinishedDataSink(
   FinishedSinkType * sink)
@@ -111,6 +119,22 @@ SingleThreadedRunner<PipelineData, SharedData, GlobalData>::setDroppedDataSink(
   DroppedSinkType * sink)
 {
   myDroppedSink = sink;
+}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+void
+SingleThreadedRunner<PipelineData, SharedData, GlobalData>::addListener(
+  ListenerType & listener)
+{
+  myRunnerEventSupport.insert(listener);
+}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+void
+SingleThreadedRunner<PipelineData, SharedData, GlobalData>::removeListener(
+  ListenerType & listener)
+{
+  myRunnerEventSupport.remove(listener);
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
@@ -129,20 +153,14 @@ SingleThreadedRunner<PipelineData, SharedData, GlobalData>::shared() const
 template <typename PipelineData, typename SharedData, typename GlobalData>
 GlobalData & SingleThreadedRunner<PipelineData, SharedData, GlobalData>::global()
 {
-  if(myRoot)
-    return myRoot->global();
-  else
-    return *myGlobalData;
+  return *myRoot->myGlobalData;
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
 const GlobalData &
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::global() const
 {
-  if(myRoot)
-    return myRoot->global();
-  else
-    return *myGlobalData;
+  return *myRoot->myGlobalData;
 }
 
 
@@ -163,6 +181,20 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::out(
     it->second.dataState = DataState::FINISHED;
     decreaseReferenceCount(it);
   }
+}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+typename SingleThreadedRunner<PipelineData, SharedData, GlobalData>::RunnerAccessType *
+SingleThreadedRunner<PipelineData, SharedData, GlobalData>::getParent()
+{
+  return myParent;
+}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+const typename SingleThreadedRunner<PipelineData, SharedData, GlobalData>::RunnerAccessType *
+SingleThreadedRunner<PipelineData, SharedData, GlobalData>::getParent() const
+{
+  return myParent;
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
@@ -211,7 +243,7 @@ SingleThreadedRunner<PipelineData, SharedData, GlobalData>::createDataHandle(
 template <typename PipelineData, typename SharedData, typename GlobalData>
 void
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::releaseDataHandle(
-  PipelineDataHandle & handle)
+  const PipelineDataHandle & handle)
 {
   const typename HandleMap::iterator it = myHandles.find(handle);
   
@@ -258,7 +290,7 @@ SingleThreadedRunner<PipelineData, SharedData, GlobalData>::createChildRunner()
 {
   return myChildren.insert(
     myChildren.end(),
-    new ChildRunnerOwningPtr(new SingleThreadedRunner(*this), this)
+    new ChildRunnerOwningPtr(new SingleThreadedRunner(*myRoot, *this), this, myMaxReleases)
   )->loan();
 }
 
@@ -269,7 +301,7 @@ SingleThreadedRunner<PipelineData, SharedData, GlobalData>::createChildRunner(
 {
   return myChildren.insert(
     myChildren.end(),
-    new ChildRunnerOwningPtr(new SingleThreadedRunner(*this, subpipe), this)
+    new ChildRunnerOwningPtr(new SingleThreadedRunner(*myRoot, *this, subpipe, myMaxReleases), this)
   )->loan();
 }
 
@@ -300,20 +332,37 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::registerBarrier
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::SingleThreadedRunner(
-  SingleThreadedRunner & rootRunner):
-myRoot(&rootRunner)
+  SingleThreadedRunner & root,
+  SingleThreadedRunner & parent,
+  const unsigned int maxReleases):
+myRoot(&rootRunner),
+myParent(&parent),
+myMaxReleases(maxReleases)
 {
-  clear();
+  init();
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::SingleThreadedRunner(
-  SingleThreadedRunner & rootRunner,
-  StartBlockType & pipe):
-myRoot(&rootRunner)
+  SingleThreadedRunner & root,
+  SingleThreadedRunner & parent,
+  StartBlockType & pipe,
+  const unsigned int maxReleases):
+myRoot(&rootRunner),
+myParent(&parent),
+myMaxReleases(maxReleases)
 {
-  clear();
+  init();
   attach(pipe);
+}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::init()
+{
+  myFinishedSink = NULL;,
+  myDroppedSink = NULL;
+  myLastHandle = 0;
+  clear();
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
@@ -335,6 +384,7 @@ template <typename PipelineData, typename SharedData, typename GlobalData>
 void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::changeState(
   const PipelineState::Value newState)
 {
+  const PipelineState::Value oldState = myState;
   switch(newState)
   {
   case PipelineState::INITIALISED:
@@ -345,11 +395,14 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::changeState(
       it->notifyInitialising(*this);
     }
     myState = PipelineState::INITIALISED;
+    // Tell the blocks
     for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
       end = myPipeline->endPreorder(); it != end; ++it)
     {
       it->notifyInitialised();
     }
+    // Tell any listeners
+    myRunnerEventSupport.notify(PipeRunnerStateChanged(*this, oldState, myState));
     break;
 
   case PipelineState::RUNNING:
@@ -360,11 +413,14 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::changeState(
       it->notifyStarting();
     }
     myState = PipelineState::RUNNING;
+    myRunnerEventSupport.notify(PipeRunnerStateChanged(*this, oldState, myState));
     doRun();
 
     break;
   case PipelineState::STOPPED:
     myState = PipelineState::STOPPED;
+    // Tell any listeners
+    myRunnerEventSupport.notify(PipeRunnerStateChanged(*this, oldState, myState));
     break;
   case PipelineState::FINISHED:
 
@@ -379,6 +435,8 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::changeState(
     {
       it->notifyFinished(*this);
     }
+    // Tell any listeners
+    myRunnerEventSupport.notify(PipeRunnerStateChanged(*this, oldState, myState));
     break;
   }
 }

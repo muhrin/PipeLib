@@ -202,6 +202,13 @@ Block<PipelineData, SharedData, GlobalData>::getRunner()
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
+const typename Block<PipelineData, SharedData, GlobalData>::RunnerAccessType *
+Block<PipelineData, SharedData, GlobalData>::getRunner() const
+{
+	return myRunner;
+}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
 void Block<PipelineData, SharedData, GlobalData>::out(
   PipelineData & data,
   const Channel channel) const

@@ -22,8 +22,6 @@ struct PipelineState
   {
     // The pipeline has not been initialised yet, changes can be made
     UNINITIALISED = 0,
-    // The pipeline is being initialised
-    INITIALISING,
     // The pipeline has been initialised, changes cannot be made
     INITIALISED,
     // The pipeline is running

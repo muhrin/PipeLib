@@ -7,5 +7,7 @@
 #include "pipelib/StartBlock.h"
 #include "pipelib/SimpleBarrier.h"
 #include "pipelib/SingleThreadedEngine.h"
+#include "pipelib/Sinks.h"
+
 
 #endif  // #ifndef PIPELIB_H

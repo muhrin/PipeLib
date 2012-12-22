@@ -13,9 +13,11 @@
 #include "pipelib/Pipeline.h"
 #include "pipelib/LoaningPtr.h"
 #include "pipelib/Sinks.h"
+#include "pipelib/PipelineState.h"
 
 namespace pipelib {
 
+// FORWARD DECLARES //////////////////////////////////////////
 template <typename PipelineData, typename SharedData, typename GlobalData>
 class Block;
 
@@ -27,6 +29,9 @@ class StartBlock;
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
 class PipeBlock;
+
+template <typename Runner>
+class PipeRunnerListener;
 
 /**
 /*  Methods needed to access a runner's memory.
@@ -49,6 +54,7 @@ class PipeRunner
 {
 public:
   typedef StartBlock<PipelineData, SharedData, GlobalData> StartBlockType;
+  typedef PipeRunnerListener<PipeRunner> ListenerType;
 
   virtual ~PipeRunner() {}
 
@@ -57,8 +63,19 @@ public:
   virtual bool isAttached() const = 0;
   virtual void run() = 0;
   virtual void run(StartBlockType & pipe) = 0;
+  virtual PipelineState::Value getState() const = 0;
+
+  // Sinks
   virtual void setFinishedDataSink(FinishedSink<PipelineData> * sink) = 0;
   virtual void setDroppedDataSink(DroppedSink<PipelineData> * sink) = 0;
+
+  // Memory methods
+  virtual MemoryAccess<SharedData, GlobalData> & memory() = 0;
+  virtual const MemoryAccess<SharedData, GlobalData> & memory() const = 0;
+
+  // Event
+  virtual void addListener(ListenerType & listener) = 0;
+  virtual void removeListener(ListenerType & listener) = 0;
 };
 
 /**
@@ -71,23 +88,32 @@ class RunnerAccess
 public:
   typedef Block<PipelineData, SharedData, GlobalData> BlockType;
   typedef typename UniquePtr<PipelineData>::Type PipelineDataPtr;
+  typedef PipeRunner<PipelineData, SharedData, GlobalData> RunnerType;
+  typedef PipeRunnerListener<RunnerType> ListenerType;
 
   virtual ~RunnerAccess() {}
 
   // Pipeline methods
   virtual void out(PipelineData & data, const BlockType & outBlock, const Channel channel) = 0;
+  virtual RunnerAccess * getParent() = 0;
+  virtual const RunnerAccess * getParent() const = 0;
+  virtual PipelineState::Value getState() const = 0;
 
   // Pipeline data methods
   virtual PipelineData & createData() = 0;
   virtual void dropData(PipelineData & toDrop) = 0;
   virtual PipelineData & registerData(PipelineDataPtr data) = 0;
   virtual PipelineDataHandle createDataHandle(PipelineData & data) = 0;
-  virtual void releaseDataHandle(PipelineDataHandle & handle) = 0;
+  virtual void releaseDataHandle(const PipelineDataHandle & handle) = 0;
   virtual PipelineData & getData(PipelineDataHandle & handle) = 0;
 
   // Memory methods
   virtual MemoryAccess<SharedData, GlobalData> & memory() = 0;
   virtual const MemoryAccess<SharedData, GlobalData> & memory() const = 0;
+
+  // Event
+  virtual void addListener(ListenerType & listener) = 0;
+  virtual void removeListener(ListenerType & listener) = 0;
 };
 
 /**

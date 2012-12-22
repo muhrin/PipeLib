@@ -82,6 +82,11 @@ void LoaningPtr<T, Notifiee>::loanReturned()
 }
 
 template <typename T>
+LoanPtr<T>::LoanPtr():
+myOwningPtr(NULL)
+{}
+
+template <typename T>
 LoanPtr<T>::LoanPtr(LoanPtr<T> & rhs):
 myOwningPtr(rhs.myOwningPtr)
 {

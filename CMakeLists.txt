@@ -65,8 +65,8 @@ source_group("Header Files\\detail" FILES ${pipelib_Header_Files__detail})
 
 set(pipelib_Header_Files__event
   include/pipelib/event/EventSupport.h
-  include/pipelib/event/IPipeListener.h
-  include/pipelib/event/PipeStateChanged.h
+  include/pipelib/event/PipeRunnerListener.h
+  include/pipelib/event/PipeRunnerStateChanged.h
 )
 source_group("Header Files\\event" FILES ${pipelib_Header_Files__event})
 

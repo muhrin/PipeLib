@@ -77,7 +77,7 @@ class LoanPtr
 {
   typedef detail::LoaningPtrBase<T> LoaningPtrBase;
 public:
-  
+  LoanPtr();
   LoanPtr(LoanPtr & rhs);
   LoanPtr(LoanPtrRef<T> rhs);
   ~LoanPtr();

@@ -21,6 +21,7 @@
 
 #include "pipelib/PipelineState.h"
 #include "pipelib/PipeRunner.h"
+#include "pipelib/event/EventSupport.h"
 
 namespace pipelib {
 
@@ -34,34 +35,37 @@ public:
   typedef StartBlock<PipelineData, SharedData, GlobalData> StartBlockType;
 
   virtual void run(StartBlockType & startBlock);
-
 };
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
 class SingleThreadedRunner :
-  public PipeRunner<PipelineData, SharedData, GlobalData>,
+  public virtual PipeRunner<PipelineData, SharedData, GlobalData>,
   public pipelib::MemoryAccess<SharedData, GlobalData>,
   public pipelib::RunnerSetup<PipelineData, SharedData, GlobalData>,
-  public pipelib::RunnerAccess<PipelineData, SharedData, GlobalData>
+  public virtual pipelib::RunnerAccess<PipelineData, SharedData, GlobalData>
 {
   typedef Block<PipelineData, SharedData, GlobalData> BlockType;
   typedef PipeRunner<PipelineData, SharedData, GlobalData> RunnerBase;
   typedef SingleThreadedEngine<PipelineData, SharedData, GlobalData> EngineType;
-  typedef pipelib::RunnerAccess<PipelineData, SharedData, GlobalData> AccessBase;
   typedef pipelib::MemoryAccess<SharedData, GlobalData> MemoryAccessBase;
   typedef pipelib::RunnerSetup<PipelineData, SharedData, GlobalData> SetupBase;
   typedef LoaningPtr<RunnerBase, SingleThreadedRunner> ChildRunnerOwningPtr;
 
   static const unsigned int DEFAULT_MAX_RELEASES = 10000;
 public:
-
+  // Pipeline
   typedef PipeBlock<PipelineData, SharedData, GlobalData> PipeBlockType;
   typedef typename RunnerBase::StartBlockType StartBlockType;
   typedef typename SetupBase::BarrierType BarrierType;
   typedef typename SetupBase::ChildRunnerPtr ChildRunnerPtr;
-  typedef typename AccessBase::PipelineDataPtr PipelineDataPtr;
+  // Access
+  typedef pipelib::RunnerAccess<PipelineData, SharedData, GlobalData> RunnerAccessType;
+  typedef typename RunnerAccessType::PipelineDataPtr PipelineDataPtr;
+  // Sinks
   typedef FinishedSink<PipelineData> FinishedSinkType;
   typedef DroppedSink<PipelineData> DroppedSinkType;
+  // Event
+  typedef PipeRunnerListener<PipeRunner> ListenerType;
 
   SingleThreadedRunner(
     StartBlockType & startBlock,
@@ -75,8 +79,13 @@ public:
   virtual bool isAttached() const;
   virtual void run();
   virtual void run(StartBlockType & pipe);
+  virtual PipelineState::Value getState() const;
+  // Sinks
   virtual void setFinishedDataSink(FinishedSinkType * sink);
   virtual void setDroppedDataSink(DroppedSinkType * sink);
+  // Event
+  virtual void addListener(ListenerType & listener);
+  virtual void removeListener(ListenerType & listener);
   // End from PipeRunner ////////////////////
 
   // From MemoryAccess ////////////////////////
@@ -87,13 +96,18 @@ public:
   // End from MemoryAccess ///////////////////
 
   // From RunnerAccess /////////////////////////
+  // Pipeline methods
   virtual void out(PipelineData & data, const BlockType & outBlock, const Channel channel);
+  virtual RunnerAccessType * getParent();
+  virtual const RunnerAccessType * getParent() const;
+  // Data methods
   virtual PipelineData & createData();
   virtual void dropData(PipelineData & toDrop);
   virtual PipelineData & registerData(PipelineDataPtr data);
   virtual PipelineDataHandle createDataHandle(PipelineData & data);
-  virtual void releaseDataHandle(PipelineDataHandle & handle);
+  virtual void releaseDataHandle(const PipelineDataHandle & handle);
   virtual PipelineData & getData(PipelineDataHandle & handle);
+  // Memory methods 
   virtual MemoryAccessBase & memory();
   virtual const MemoryAccessBase & memory() const;
   // End from RunnerAccess //////////////////////
@@ -126,9 +140,20 @@ private:
   typedef ::std::map<PipelineData *, Metadata> DataStore;
   typedef ::std::set<BarrierType *> Barriers;
   typedef ::std::map<PipelineDataHandle, PipelineData *> HandleMap;
+  typedef RunnerBase::ListenerType ListenerType;
+  typedef event::EventSupport<ListenerType> RunnerEventSupport;
   
-  SingleThreadedRunner(SingleThreadedRunner & rootRunner);
-  SingleThreadedRunner(SingleThreadedRunner & rootRunner, StartBlockType & subpipe);
+  SingleThreadedRunner(
+    SingleThreadedRunner & root,
+    SingleThreadedRunner & parent,
+    const unsigned int maxReleases);
+  SingleThreadedRunner(
+    SingleThreadedRunner & root,
+    SingleThreadedRunner & parent,
+    StartBlockType & subpipe,
+    const unsigned int maxReleases);
+
+  void init();
 
   void doRun();
   void changeState(const PipelineState::Value newState);
@@ -142,6 +167,7 @@ private:
 
   // Parent/Children
   SingleThreadedRunner * const myRoot;
+  SingleThreadedRunner * const myParent;
   ChildRunners myChildren;
 
   // Barriers
@@ -164,6 +190,9 @@ private:
   // Sinks
   FinishedSinkType * myFinishedSink;
   DroppedSinkType * myDroppedSink;
+
+  // Event
+  RunnerEventSupport myRunnerEventSupport;
 };
 
 }

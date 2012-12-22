@@ -115,6 +115,7 @@ protected:
   /* Get the PipeRunner driving this block.  Can return NULL if not running.
   /**/
   RunnerAccessType * getRunner();
+  const RunnerAccessType * getRunner() const;
 
   void out(PipelineData & data, const Channel channel = CHANNEL_DEFAULT) const;
 
