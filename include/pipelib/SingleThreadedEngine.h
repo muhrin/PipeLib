@@ -106,7 +106,7 @@ public:
   virtual PipelineData & registerData(PipelineDataPtr data);
   virtual PipelineDataHandle createDataHandle(PipelineData & data);
   virtual void releaseDataHandle(const PipelineDataHandle & handle);
-  virtual PipelineData & getData(PipelineDataHandle & handle);
+  virtual PipelineData & getData(const PipelineDataHandle & handle);
   // Memory methods 
   virtual MemoryAccessBase & memory();
   virtual const MemoryAccessBase & memory() const;

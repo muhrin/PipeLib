@@ -259,7 +259,7 @@ SingleThreadedRunner<PipelineData, SharedData, GlobalData>::releaseDataHandle(
 template <typename PipelineData, typename SharedData, typename GlobalData>
 PipelineData &
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::getData(
-  PipelineDataHandle & handle)
+  const PipelineDataHandle & handle)
 {
   typename HandleMap::iterator it = myHandles.find(handle);
   
