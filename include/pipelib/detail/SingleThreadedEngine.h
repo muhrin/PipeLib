@@ -28,15 +28,44 @@ void SingleThreadedEngine<PipelineData, SharedData, GlobalData>::run(
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
-SingleThreadedRunner<PipelineData, SharedData, GlobalData>::SingleThreadedRunner(
-  StartBlockType & startBlock,
-  unsigned int maxReleases):
-myRoot(this),   // The top most pipe is its own root but has no parent
-myParent(NULL),
-myMaxReleases(maxReleases)
+typename SingleThreadedEngine<PipelineData, SharedData, GlobalData>::RunnerPtr
+SingleThreadedEngine<PipelineData, SharedData, GlobalData>::createRunner()
 {
-  init();
-  attach(startBlock);
+  typedef SingleThreadedRunner<PipelineData, SharedData, GlobalData> RunnerType;
+  return myRunners.insert(
+    myRunners.end(),
+    new RunnerOwningPtr(new RunnerType())
+  )->loan();
+}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+typename SingleThreadedEngine<PipelineData, SharedData, GlobalData>::RunnerPtr
+SingleThreadedEngine<PipelineData, SharedData, GlobalData>::createRunner(
+  StartBlockType & pipeline)
+{
+  typedef SingleThreadedRunner<PipelineData, SharedData, GlobalData> RunnerType;
+  return myRunners.insert(
+    myRunners.end(),
+    new RunnerOwningPtr(new RunnerType(pipeline))
+  )->loan();
+}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+void
+SingleThreadedEngine<PipelineData, SharedData, GlobalData>::loanReturned(const RunnerOwningPtr & runner)
+{
+  bool found = false;
+  for(typename Runners::iterator it = myRunners.begin(), end = myRunners.end();
+    it != end; ++it)
+  {
+    if(&(*it) == &runner)
+    {
+      myRunners.erase(it);
+      found = true;
+      break;
+    }
+  }
+  PIPELIB_ASSERT(found);
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
@@ -327,6 +356,31 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::registerBarrier
   BarrierType & barrier)
 {
   myBarriers.insert(&barrier);
+}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+SingleThreadedRunner<PipelineData, SharedData, GlobalData>::SingleThreadedRunner(
+  unsigned int maxReleases):
+myGlobalData(new GlobalData()),
+myRoot(this),   // The top most pipe is its own root but has no parent
+myParent(NULL),
+myMaxReleases(maxReleases)
+{
+  init();
+}
+
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+SingleThreadedRunner<PipelineData, SharedData, GlobalData>::SingleThreadedRunner(
+  StartBlockType & startBlock,
+  unsigned int maxReleases):
+myGlobalData(new GlobalData()),
+myRoot(this),   // The top most pipe is its own root but has no parent
+myParent(NULL),
+myMaxReleases(maxReleases)
+{
+  init();
+  attach(startBlock);
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>

@@ -20,21 +20,33 @@
 #include <boost/shared_ptr.hpp>
 
 #include "pipelib/PipelineState.h"
+#include "pipelib/PipeEngine.h"
 #include "pipelib/PipeRunner.h"
 #include "pipelib/event/EventSupport.h"
 
 namespace pipelib {
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
-class SingleThreadedEngine
+class SingleThreadedEngine : public PipeEngine<PipelineData, SharedData, GlobalData>
 {
+  typedef PipeEngine<PipelineData, SharedData, GlobalData> Base;
 public:
-
-  typedef Block<PipelineData, SharedData, GlobalData> BlockType;
-  typedef PipeBlock<PipelineData, SharedData, GlobalData> PipeBlockType;
   typedef StartBlock<PipelineData, SharedData, GlobalData> StartBlockType;
+  typedef Base::RunnerPtr RunnerPtr;
 
   virtual void run(StartBlockType & startBlock);
+  virtual RunnerPtr createRunner();
+  virtual RunnerPtr createRunner(StartBlockType & subpipe);
+
+private:
+  typedef LoaningPtr<Base::RunnerType, SingleThreadedEngine> RunnerOwningPtr;
+  typedef ::boost::ptr_vector<RunnerOwningPtr> Runners;
+
+  void loanReturned(const RunnerOwningPtr & runnerPtr);
+
+  Runners myRunners;
+
+  friend class LoaningPtr<Base::RunnerType, SingleThreadedEngine>;;
 };
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
@@ -67,10 +79,6 @@ public:
   // Event
   typedef event::PipeRunnerListener<RunnerBase> ListenerType;
 
-  SingleThreadedRunner(
-    StartBlockType & startBlock,
-    unsigned int maxReleases = DEFAULT_MAX_RELEASES
-  );
   virtual ~SingleThreadedRunner();
 
   // From PipeRunner ////////////////////////
@@ -118,8 +126,6 @@ public:
   virtual void registerBarrier(BarrierType & barrier);
   // End from RunnerSetup /////////////////////////
 
-  void loanReturned(ChildRunnerOwningPtr & childRunner);
-
 private:
 
   struct DataState
@@ -142,6 +148,11 @@ private:
   typedef ::std::map<PipelineDataHandle, PipelineData *> HandleMap;
   typedef event::EventSupport<ListenerType> RunnerEventSupport;
   
+  SingleThreadedRunner(unsigned int maxReleases = DEFAULT_MAX_RELEASES);
+  SingleThreadedRunner(
+    StartBlockType & startBlock,
+    unsigned int maxReleases = DEFAULT_MAX_RELEASES
+  );
   SingleThreadedRunner(
     SingleThreadedRunner & root,
     SingleThreadedRunner & parent,
@@ -163,6 +174,8 @@ private:
   PipelineDataHandle generateHandle();
   void increaseReferenceCount(const typename DataStore::iterator & it);
   void decreaseReferenceCount(const typename DataStore::iterator & it);
+
+  void loanReturned(ChildRunnerOwningPtr & childRunner);
 
   // Parent/Children
   SingleThreadedRunner * const myRoot;
@@ -192,6 +205,9 @@ private:
 
   // Event
   RunnerEventSupport myRunnerEventSupport;
+
+  friend class SingleThreadedEngine<PipelineData, SharedData, GlobalData>;
+  friend class LoaningPtr<RunnerBase, SingleThreadedRunner>;
 };
 
 }
