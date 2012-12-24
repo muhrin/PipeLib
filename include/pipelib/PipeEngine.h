@@ -15,24 +15,20 @@
 
 namespace pipelib {
 
-template <
-  typename PipelineData,
-  typename SharedData,
-  typename GlobalData,
-  typename PipelineData & = PipelineData &,
-  typename SharedData & = SharedData &,
-  typename GlobalData & = GlobalData &
->
+template <typename PipelineData, typename SharedData, typename GlobalData>
+class PipeRunner;
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
 class PipeEngine
 {
 public:
-
-  typedef Block<PipelineData, SharedData, GlobalData> BlockType;
-  typedef PipeBlock<PipelineData, SharedData, GlobalData> PipeBlockType;
   typedef StartBlock<PipelineData, SharedData, GlobalData> StartBlockType;
+  typedef PipeRunner<PipelineData, SharedData, GlobalData> RunnerType;
+  typedef LoanPtr<RunnerType> RunnerPtr;
 
   virtual void run(StartBlockType & startBlock) = 0;
-
+  virtual RunnerPtr createRunner() = 0;
+  virtual RunnerPtr createRunner(StartBlockType & subpipe) = 0;
 };
 
 }

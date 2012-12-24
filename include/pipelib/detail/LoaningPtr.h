@@ -164,7 +164,7 @@ LoanPtr<T>::operator LoanPtrRef<T>()
 {
   LoaningPtrBase * const tmpPtr = myOwningPtr;
   myOwningPtr = NULL;
-  LoanPtrRef<T> ref(myOwningPtr);
+  LoanPtrRef<T> ref(tmpPtr);
   return ref;
 }
 
