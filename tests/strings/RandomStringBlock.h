@@ -10,14 +10,16 @@
 #define RANDOM_STRING_BLOCK_H
 
 // INCLUDES /////////////////////////////////////////////
-#include <AbstractSimpleStartBlock.h>
-
 #include <string>
 
-// FORWARD DECLARATIONS ////////////////////////////////////
+#include <pipelib/pipelib.h>
 
-class RandomStringBlock : public ::pipelib::AbstractSimpleStartBlock<std::string>
+typedef ::pipelib::NoSharedGlobal< ::std::string>::StartBlockType StringStartBlock;
+
+class RandomStringBlock : public StringStartBlock
 {
+  typedef StringStartBlock Base;
+  typedef Base::BlockType BlockType;
 public:
 	RandomStringBlock(const size_t numStrings);
 

@@ -10,20 +10,24 @@
 #define PRINT_STRING_BLOCK_H
 
 // INCLUDES /////////////////////////////////////////////
-#include "AbstractSimpleBlock.h"
-
 #include <string>
+
+#include <pipelib/pipelib.h>
 
 // FORWARD DECLARATIONS ////////////////////////////////////
 
-class PrintStringBlock : public ::pipelib::AbstractSimpleBlock<std::string>
+// TYPEDEFS //////////////////////////////////////////////
+
+typedef ::pipelib::NoSharedGlobal< ::std::string>::PipeBlockType StringPipeBlock;
+
+class PrintStringBlock : public StringPipeBlock
 {
+  typedef StringPipeBlock Base;
+  typedef Base::BlockType BlockType;
 public:
 	PrintStringBlock(const int & num);
 
-
-	virtual void in(std::string & data);
-
+  virtual void in(::std::string & data);
 
 private:
 	const int myNum;

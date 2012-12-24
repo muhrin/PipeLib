@@ -12,22 +12,32 @@
 // INCLUDES /////////////////////////////////////////////
 #include "pipelib/Block.h"
 
-#include <string>
-
 // FORWARD DECLARATIONS ////////////////////////////////////
 
 namespace pipelib {
 
-template <
-  typename PipelineData,
-  typename SharedData = DefaultSharedData,
-  typename GlobalData = SharedData
->
+template <typename PipelineData, typename SharedData, typename GlobalData>
 class PipeBlock : public virtual Block<PipelineData, SharedData, GlobalData>
 {
-public:
+protected:
+  typedef Block<PipelineData, SharedData, GlobalData> BlockType;
 
-	PipeBlock(): Block<PipelineData, SharedData, GlobalData>("Pipe block") {}
+public:
+  typedef BlockConnector<PipelineData, SharedData, GlobalData, PipeBlock> ConnectorType;
+
+  PipeBlock(const size_t numOutputs = 1): BlockType("Pipe block", numOutputs) {}
+
+  // Hide Block's operator |= so that we can return a PipeBlock reference
+  PipeBlock & operator |= (PipeBlock & toConnect)
+  {
+    BlockType::operator |= (toConnect);
+    return *this;
+  }
+
+  ConnectorType operator[] (const Channel channel)
+  {
+    return ConnectorType(*this, channel);
+  }
 
 	virtual void in(PipelineData & data) = 0;
 };

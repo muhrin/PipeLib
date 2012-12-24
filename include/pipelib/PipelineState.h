@@ -21,10 +21,8 @@ struct PipelineState
   enum Value
   {
     // The pipeline has not been initialised yet, changes can be made
-    UNINITIALISED,
-    // The pipeline is being initialised
-    INITIALISING,
-    // The pipeline has been initialised but has never been started
+    UNINITIALISED = 0,
+    // The pipeline has been initialised, changes cannot be made
     INITIALISED,
     // The pipeline is running
     RUNNING,

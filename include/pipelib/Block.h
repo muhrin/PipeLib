@@ -11,111 +11,135 @@
 
 // INCLUDES /////////////////////////////////////////////
 #include "pipelib/Pipeline.h"
+#include "pipelib/BlockConnector.h"
+#include "pipelib/PipeRunner.h"
+
 #include <string>
 
+#include <boost/scoped_array.hpp>
 
-// FORWARD DECLARATIONS ////////////////////////////////////
 namespace pipelib {
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-class IPipeline;
+// FORWARD DECLARATIONS ////////////////////////////////////
+template <class BlockType>
+class PreorderIncrementer;
+
+template <class BlockType, class Incrementer>
+class BlockIterator;
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
 class PipeBlock;
-}
 
-namespace pipelib {
-
-template <
-  typename PipelineData,
-  typename SharedData = DefaultSharedData,
-  typename GlobalData = SharedData
->
+template <typename PipelineData, typename SharedData, typename GlobalData>
 class Block
 {
 public:
 
-	explicit Block(const ::std::string & name);
+  typedef PipelineData PipelineDataType;
+  typedef SharedData SharedDataType;
+  typedef GlobalData GlobalDataType;
+
+  typedef PipeBlock<PipelineData, SharedData, GlobalData> PipeBlockType;
+  typedef BlockConnector<PipelineData, SharedData, GlobalData> ConnectorType;
+
+private:
+
+  typedef ::boost::scoped_array<PipeBlockType *> Outputs;
+
+protected:
+
+  typedef typename PipeRunnerTypes<Block>::Setup RunnerSetupType;
+  typedef typename PipeRunnerTypes<Block>::Access RunnerAccessType;
+
+public:
+  typedef BlockIterator<Block, PreorderIncrementer<Block> > PreorderIterator;
+  typedef BlockIterator<Block, PreorderIncrementer<const Block> > ConstPreorderIterator;
+
+  typedef typename Outputs::element_type * OutputIterator;
+  typedef const typename Outputs::element_type * ConstOutputIterator;
+
+	explicit Block(const ::std::string & name, const size_t numOutputs = 1);
 	virtual ~Block() {}
 
 	const std::string & getName() const;
 
 	/**
-	/* Get the pipeline that this block is a member of.  Can return NULL if not set.
-	/**/
-	virtual const IPipeline<PipelineData, SharedData, GlobalData> * getPipeline() const;
-
-	/**
 	/* Get the number of outputs that this block has.
 	/**/
-	virtual size_t getNumOutputs() const = 0;
-
-	/**
-	/* Set the output block for a particular channel.
-	/**/
-	virtual void setOutput(PipeBlock<PipelineData, SharedData, GlobalData> & output, const ChannelTyp channel = CHANNEL_DEFAULT) = 0;
+	size_t getNumOutputs() const;
 
 	/**
 	/* Clear the output on a particular channel.
 	/**/
-	virtual void clearOutput(const ChannelTyp channel = CHANNEL_DEFAULT) = 0;
+	bool clearOutput(const Channel channel = CHANNEL_DEFAULT);
 
 	/**
 	/* Get the output on a particular channel.  Can be NULL if not set.
 	/**/
-	virtual PipeBlock<PipelineData, SharedData, GlobalData> * getOutput(const ChannelTyp channel = CHANNEL_DEFAULT) const = 0;
+	PipeBlockType * getOutput(const Channel channel = CHANNEL_DEFAULT) const;
 
-	////////////////////////////////////////////
-	// Pipeline messages to blocks
-	////////////////////////////////////////////
+  OutputIterator beginOutputs();
+  OutputIterator endOutputs();
 
-	virtual void inserted(IPipeline<PipelineData, SharedData, GlobalData> & pipeline);
+  ConstOutputIterator beginOutputs() const;
+  ConstOutputIterator endOutputs() const;
+
+  Block & operator |= (PipeBlockType & toConnect);
+  ConnectorType operator[] (const Channel channel);
+
+  PreorderIterator beginPreorder();
+  PreorderIterator endPreorder();
+
+  ConstPreorderIterator beginPreorder() const;
+  ConstPreorderIterator endPreorder() const;
+
+  ////////////////////////////////////////////
+  // Pipeline runner messages to blocks
+  ////////////////////////////////////////////
+  void notifyAttached(RunnerSetupType & setup);
+  void notifyInitialising(RunnerAccessType & access);
+  void notifyInitialised();
+  void notifyStarting();
+  void notifyFinishing();
+  void notifyFinished(RunnerAccessType & access);
+  void notifyDetached();
+
+  /**
+  /* Set the output block for a particular channel.
+  /**/
+  void setOutput(PipeBlockType & output, const Channel channel = CHANNEL_DEFAULT);
+
+protected:
+
+  /**
+  /* Get the PipeRunner driving this block.  Can return NULL if not running.
+  /**/
+  RunnerAccessType * getRunner();
+  const RunnerAccessType * getRunner() const;
+
+  void out(PipelineData & data, const Channel channel = CHANNEL_DEFAULT) const;
+
+  ////////////////////////////////////////////
+  // Pipeline runner messages to blocks
+  ////////////////////////////////////////////
+  virtual void runnerAttached(RunnerSetupType & /*setup*/) {}
   virtual void pipelineInitialising() {}
   virtual void pipelineInitialised() {}
   virtual void pipelineStarting() {}
   virtual void pipelineFinishing() {}
-	virtual void removed();
+  virtual void pipelineFinished() {}
+  virtual void runnerDetached() {}
 
-protected:
+private:
 
-	const ::std::string						myName;
-
-	IPipeline<PipelineData, SharedData, GlobalData> *	myPipeline;
+  const ::std::string myName;
+  RunnerAccessType * myRunner;
+  const size_t myNumOutputs;
+  Outputs myOutputs;
 };
 
-
-// IMPLEMENTATION ///////////////////////////////////////////
-
-template <typename PipelineData, typename SharedData, typename GlobalData>
-Block<PipelineData, SharedData, GlobalData>::Block(const ::std::string & name):
-myName(name),
-myPipeline(NULL)
-{}
-
-template <typename PipelineData, typename SharedData, typename GlobalData>
-const ::std::string & Block<PipelineData, SharedData, GlobalData>::getName() const
-{
-	return myName;
 }
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-const IPipeline<PipelineData, SharedData, GlobalData> * Block<PipelineData, SharedData, GlobalData>::getPipeline() const
-{
-	return myPipeline;
-}
-
-template <typename PipelineData, typename SharedData, typename GlobalData>
-void Block<PipelineData, SharedData, GlobalData>::inserted(IPipeline<PipelineData, SharedData, GlobalData> & pipeline)
-{
-	myPipeline = &pipeline;
-}
-
-template <typename PipelineData, typename SharedData, typename GlobalData>
-void Block<PipelineData, SharedData, GlobalData>::removed()
-{
-	myPipeline = NULL;
-}
-
-}
+#include "pipelib/detail/Block.h"
 
 #endif /* BLOCK_H */
