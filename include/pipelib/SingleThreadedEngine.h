@@ -32,21 +32,21 @@ class SingleThreadedEngine : public PipeEngine<PipelineData, SharedData, GlobalD
   typedef PipeEngine<PipelineData, SharedData, GlobalData> Base;
 public:
   typedef StartBlock<PipelineData, SharedData, GlobalData> StartBlockType;
-  typedef Base::RunnerPtr RunnerPtr;
+  typedef typename Base::RunnerPtr RunnerPtr;
 
   virtual void run(StartBlockType & startBlock);
   virtual RunnerPtr createRunner();
   virtual RunnerPtr createRunner(StartBlockType & subpipe);
 
 private:
-  typedef LoaningPtr<Base::RunnerType, SingleThreadedEngine> RunnerOwningPtr;
+  typedef LoaningPtr<typename Base::RunnerType, SingleThreadedEngine> RunnerOwningPtr;
   typedef ::boost::ptr_vector<RunnerOwningPtr> Runners;
 
   void loanReturned(const RunnerOwningPtr & runnerPtr);
 
   Runners myRunners;
 
-  friend class LoaningPtr<Base::RunnerType, SingleThreadedEngine>;;
+  friend class LoaningPtr<typename Base::RunnerType, SingleThreadedEngine>;
 };
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
