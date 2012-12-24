@@ -483,6 +483,7 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::changeState(
       it->notifyFinishing();
     }
     myState = PipelineState::FINISHED;
+    mySharedData.reset(new SharedData());
     for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
       end = myPipeline->endPreorder(); it != end; ++it)
     {
