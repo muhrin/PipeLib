@@ -140,14 +140,14 @@ PipelineState::Value SingleThreadedRunner<PipelineData, SharedData, GlobalData>:
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
-typename SingleThreadedRunner<PipelineData, SharedData, GlobalData> *
+SingleThreadedRunner<PipelineData, SharedData, GlobalData> *
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::getParent()
 {
   return myParent;
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
-const typename SingleThreadedRunner<PipelineData, SharedData, GlobalData> *
+const SingleThreadedRunner<PipelineData, SharedData, GlobalData> *
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::getParent() const
 {
   return myParent;
