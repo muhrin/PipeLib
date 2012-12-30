@@ -88,6 +88,8 @@ public:
   virtual void run();
   virtual void run(StartBlockType & pipe);
   virtual PipelineState::Value getState() const;
+  virtual SingleThreadedRunner * getParent();
+  virtual const SingleThreadedRunner * getParent() const;
   // Sinks
   virtual void setFinishedDataSink(FinishedSinkType * sink);
   virtual void setDroppedDataSink(DroppedSinkType * sink);
@@ -106,8 +108,8 @@ public:
   // From RunnerAccess /////////////////////////
   // Pipeline methods
   virtual void out(PipelineData & data, const BlockType & outBlock, const Channel channel);
-  virtual RunnerAccessType * getParent();
-  virtual const RunnerAccessType * getParent() const;
+  virtual RunnerAccessType * getParentAccess();
+  virtual const RunnerAccessType * getParentAccess() const;
   // Data methods
   virtual PipelineData & createData();
   virtual void dropData(PipelineData & toDrop);

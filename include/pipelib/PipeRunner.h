@@ -66,6 +66,8 @@ public:
   virtual void run() = 0;
   virtual void run(StartBlockType & pipe) = 0;
   virtual PipelineState::Value getState() const = 0;
+  virtual PipeRunner * getParent() = 0;
+  virtual const PipeRunner * getParent() const = 0;
 
   // Sinks
   virtual void setFinishedDataSink(FinishedSink<PipelineData> * sink) = 0;
@@ -97,8 +99,8 @@ public:
 
   // Pipeline methods
   virtual void out(PipelineData & data, const BlockType & outBlock, const Channel channel) = 0;
-  virtual RunnerAccess * getParent() = 0;
-  virtual const RunnerAccess * getParent() const = 0;
+  virtual RunnerAccess * getParentAccess() = 0;
+  virtual const RunnerAccess * getParentAccess() const = 0;
   virtual PipelineState::Value getState() const = 0;
 
   // Pipeline data methods

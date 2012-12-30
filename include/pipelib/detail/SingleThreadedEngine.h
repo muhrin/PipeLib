@@ -17,6 +17,12 @@
 #include "pipelib/event/PipeRunnerListener.h"
 #include "pipelib/event/PipeRunnerStateChanged.h"
 
+#ifdef _MSC_VER
+// Disable warning about passing this pointer in initialisation list
+#  pragma warning( push )
+#  pragma warning( disable : 4355 )
+#endif
+
 namespace pipelib {
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
@@ -134,6 +140,20 @@ PipelineState::Value SingleThreadedRunner<PipelineData, SharedData, GlobalData>:
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
+typename SingleThreadedRunner<PipelineData, SharedData, GlobalData> *
+SingleThreadedRunner<PipelineData, SharedData, GlobalData>::getParent()
+{
+  return myParent;
+}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+const typename SingleThreadedRunner<PipelineData, SharedData, GlobalData> *
+SingleThreadedRunner<PipelineData, SharedData, GlobalData>::getParent() const
+{
+  return myParent;
+}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
 void
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::setFinishedDataSink(
   FinishedSinkType * sink)
@@ -213,14 +233,14 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::out(
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
 typename SingleThreadedRunner<PipelineData, SharedData, GlobalData>::RunnerAccessType *
-SingleThreadedRunner<PipelineData, SharedData, GlobalData>::getParent()
+SingleThreadedRunner<PipelineData, SharedData, GlobalData>::getParentAccess()
 {
   return myParent;
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
 const typename SingleThreadedRunner<PipelineData, SharedData, GlobalData>::RunnerAccessType *
-SingleThreadedRunner<PipelineData, SharedData, GlobalData>::getParent() const
+SingleThreadedRunner<PipelineData, SharedData, GlobalData>::getParentAccess() const
 {
   return myParent;
 }
@@ -591,5 +611,9 @@ SingleThreadedRunner<PipelineData, SharedData, GlobalData>::decreaseReferenceCou
 }
 
 }
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
 
 #endif /* SINGLE_THREADED_ENGINE_DETAIL_H */

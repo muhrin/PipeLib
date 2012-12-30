@@ -40,6 +40,12 @@ T * LoaningPtrBase<T>::operator-> () const
 }
 
 template <typename T>
+T * LoaningPtrBase<T>::get() const
+{
+  return myPtr;
+}
+
+template <typename T>
 void LoaningPtrBase<T>::reset(T * const ptr)
 {
   if(myLoanee)
@@ -116,13 +122,19 @@ LoanPtr<T>::~LoanPtr()
 template <typename T>
 T & LoanPtr<T>::operator* () const
 {
-  return *myOwningPtr;
+  return *(*myOwningPtr);
 }
 
 template <typename T>
 T * LoanPtr<T>::operator-> () const
 {
   return myOwningPtr->operator->();
+}
+
+template <typename T>
+T * LoanPtr<T>::get() const
+{
+  return myOwningPtr ? myOwningPtr.get() : NULL;
 }
 
 template <typename T>

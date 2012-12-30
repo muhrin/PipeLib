@@ -31,6 +31,7 @@ public:
 
   T & operator* () const;
   T * operator-> () const;
+  T * get() const;
   void reset(T * const ptr = 0);
   LoanPtrType loan();
 
@@ -84,6 +85,7 @@ public:
 
   T & operator* () const;
   T * operator-> () const;
+  T * get() const;
   LoanPtr<T> & operator= (LoanPtr<T> & rhs);
   LoanPtr<T> & operator= (LoanPtrRef<T> rhs);
   void reset();

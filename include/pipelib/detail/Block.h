@@ -152,7 +152,7 @@ template <typename PipelineData, typename SharedData, typename GlobalData>
 void Block<PipelineData, SharedData, GlobalData>::notifyInitialising(RunnerAccessType & access)
 {
   myRunner = &access;
-  pipelineInitialised();
+  pipelineInitialising();
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
