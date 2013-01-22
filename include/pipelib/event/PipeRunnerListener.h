@@ -18,13 +18,16 @@ namespace event {
 // FORWARD DECLARATIONS ////////////////////////////////////
 
 template <class Runner>
+class PipeRunnerDestroyed;
+template <class Runner>
 class PipeRunnerStateChanged;
 
 template <class Runner>
 class PipeRunnerListener
 {
 public:
-  virtual void notify(const PipeRunnerStateChanged<Runner> & evt) = 0;
+  virtual void notify(const PipeRunnerStateChanged<Runner> & evt) {}
+  virtual void notify(const PipeRunnerDestroyed<Runner> & evt) {}
 
 };
 

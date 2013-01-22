@@ -51,37 +51,6 @@ public:
   virtual const GlobalData & global() const = 0;
 };
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-class PipeRunner
-{
-public:
-  typedef StartBlock<PipelineData, SharedData, GlobalData> StartBlockType;
-  typedef event::PipeRunnerListener<PipeRunner> ListenerType;
-
-  virtual ~PipeRunner() {}
-
-  virtual void attach(StartBlockType & pipe) = 0;
-  virtual StartBlockType * detach() = 0;
-  virtual bool isAttached() const = 0;
-  virtual void run() = 0;
-  virtual void run(StartBlockType & pipe) = 0;
-  virtual PipelineState::Value getState() const = 0;
-  virtual PipeRunner * getParent() = 0;
-  virtual const PipeRunner * getParent() const = 0;
-
-  // Sinks
-  virtual void setFinishedDataSink(FinishedSink<PipelineData> * sink) = 0;
-  virtual void setDroppedDataSink(DroppedSink<PipelineData> * sink) = 0;
-
-  // Memory methods
-  virtual MemoryAccess<SharedData, GlobalData> & memory() = 0;
-  virtual const MemoryAccess<SharedData, GlobalData> & memory() const = 0;
-
-  // Event
-  virtual void addListener(ListenerType & listener) = 0;
-  virtual void removeListener(ListenerType & listener) = 0;
-};
-
 /**
 /* Methods needed by a blocks whilst the pipeline is running.
 /*
@@ -92,8 +61,7 @@ class RunnerAccess
 public:
   typedef Block<PipelineData, SharedData, GlobalData> BlockType;
   typedef typename UniquePtr<PipelineData>::Type PipelineDataPtr;
-  typedef PipeRunner<PipelineData, SharedData, GlobalData> RunnerType;
-  typedef event::PipeRunnerListener<RunnerType> ListenerType;
+  typedef event::PipeRunnerListener<RunnerAccess> ListenerType;
 
   virtual ~RunnerAccess() {}
 
@@ -118,6 +86,32 @@ public:
   // Event
   virtual void addListener(ListenerType & listener) = 0;
   virtual void removeListener(ListenerType & listener) = 0;
+};
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+class PipeRunner
+{
+public:
+  typedef StartBlock<PipelineData, SharedData, GlobalData> StartBlockType;
+
+  virtual ~PipeRunner() {}
+
+  virtual void attach(StartBlockType & pipe) = 0;
+  virtual StartBlockType * detach() = 0;
+  virtual bool isAttached() const = 0;
+  virtual void run() = 0;
+  virtual void run(StartBlockType & pipe) = 0;
+  virtual PipelineState::Value getState() const = 0;
+  virtual PipeRunner * getParent() = 0;
+  virtual const PipeRunner * getParent() const = 0;
+
+  // Sinks
+  virtual void setFinishedDataSink(FinishedSink<PipelineData> * sink) = 0;
+  virtual void setDroppedDataSink(DroppedSink<PipelineData> * sink) = 0;
+
+  // Memory methods
+  virtual MemoryAccess<SharedData, GlobalData> & memory() = 0;
+  virtual const MemoryAccess<SharedData, GlobalData> & memory() const = 0;
 };
 
 /**

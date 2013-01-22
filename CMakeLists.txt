@@ -66,14 +66,20 @@ source_group("Header Files\\detail" FILES ${pipelib_Header_Files__detail})
 set(pipelib_Header_Files__event
   include/pipelib/event/EventSupport.h
   include/pipelib/event/PipeRunnerListener.h
-  include/pipelib/event/PipeRunnerStateChanged.h
+  include/pipelib/event/PipeRunnerEvents.h
 )
 source_group("Header Files\\event" FILES ${pipelib_Header_Files__event})
+
+set(pipelib_Header_Files__event__detail
+  include/pipelib/event/detail/PipeRunnerEvents.h
+)
+source_group("Header Files\\event\\detail" FILES ${pipelib_Header_Files__event__detail})
 
 set(pipelib_Header_Files
   ${pipelib_Header_Files__}
   ${pipelib_Header_Files__detail}
   ${pipelib_Header_Files__event}
+  ${pipelib_Header_Files__event__detail}
 )
 
 set(pipelib_Files

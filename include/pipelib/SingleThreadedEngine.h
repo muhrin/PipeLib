@@ -77,7 +77,8 @@ public:
   typedef FinishedSink<PipelineData> FinishedSinkType;
   typedef DroppedSink<PipelineData> DroppedSinkType;
   // Event
-  typedef event::PipeRunnerListener<RunnerBase> ListenerType;
+  //typedef event::PipeRunnerListener<RunnerBase> ListenerType;
+  typedef RunnerAccessType::ListenerType ListenerType;
 
   virtual ~SingleThreadedRunner();
 

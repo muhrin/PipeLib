@@ -14,8 +14,8 @@
 
 #include "pipelib/Barrier.h"
 #include "pipelib/event/EventSupport.h"
+#include "pipelib/event/PipeRunnerEvents.h"
 #include "pipelib/event/PipeRunnerListener.h"
-#include "pipelib/event/PipeRunnerStateChanged.h"
 
 #ifdef _MSC_VER
 // Disable warning about passing this pointer in initialisation list
@@ -81,6 +81,7 @@ SingleThreadedRunner<PipelineData, SharedData, GlobalData>::~SingleThreadedRunne
   {
     delete data.first;
   }
+  myRunnerEventSupport.notify(event::makeDestroyedEvent(*this));
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
