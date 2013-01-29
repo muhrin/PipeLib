@@ -58,6 +58,7 @@ BlockIterator<BlockType, Incrementer>::BlockIterator()
 template <class BlockType, class Incrementer>
 BlockIterator<BlockType, Incrementer>::BlockIterator(BlockType & block)
 {
+  // Put the current block at the end of the list
   myVisiting = myToVisit.insert(myToVisit.end(), &block);
 }
 
@@ -65,7 +66,13 @@ template <class BlockType, class Incrementer>
 void
 BlockIterator<BlockType, Incrementer>::increment()
 {
-  myIncrementer(myVisiting, myToVisit, myVisited);
+  myIncrementer(
+    myVisiting,
+    myToVisit,
+    myVisited,
+    (*myVisiting)->beginOutputs(),
+    (*myVisiting)->endOutputs()
+  );
 }
 
 template <class BlockType, class Incrementer>
@@ -95,14 +102,18 @@ BlockIterator<BlockType, Incrementer>::equal(const BlockIterator & other) const
 
 
 template <class BlockType>
+template <class InputIterator>
 void
 PreorderIncrementer<BlockType>::operator() (
   typename ToVisit::iterator & visiting,
   ToVisit & toVisit,
-  Visited & visited) const
+  Visited & visited,
+  InputIterator first,
+  InputIterator last
+) const
 {
   typedef detail::NotVisitedPredicate<BlockType> NotVisitedPred;
-  typedef ::boost::filter_iterator<NotVisitedPred, typename BlockType::OutputIterator> FilterIter;
+  typedef ::boost::filter_iterator<NotVisitedPred, InputIterator> FilterIter;
   NotVisitedPred filter(visited);
 
   // Save pointer to the one we're visiting
@@ -115,9 +126,9 @@ PreorderIncrementer<BlockType>::operator() (
   visited.insert(block);
 
   // Insert all its not yet visisted outputs
-  FilterIter start(filter, block->beginOutputs(), block->endOutputs());
-  FilterIter end(filter, block->endOutputs(), block->endOutputs());
-  toVisit.insert(it, start, end);
+  FilterIter filteredStart(filter, first, last);
+  FilterIter filteredEnd(filter, last, last);
+  toVisit.insert(it, filteredStart, filteredEnd);
   if(!toVisit.empty())
     visiting = toVisit.begin();
   else

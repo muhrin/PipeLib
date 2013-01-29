@@ -50,9 +50,9 @@ size_t Block<PipelineData, SharedData, GlobalData>::getNumOutputs() const
 template <typename PipelineData, typename SharedData, typename GlobalData>
 bool Block<PipelineData, SharedData, GlobalData>::clearOutput(const Channel channel)
 {
-  ASSERT(channel < getNumOutputs());
+  PIPELIB_ASSERT(channel < static_cast<Channel>(getNumOutputs()));
 
-  const bool wasSet = myOutputs[channel];
+  const bool wasSet = (myOutputs[channel] != NULL);
   myOutputs[channel] = NULL;
   return wasSet;
 }

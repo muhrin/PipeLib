@@ -27,24 +27,19 @@ template <
   typename PipelineData,
   typename SharedData,
   typename GlobalData,
-  class ConnectingType = Block<PipelineData, SharedData, GlobalData>
+  class OutputType = Block<PipelineData, SharedData, GlobalData>,
+  class InputType = PipeBlock<PipelineData, SharedData, GlobalData>
 >
 class BlockConnector
 {
-  typedef Block<PipelineData, SharedData, GlobalData> BlockType;
-
-  BOOST_STATIC_ASSERT((::boost::is_base_of<ConnectingType, BlockType>::value));
 public:
+  BlockConnector(OutputType & block, const Channel channel);
 
-  typedef PipeBlock<PipelineData, SharedData, GlobalData> PipeBlockType;
-
-  BlockConnector(ConnectingType & block, const Channel channel);
-
-  ConnectingType & operator |= (PipeBlockType & toConnect);
+  OutputType & operator |= (InputType & toConnect);
 
 private:
 
-  ConnectingType & myBlock;
+  OutputType & myBlock;
   Channel myChannel;
 };
 

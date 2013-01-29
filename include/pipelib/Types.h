@@ -62,7 +62,23 @@ struct UniquePtr : ::boost::noncopyable
 private:
   UniquePtr() {}
 };
-	
+
+// Sometimes it's not possible to use the above struct-typedef method,
+// for example in cases where ADL should be used.  In which case this
+// macro can be used for the pointer type instead.  It's less safe -
+// but it works.
+#ifdef PIPELIB_USE_CPP11
+#  define PIPELIB_UNIQUE_PTR(T) ::std::unique_ptr<T>
+#else
+#  define PIPELIB_UNIQUE_PTR(T) ::std::auto_ptr<T>
+#endif
+
+template <typename T>
+inline PIPELIB_UNIQUE_PTR(T) makeUniquePtr(T * ptr)
+{
+  return UniquePtr<T>::Type(ptr);
+}
+
 }
 
 
