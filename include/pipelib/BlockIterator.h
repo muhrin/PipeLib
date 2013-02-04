@@ -54,10 +54,14 @@ public:
   typedef ::std::list<BlockType *> ToVisit;
   typedef ::std::set<BlockType *> Visited;
 
+  template <class InputIterator>
   void operator() (
     typename ToVisit::iterator & visiting,
     ToVisit & toVisit,
-    Visited & visited) const;
+    Visited & visited,
+    InputIterator first,
+    InputIterator last
+  ) const;
 };
 
 }

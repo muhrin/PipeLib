@@ -33,6 +33,8 @@ set(CMAKE_PREFIX_PATH
 add_definitions(-DBOOST_ALL_NO_LIB)
 find_package(Boost 1.36.0 REQUIRED)
 
+## pipelib
+
 set(pipelib_Header_Files__
   include/pipelib/Barrier.h
   include/pipelib/Block.h
@@ -53,6 +55,8 @@ set(pipelib_Header_Files__
 )
 source_group("Header Files\\" FILES ${pipelib_Header_Files__})
 
+## pipelib/detail
+
 set(pipelib_Header_Files__detail
   include/pipelib/detail/Block.h
   include/pipelib/detail/BlockConnector.h
@@ -63,6 +67,8 @@ set(pipelib_Header_Files__detail
 )
 source_group("Header Files\\detail" FILES ${pipelib_Header_Files__detail})
 
+## pipelib/event
+
 set(pipelib_Header_Files__event
   include/pipelib/event/EventSupport.h
   include/pipelib/event/PipeRunnerListener.h
@@ -70,16 +76,38 @@ set(pipelib_Header_Files__event
 )
 source_group("Header Files\\event" FILES ${pipelib_Header_Files__event})
 
+## pipelib/event/detail
+
 set(pipelib_Header_Files__event__detail
   include/pipelib/event/detail/PipeRunnerEvents.h
 )
 source_group("Header Files\\event\\detail" FILES ${pipelib_Header_Files__event__detail})
+
+## pipelib/managed
+
+set(pipelib_Header_Files__managed
+  include/pipelib/managed/ManagedBlock.h
+  include/pipelib/managed/ManagedPipeline.h
+)
+source_group("Header Files\\managed" FILES ${pipelib_Header_Files__managed})
+
+## pipelib/managed/detail
+
+set(pipelib_Header_Files__managed__detail
+  include/pipelib/managed/detail/BlockOwner.h
+  include/pipelib/managed/detail/BlockOwnerIterator.h
+  include/pipelib/managed/detail/ManagedBlock.h
+  include/pipelib/managed/detail/ManagedPipeline.h
+)
+source_group("Header Files\\managed\\detail" FILES ${pipelib_Header_Files__managed__detail})
 
 set(pipelib_Header_Files
   ${pipelib_Header_Files__}
   ${pipelib_Header_Files__detail}
   ${pipelib_Header_Files__event}
   ${pipelib_Header_Files__event__detail}
+  ${pipelib_Header_Files__managed}
+  ${pipelib_Header_Files__managed__detail}
 )
 
 set(pipelib_Files

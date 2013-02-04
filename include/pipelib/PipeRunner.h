@@ -101,6 +101,8 @@ public:
   virtual bool isAttached() const = 0;
   virtual void run() = 0;
   virtual void run(StartBlockType & pipe) = 0;
+  template <class StartBlockProxy>
+  bool runProxy(StartBlockProxy & proxy);
   virtual PipelineState::Value getState() const = 0;
   virtual PipeRunner * getParent() = 0;
   virtual const PipeRunner * getParent() const = 0;
@@ -113,6 +115,18 @@ public:
   virtual MemoryAccess<SharedData, GlobalData> & memory() = 0;
   virtual const MemoryAccess<SharedData, GlobalData> & memory() const = 0;
 };
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+template <class StartBlockProxy>
+bool PipeRunner<PipelineData, SharedData, GlobalData>::runProxy(StartBlockProxy & proxy)
+{
+  StartBlockType * const startBlock = proxy.getStartBlock();
+  if(!startBlock)
+    return false;
+
+  run(*startBlock);
+  return true;
+}
 
 /**
 /* Class template that defines the methods needed by blocks
