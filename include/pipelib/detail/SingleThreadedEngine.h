@@ -225,7 +225,7 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::out(
     // So this data is finished, check if we have a sink, otherwise delete
     typename DataStore::iterator it = findData(data);
     
-    PIPELIB_ASSERT_MSG(it != myDataStore.end(), "Couldn't find date in data store");
+    PIPELIB_ASSERT_MSG(it != myDataStore.end(), "Couldn't find data in data store");
 
     it->second.dataState = DataState::FINISHED;
     decreaseReferenceCount(it);
@@ -259,7 +259,7 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::dropData(
   // So this data is finished, check if we have a sink, otherwise delete
   typename DataStore::iterator it = findData(data);
   
-  PIPELIB_ASSERT_MSG(it != myDataStore.end(), "Couldn't find date in data store");
+  PIPELIB_ASSERT_MSG(it != myDataStore.end(), "Couldn't find data in data store");
 
   it->second.dataState = DataState::DROPPED;
   decreaseReferenceCount(it);
