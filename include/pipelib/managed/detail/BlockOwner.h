@@ -205,7 +205,7 @@ BlockOwner<PipelineData, SharedData, GlobalData>::create(PIPELIB_UNIQUE_PTR(Bloc
     PipelineData,
     SharedData,
     GlobalData,
-    ::boost::is_base_of<StartBlockType, BlockType>::value && ::boost::is_base_of<PipeBlockType, BlockType>::value
+    ::boost::is_base_of<StartBlockType, BlockCreateType>::value && ::boost::is_base_of<PipeBlockType, BlockCreateType>::value
   >::create(blockPtr);
 }
 
