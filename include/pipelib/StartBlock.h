@@ -26,6 +26,9 @@ public:
   StartBlock(const size_t numOutputs = 1): BlockType("Start block", numOutputs) {}
 
 	virtual void start() = 0;
+
+  virtual StartBlock * asStartBlock() { return this; }
+  virtual const StartBlock * asStartBlock() const { return this; }
 };
 
 }

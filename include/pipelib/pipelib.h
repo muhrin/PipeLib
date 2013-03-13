@@ -1,6 +1,7 @@
 #ifndef PIPELIB_H
 #define PIPELIB_H
 
+#include "pipelib/Pipe.h"
 #include "pipelib/Pipeline.h"
 #include "pipelib/Block.h"
 #include "pipelib/PipeBlock.h"

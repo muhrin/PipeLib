@@ -31,6 +31,9 @@ template <typename PipelineData, typename SharedData, typename GlobalData>
 class PipeBlock;
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
+class StartBlock;
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
 class Block
 {
 public:
@@ -40,6 +43,7 @@ public:
   typedef GlobalData GlobalDataType;
 
   typedef PipeBlock<PipelineData, SharedData, GlobalData> PipeBlockType;
+  typedef StartBlock<PipelineData, SharedData, GlobalData> StartBlockType;
   typedef BlockConnector<PipelineData, SharedData, GlobalData> ConnectorType;
 
 private:
@@ -108,6 +112,15 @@ public:
   /* Set the output block for a particular channel.
   /**/
   void setOutput(PipeBlockType & output, const Channel channel = CHANNEL_DEFAULT);
+
+  bool isPipeBlock() const;
+  bool isStartBlock() const;
+
+  virtual PipeBlockType * asPipeBlock() { return NULL; }
+  virtual const PipeBlockType * asPipeBlock() const { return NULL; }
+
+  virtual StartBlockType * asStartBlock() { return NULL; }
+  virtual const StartBlockType * asStartBlock() const { return NULL; }
 
 protected:
 

@@ -18,6 +18,8 @@ namespace pipelib {
 template <typename T>
 class LoanPtr;
 template <typename PipelineData, typename SharedData, typename GlobalData>
+class Pipe;
+template <typename PipelineData, typename SharedData, typename GlobalData>
 class PipeRunner;
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
@@ -25,29 +27,15 @@ class PipeEngine
 {
 public:
   typedef StartBlock<PipelineData, SharedData, GlobalData> StartBlockType;
+  typedef Pipe<PipelineData, SharedData, GlobalData> PipeType;
   typedef PipeRunner<PipelineData, SharedData, GlobalData> RunnerType;
   typedef LoanPtr<RunnerType> RunnerPtr;
 
-  virtual void run(StartBlockType & startBlock) = 0;
-
-  template <class StartBlockProxy>
-  bool runProxy(StartBlockProxy & proxy);
+  virtual void run(PipeType & pipe) = 0;
 
   virtual RunnerPtr createRunner() = 0;
-  virtual RunnerPtr createRunner(StartBlockType & subpipe) = 0;
+  virtual RunnerPtr createRunner(PipeType & subpipe) = 0;
 };
-
-template <typename PipelineData, typename SharedData, typename GlobalData>
-template <class StartBlockProxy>
-bool PipeEngine<PipelineData, SharedData, GlobalData>::runProxy(StartBlockProxy & proxy)
-{
-  StartBlockType * const startBlock = proxy.getStartBlock();
-  if(!startBlock)
-    return false;
-
-  run(*startBlock);
-  return true;
-}
 
 }
 

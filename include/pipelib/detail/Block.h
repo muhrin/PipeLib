@@ -226,6 +226,19 @@ void Block<PipelineData, SharedData, GlobalData>::setOutput(
   myOutputs[channel] = &output;
 }
 
+template <typename PipelineData, typename SharedData, typename GlobalData>
+bool Block<PipelineData, SharedData, GlobalData>::isPipeBlock() const
+{
+  return asPipeBlock() != NULL;
+}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+bool Block<PipelineData, SharedData, GlobalData>::isStartBlock() const
+{
+  return asStartBlock() != NULL;
+}
+
+
 }
 
 #endif /* BLOCK_H */

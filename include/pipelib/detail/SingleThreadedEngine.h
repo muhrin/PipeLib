@@ -13,6 +13,7 @@
 #include <boost/foreach.hpp>
 
 #include "pipelib/Barrier.h"
+#include "pipelib/Pipe.h"
 #include "pipelib/event/EventSupport.h"
 #include "pipelib/event/PipeRunnerEvents.h"
 #include "pipelib/event/PipeRunnerListener.h"
@@ -27,9 +28,9 @@ namespace pipelib {
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
 void SingleThreadedEngine<PipelineData, SharedData, GlobalData>::run(
-  StartBlockType & startBlock)
+  PipeType & pipe)
 {
-  SingleThreadedRunner<PipelineData, SharedData, GlobalData> runner(startBlock);
+  SingleThreadedRunner<PipelineData, SharedData, GlobalData> runner(pipe);
   runner.run();
 }
 
@@ -47,7 +48,7 @@ SingleThreadedEngine<PipelineData, SharedData, GlobalData>::createRunner()
 template <typename PipelineData, typename SharedData, typename GlobalData>
 typename SingleThreadedEngine<PipelineData, SharedData, GlobalData>::RunnerPtr
 SingleThreadedEngine<PipelineData, SharedData, GlobalData>::createRunner(
-  StartBlockType & pipeline)
+  PipeType & pipeline)
 {
   typedef SingleThreadedRunner<PipelineData, SharedData, GlobalData> RunnerType;
   return myRunners.insert(
@@ -85,31 +86,20 @@ SingleThreadedRunner<PipelineData, SharedData, GlobalData>::~SingleThreadedRunne
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
-void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::attach(StartBlockType & pipe)
+void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::attach(PipeType & pipe)
 {
   if(isAttached())
     detach();
 
   myPipeline = &pipe;
-  for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
-    end = myPipeline->endPreorder(); it != end; ++it)
-  {
-    it->notifyAttached(*this);
-  }
+  notifyAttached(*myPipeline, *this);
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
-typename SingleThreadedRunner<PipelineData, SharedData, GlobalData>::StartBlockType *
-SingleThreadedRunner<PipelineData, SharedData, GlobalData>::detach()
+void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::detach()
 {
-  for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
-    end = myPipeline->endPreorder(); it != end; ++it)
-  {
-    it->notifyDetached();
-  }
-  StartBlockType * const pipe = myPipeline;
+  notifyDetached(*myPipeline);
   clear();
-  return pipe;
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
@@ -121,14 +111,18 @@ bool SingleThreadedRunner<PipelineData, SharedData, GlobalData>::isAttached() co
 template <typename PipelineData, typename SharedData, typename GlobalData>
 void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::run()
 {
+  PIPELIB_ASSERT(isAttached());
+
   changeState(PipelineState::INITIALISED);
   changeState(PipelineState::RUNNING);
   changeState(PipelineState::FINISHED);
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
-void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::run(StartBlockType & pipe)
+void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::run(PipeType & pipe)
 {
+  PIPELIB_ASSERT(pipe.getStartBlock());
+
   attach(pipe);
   run();
   detach();
@@ -346,7 +340,7 @@ SingleThreadedRunner<PipelineData, SharedData, GlobalData>::createChildRunner()
 template <typename PipelineData, typename SharedData, typename GlobalData>
 typename SingleThreadedRunner<PipelineData, SharedData, GlobalData>::ChildRunnerPtr
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::createChildRunner(
-  StartBlockType & subpipe)
+  PipeType & subpipe)
 {
   return myChildren.insert(
     myChildren.end(),
@@ -390,10 +384,9 @@ myMaxReleases(maxReleases)
   init();
 }
 
-
 template <typename PipelineData, typename SharedData, typename GlobalData>
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::SingleThreadedRunner(
-  StartBlockType & startBlock,
+  PipeType & pipe,
   unsigned int maxReleases):
 myGlobalData(new GlobalData()),
 myRoot(this),   // The top most pipe is its own root but has no parent
@@ -401,8 +394,9 @@ myParent(NULL),
 myMaxReleases(maxReleases)
 {
   init();
-  attach(startBlock);
+  attach(pipe);
 }
+
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::SingleThreadedRunner(
@@ -420,7 +414,7 @@ template <typename PipelineData, typename SharedData, typename GlobalData>
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::SingleThreadedRunner(
   SingleThreadedRunner & root,
   SingleThreadedRunner & parent,
-  StartBlockType & pipe,
+  PipeType & pipe,
   const unsigned int maxReleases):
 myRoot(&root),
 myParent(&parent),
@@ -442,7 +436,7 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::init()
 template <typename PipelineData, typename SharedData, typename GlobalData>
 void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::doRun()
 {
-  myPipeline->start();
+  myPipeline->getStartBlock()->start();
   
   // Release any barriers that are waiting
   unsigned int numReleases = 0;
@@ -463,29 +457,18 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::changeState(
   {
   case PipelineState::INITIALISED:
 
-    for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
-      end = myPipeline->endPreorder(); it != end; ++it)
-    {
-      it->notifyInitialising(*this);
-    }
-    myState = PipelineState::INITIALISED;
     // Tell the blocks
-    for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
-      end = myPipeline->endPreorder(); it != end; ++it)
-    {
-      it->notifyInitialised();
-    }
+    notifyInitialising(*myPipeline, *this);
+    myState = PipelineState::INITIALISED;
+    notifyInitialised(*myPipeline);
+
     // Tell any listeners
     myRunnerEventSupport.notify(event::makeStateChangedEvent(*this, oldState, myState));
     break;
 
   case PipelineState::RUNNING:
 
-    for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
-      end = myPipeline->endPreorder(); it != end; ++it)
-    {
-      it->notifyStarting();
-    }
+    notifyStarting(*myPipeline);
     myState = PipelineState::RUNNING;
     myRunnerEventSupport.notify(event::makeStateChangedEvent(*this, oldState, myState));
     doRun();
@@ -498,18 +481,11 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::changeState(
     break;
   case PipelineState::FINISHED:
 
-    for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
-      end = myPipeline->endPreorder(); it != end; ++it)
-    {
-      it->notifyFinishing();
-    }
+    notifyFinishing(*myPipeline);
     myState = PipelineState::FINISHED;
     mySharedData.reset(new SharedData());
-    for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
-      end = myPipeline->endPreorder(); it != end; ++it)
-    {
-      it->notifyFinished(*this);
-    }
+    notifyFinished(*myPipeline, *this);
+
     // Tell any listeners
     myRunnerEventSupport.notify(event::makeStateChangedEvent(*this, oldState, myState));
     break;

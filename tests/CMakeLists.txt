@@ -9,17 +9,6 @@ add_subdirectory(
  strings
 )
 
-## tests/managed
-
-set(tests_Header_Files__utility
-)
-source_group("Header Files\\managed" FILES ${tests_Header_Files__managed})
-
-set(tests_Source_Files__managed
-  managed/ManagedPipelineTest.cpp
-)
-source_group("Source Files\\managed" FILES ${tests_Source_Files__managed})
-
 ## tests/
 
 set(tests_Header_Files__
@@ -28,16 +17,15 @@ set(tests_Header_Files__
 source_group("Header Files" FILES ${tests_Header_Files__})
 
 set(tests_Source_Files__
+  BasicTests.cpp
 )
 source_group("Source Files" FILES ${tests_Source_Files__})
 
 set(tests_Header_Files
-  ${tests_Header_Files__managed}
   ${tests_Header_Files__}
 )
 
 set(tests_Source_Files
-  ${tests_Source_Files__managed}
   ${tests_Source_Files__}
 )
 

@@ -11,23 +11,32 @@ int main()
 	using namespace pipelib;
 	using std::string;
 
+  typedef ::pipelib::Pipe<string, const void *, const void *> PipeType;
+  typedef pipelib::SimpleBarrier<string, const void *, const void *> Barrier;
+  typedef PipeType::BlockType BlockType;
+
 	// Create the pipeline
   NoSharedGlobal<string>::SingleThreadedEngineType engine;
 
 	// Create the start block
-	RandomStringBlock start(10);
+  PipeType pipe;
+  RandomStringBlock * const start = pipe.addBlock(new RandomStringBlock(10));
+  pipe.setStartBlock(start);
 
 	// Create pipeline blocks
-	PrintStringBlock b1(1);
-	PrintStringBlock b2(2);
-  pipelib::SimpleBarrier<string, const void *, const void *> barrier;
-	PrintStringBlock b3(3);
+	PrintStringBlock * const b1 = pipe.addBlock(new PrintStringBlock(1));
+  PrintStringBlock * const b2 = pipe.addBlock(new PrintStringBlock(2));
+  Barrier * const barrier = pipe.addBlock(new Barrier());
+	PrintStringBlock * const b3 = pipe.addBlock(new PrintStringBlock(3));
 
   // Connect everything
-  start |= b1 |= b2 |= barrier |= b3;
+  pipe.connect(start, b1);
+  pipe.connect(b1, b2);
+  pipe.connect(b2, barrier);
+  pipe.connect(barrier, b3);
 
 	// Run the pipe
-  engine.run(start);
+  engine.run(pipe);
 
 	return 0;
 }

@@ -40,6 +40,9 @@ public:
   }
 
 	virtual void in(PipelineData & data) = 0;
+
+  virtual PipeBlock * asPipeBlock() { return this; }
+  virtual const PipeBlock * asPipeBlock() const { return this; }
 };
 
 }

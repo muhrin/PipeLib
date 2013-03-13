@@ -42,6 +42,7 @@ set(pipelib_Header_Files__
   include/pipelib/BlockIterator.h
   include/pipelib/LoaningPtr.h
   include/pipelib/pipelib.h
+  include/pipelib/Pipe.h
   include/pipelib/PipelineState.h
   include/pipelib/PipeBlock.h
   include/pipelib/PipeEngine.h
@@ -62,6 +63,7 @@ set(pipelib_Header_Files__detail
   include/pipelib/detail/BlockConnector.h
   include/pipelib/detail/BlockIterator.h
   include/pipelib/detail/LoaningPtr.h
+  include/pipelib/detail/Pipe.h
   include/pipelib/detail/SimpleBarrier.h
   include/pipelib/detail/SingleThreadedEngine.h
 )
@@ -83,31 +85,11 @@ set(pipelib_Header_Files__event__detail
 )
 source_group("Header Files\\event\\detail" FILES ${pipelib_Header_Files__event__detail})
 
-## pipelib/managed
-
-set(pipelib_Header_Files__managed
-  include/pipelib/managed/ManagedBlock.h
-  include/pipelib/managed/ManagedPipeline.h
-)
-source_group("Header Files\\managed" FILES ${pipelib_Header_Files__managed})
-
-## pipelib/managed/detail
-
-set(pipelib_Header_Files__managed__detail
-  include/pipelib/managed/detail/BlockOwner.h
-  include/pipelib/managed/detail/BlockOwnerIterator.h
-  include/pipelib/managed/detail/ManagedBlock.h
-  include/pipelib/managed/detail/ManagedPipeline.h
-)
-source_group("Header Files\\managed\\detail" FILES ${pipelib_Header_Files__managed__detail})
-
 set(pipelib_Header_Files
   ${pipelib_Header_Files__}
   ${pipelib_Header_Files__detail}
   ${pipelib_Header_Files__event}
   ${pipelib_Header_Files__event__detail}
-  ${pipelib_Header_Files__managed}
-  ${pipelib_Header_Files__managed__detail}
 )
 
 set(pipelib_Files
