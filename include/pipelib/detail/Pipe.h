@@ -63,7 +63,7 @@ bool Pipe<PipelineData, SharedData, GlobalData>::clearOutput(
 {
   PIPELIB_ASSERT(block);
 
-  if(!block->getOutput(channel()))
+  if(!block->getOutput(channel))
     return false;
 
   block->clearOutput(channel);
