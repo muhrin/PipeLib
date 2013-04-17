@@ -92,13 +92,13 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::attach(PipeType
     detach();
 
   myPipeline = &pipe;
-  notifyAttached(*myPipeline, *this);
+  this->notifyAttached(*myPipeline, *this);
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
 void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::detach()
 {
-  notifyDetached(*myPipeline);
+  this->notifyDetached(*myPipeline);
   clear();
 }
 
@@ -458,9 +458,9 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::changeState(
   case PipelineState::INITIALISED:
 
     // Tell the blocks
-    notifyInitialising(*myPipeline, *this);
+    this->notifyInitialising(*myPipeline, *this);
     myState = PipelineState::INITIALISED;
-    notifyInitialised(*myPipeline);
+    this->notifyInitialised(*myPipeline);
 
     // Tell any listeners
     myRunnerEventSupport.notify(event::makeStateChangedEvent(*this, oldState, myState));
@@ -468,7 +468,7 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::changeState(
 
   case PipelineState::RUNNING:
 
-    notifyStarting(*myPipeline);
+    this->notifyStarting(*myPipeline);
     myState = PipelineState::RUNNING;
     myRunnerEventSupport.notify(event::makeStateChangedEvent(*this, oldState, myState));
     doRun();
@@ -481,10 +481,10 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::changeState(
     break;
   case PipelineState::FINISHED:
 
-    notifyFinishing(*myPipeline);
+    this->notifyFinishing(*myPipeline);
     myState = PipelineState::FINISHED;
     mySharedData.reset(new SharedData());
-    notifyFinished(*myPipeline, *this);
+    this->notifyFinished(*myPipeline, *this);
 
     // Tell any listeners
     myRunnerEventSupport.notify(event::makeStateChangedEvent(*this, oldState, myState));
