@@ -42,7 +42,7 @@ T * LoaningPtrBase<T>::operator-> () const
 template <typename T>
 T * LoaningPtrBase<T>::get() const
 {
-  return myPtr;
+  return myPtr.get();
 }
 
 template <typename T>

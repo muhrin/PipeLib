@@ -12,11 +12,10 @@
 // INCLUDES /////////////////////////////////////////////
 #include "pipelib/Pipeline.h"
 #include "pipelib/BlockConnector.h"
+#include "pipelib/BlockHandle.h"
 #include "pipelib/PipeRunner.h"
 
 #include <string>
-
-#include <boost/scoped_array.hpp>
 
 namespace pipelib {
 
@@ -36,6 +35,7 @@ template< typename PipelineData, typename SharedData, typename GlobalData>
 template< typename PipelineData, typename SharedData, typename GlobalData>
   class Block
   {
+    typedef BlockHandle<PipelineData, SharedData, GlobalData> BlockHandle;
   public:
 
     typedef PipelineData PipelineDataType;
@@ -48,7 +48,7 @@ template< typename PipelineData, typename SharedData, typename GlobalData>
 
   private:
 
-    typedef ::boost::scoped_array< PipeBlockType *> Outputs;
+    typedef ::std::vector< PipeBlockType *> Outputs;
 
   protected:
 

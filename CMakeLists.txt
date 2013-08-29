@@ -38,6 +38,7 @@ find_package(Boost 1.36.0 REQUIRED)
 set(pipelib_Header_Files__
   include/pipelib/Barrier.h
   include/pipelib/Block.h
+  include/pipelib/BlockHandle.h
   include/pipelib/BlockConnector.h
   include/pipelib/BlockIterator.h
   include/pipelib/LoaningPtr.h

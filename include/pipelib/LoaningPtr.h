@@ -57,6 +57,7 @@ class LoaningPtr : public detail::LoaningPtrBase<T>
 {
 public:
   explicit LoaningPtr(T * const ptr, Notifiee * notifiee = NULL);
+  virtual ~LoaningPtr() {}
   
 protected:
   virtual void loanReturned();
