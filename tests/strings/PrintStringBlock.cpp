@@ -4,6 +4,7 @@
 #include "PrintStringBlock.h"
 
 #include <iostream>
+#include <sstream>
 
 using namespace pipelib;
 
@@ -16,7 +17,9 @@ void PrintStringBlock::in(std::string & data)
 {
 	std::cout << myNum << " " << data << std::endl;
 
-	data += " " + myNum;
+  ::std::stringstream ss;
+  ss << data << " " << myNum;
+  data = ss.str();
 
   out(data);
 }

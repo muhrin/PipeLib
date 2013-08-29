@@ -15,6 +15,10 @@
 
 namespace pipelib {
 
+template <typename T>
+class LoanPtr;
+template <typename PipelineData, typename SharedData, typename GlobalData>
+class Pipe;
 template <typename PipelineData, typename SharedData, typename GlobalData>
 class PipeRunner;
 
@@ -23,12 +27,14 @@ class PipeEngine
 {
 public:
   typedef StartBlock<PipelineData, SharedData, GlobalData> StartBlockType;
+  typedef Pipe<PipelineData, SharedData, GlobalData> PipeType;
   typedef PipeRunner<PipelineData, SharedData, GlobalData> RunnerType;
   typedef LoanPtr<RunnerType> RunnerPtr;
 
-  virtual void run(StartBlockType & startBlock) = 0;
+  virtual void run(PipeType & pipe) = 0;
+
   virtual RunnerPtr createRunner() = 0;
-  virtual RunnerPtr createRunner(StartBlockType & subpipe) = 0;
+  virtual RunnerPtr createRunner(PipeType & subpipe) = 0;
 };
 
 }

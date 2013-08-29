@@ -21,122 +21,203 @@
 namespace pipelib {
 
 // FORWARD DECLARATIONS ////////////////////////////////////
-template <class BlockType>
-class PreorderIncrementer;
+template< class BlockType>
+  class PreorderIncrementer;
 
-template <class BlockType, class Incrementer>
-class BlockIterator;
+template< class BlockType, class Incrementer>
+  class BlockIterator;
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-class PipeBlock;
+template< typename PipelineData, typename SharedData, typename GlobalData>
+  class PipeBlock;
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-class Block
-{
-public:
+template< typename PipelineData, typename SharedData, typename GlobalData>
+  class StartBlock;
 
-  typedef PipelineData PipelineDataType;
-  typedef SharedData SharedDataType;
-  typedef GlobalData GlobalDataType;
+template< typename PipelineData, typename SharedData, typename GlobalData>
+  class Block
+  {
+  public:
 
-  typedef PipeBlock<PipelineData, SharedData, GlobalData> PipeBlockType;
-  typedef BlockConnector<PipelineData, SharedData, GlobalData> ConnectorType;
+    typedef PipelineData PipelineDataType;
+    typedef SharedData SharedDataType;
+    typedef GlobalData GlobalDataType;
 
-private:
+    typedef PipeBlock< PipelineData, SharedData, GlobalData> PipeBlockType;
+    typedef StartBlock< PipelineData, SharedData, GlobalData> StartBlockType;
+    typedef BlockConnector< PipelineData, SharedData, GlobalData> ConnectorType;
 
-  typedef ::boost::scoped_array<PipeBlockType *> Outputs;
+  private:
 
-protected:
+    typedef ::boost::scoped_array< PipeBlockType *> Outputs;
 
-  typedef typename PipeRunnerTypes<Block>::Setup RunnerSetupType;
-  typedef typename PipeRunnerTypes<Block>::Access RunnerAccessType;
+  protected:
 
-public:
-  typedef BlockIterator<Block, PreorderIncrementer<Block> > PreorderIterator;
-  typedef BlockIterator<Block, PreorderIncrementer<const Block> > ConstPreorderIterator;
+    typedef typename PipeRunnerTypes< Block>::Setup RunnerSetupType;
+    typedef typename PipeRunnerTypes< Block>::Access RunnerAccessType;
 
-  typedef typename Outputs::element_type * OutputIterator;
-  typedef const typename Outputs::element_type * ConstOutputIterator;
+  public:
+    typedef BlockIterator< Block, PreorderIncrementer< Block> > PreorderIterator;
+    typedef BlockIterator< Block, PreorderIncrementer< const Block> > ConstPreorderIterator;
 
-	explicit Block(const ::std::string & name, const size_t numOutputs = 1);
-	virtual ~Block() {}
+    typedef typename Outputs::element_type * OutputIterator;
+    typedef const typename Outputs::element_type * ConstOutputIterator;
 
-	const std::string & getName() const;
+    explicit
+    Block(const ::std::string & name, const size_t numOutputs = 1);
+    virtual
+    ~Block()
+    {
+    }
 
-	/**
-	/* Get the number of outputs that this block has.
-	/**/
-	size_t getNumOutputs() const;
+    const std::string &
+    getName() const;
 
-	/**
-	/* Clear the output on a particular channel.
-	/**/
-	bool clearOutput(const Channel channel = CHANNEL_DEFAULT);
+    /**
+     /* Get the number of outputs that this block has.
+     /**/
+    size_t
+    getNumOutputs() const;
 
-	/**
-	/* Get the output on a particular channel.  Can be NULL if not set.
-	/**/
-	PipeBlockType * getOutput(const Channel channel = CHANNEL_DEFAULT) const;
+    /**
+     /* Clear the output on a particular channel.
+     /**/
+    bool
+    clearOutput(const Channel channel = CHANNEL_DEFAULT);
 
-  OutputIterator beginOutputs();
-  OutputIterator endOutputs();
+    /**
+     /* Get the output on a particular channel.  Can be NULL if not set.
+     /**/
+    PipeBlockType *
+    getOutput(const Channel channel = CHANNEL_DEFAULT) const;
 
-  ConstOutputIterator beginOutputs() const;
-  ConstOutputIterator endOutputs() const;
+    OutputIterator
+    beginOutputs();
+    OutputIterator
+    endOutputs();
 
-  Block & operator |= (PipeBlockType & toConnect);
-  ConnectorType operator[] (const Channel channel);
+    ConstOutputIterator
+    beginOutputs() const;
+    ConstOutputIterator
+    endOutputs() const;
 
-  PreorderIterator beginPreorder();
-  PreorderIterator endPreorder();
+    Block &
+    operator |=(PipeBlockType & toConnect);
+    ConnectorType
+    operator[](const Channel channel);
 
-  ConstPreorderIterator beginPreorder() const;
-  ConstPreorderIterator endPreorder() const;
+    PreorderIterator
+    beginPreorder();
+    PreorderIterator
+    endPreorder();
 
-  ////////////////////////////////////////////
-  // Pipeline runner messages to blocks
-  ////////////////////////////////////////////
-  void notifyAttached(RunnerSetupType & setup);
-  void notifyInitialising(RunnerAccessType & access);
-  void notifyInitialised();
-  void notifyStarting();
-  void notifyFinishing();
-  void notifyFinished(RunnerAccessType & access);
-  void notifyDetached();
+    ConstPreorderIterator
+    beginPreorder() const;
+    ConstPreorderIterator
+    endPreorder() const;
 
-  /**
-  /* Set the output block for a particular channel.
-  /**/
-  void setOutput(PipeBlockType & output, const Channel channel = CHANNEL_DEFAULT);
+    ////////////////////////////////////////////
+    // Pipeline runner messages to blocks
+    ////////////////////////////////////////////
+    void
+    notifyAttached(RunnerSetupType & setup);
+    void
+    notifyInitialising(RunnerAccessType & access);
+    void
+    notifyInitialised();
+    void
+    notifyStarting();
+    void
+    notifyFinishing();
+    void
+    notifyFinished(RunnerAccessType & access);
+    void
+    notifyDetached();
 
-protected:
+    /**
+     /* Set the output block for a particular channel.
+     /**/
+    void
+    setOutput(PipeBlockType & output, const Channel channel = CHANNEL_DEFAULT);
 
-  /**
-  /* Get the PipeRunner driving this block.  Can return NULL if not running.
-  /**/
-  RunnerAccessType * getRunner();
-  const RunnerAccessType * getRunner() const;
+    bool
+    isPipeBlock() const;
+    bool
+    isStartBlock() const;
 
-  void out(PipelineData & data, const Channel channel = CHANNEL_DEFAULT) const;
+    virtual PipeBlockType *
+    asPipeBlock()
+    {
+      return NULL;
+    }
+    virtual const PipeBlockType *
+    asPipeBlock() const
+    {
+      return NULL;
+    }
 
-  ////////////////////////////////////////////
-  // Pipeline runner messages to blocks
-  ////////////////////////////////////////////
-  virtual void runnerAttached(RunnerSetupType & /*setup*/) {}
-  virtual void pipelineInitialising() {}
-  virtual void pipelineInitialised() {}
-  virtual void pipelineStarting() {}
-  virtual void pipelineFinishing() {}
-  virtual void pipelineFinished() {}
-  virtual void runnerDetached() {}
+    virtual StartBlockType *
+    asStartBlock()
+    {
+      return NULL;
+    }
+    virtual const StartBlockType *
+    asStartBlock() const
+    {
+      return NULL;
+    }
 
-private:
+  protected:
 
-  const ::std::string myName;
-  RunnerAccessType * myRunner;
-  const size_t myNumOutputs;
-  Outputs myOutputs;
-};
+    /**
+     /* Get the PipeRunner driving this block.  Can return NULL if not running.
+     /**/
+    RunnerAccessType *
+    getRunner();
+    const RunnerAccessType *
+    getRunner() const;
+
+    void
+    out(PipelineData & data, const Channel channel = CHANNEL_DEFAULT) const;
+
+    ////////////////////////////////////////////
+    // Pipeline runner messages to blocks
+    ////////////////////////////////////////////
+    virtual void
+    runnerAttached(RunnerSetupType & /*setup*/)
+    {
+    }
+    virtual void
+    pipelineInitialising()
+    {
+    }
+    virtual void
+    pipelineInitialised()
+    {
+    }
+    virtual void
+    pipelineStarting()
+    {
+    }
+    virtual void
+    pipelineFinishing()
+    {
+    }
+    virtual void
+    pipelineFinished()
+    {
+    }
+    virtual void
+    runnerDetached()
+    {
+    }
+
+  private:
+
+    const ::std::string myName;
+    RunnerAccessType * myRunner;
+    const size_t myNumOutputs;
+    Outputs myOutputs;
+  };
 
 }
 

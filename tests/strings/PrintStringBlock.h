@@ -22,15 +22,17 @@ typedef ::pipelib::NoSharedGlobal< ::std::string>::PipeBlockType StringPipeBlock
 
 class PrintStringBlock : public StringPipeBlock
 {
+  typedef pipelib::Block< ::std::string, const void *, const void *> BlockType;
   typedef StringPipeBlock Base;
-  typedef Base::BlockType BlockType;
 public:
-	PrintStringBlock(const int & num);
+  PrintStringBlock(const int & num);
+  virtual ~PrintStringBlock() {}
 
-  virtual void in(::std::string & data);
+  virtual void
+  in(::std::string & data);
 
 private:
-	const int myNum;
+  const int myNum;
 };
 
 #endif /* PRINT_STRING_BLOCK_H */

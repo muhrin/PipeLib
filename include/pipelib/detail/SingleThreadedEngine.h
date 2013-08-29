@@ -13,17 +13,24 @@
 #include <boost/foreach.hpp>
 
 #include "pipelib/Barrier.h"
+#include "pipelib/Pipe.h"
 #include "pipelib/event/EventSupport.h"
+#include "pipelib/event/PipeRunnerEvents.h"
 #include "pipelib/event/PipeRunnerListener.h"
-#include "pipelib/event/PipeRunnerStateChanged.h"
+
+#ifdef _MSC_VER
+// Disable warning about passing this pointer in initialisation list
+#  pragma warning( push )
+#  pragma warning( disable : 4355 )
+#endif
 
 namespace pipelib {
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
 void SingleThreadedEngine<PipelineData, SharedData, GlobalData>::run(
-  StartBlockType & startBlock)
+  PipeType & pipe)
 {
-  SingleThreadedRunner<PipelineData, SharedData, GlobalData> runner(startBlock);
+  SingleThreadedRunner<PipelineData, SharedData, GlobalData> runner(pipe);
   runner.run();
 }
 
@@ -41,7 +48,7 @@ SingleThreadedEngine<PipelineData, SharedData, GlobalData>::createRunner()
 template <typename PipelineData, typename SharedData, typename GlobalData>
 typename SingleThreadedEngine<PipelineData, SharedData, GlobalData>::RunnerPtr
 SingleThreadedEngine<PipelineData, SharedData, GlobalData>::createRunner(
-  StartBlockType & pipeline)
+  PipeType & pipeline)
 {
   typedef SingleThreadedRunner<PipelineData, SharedData, GlobalData> RunnerType;
   return myRunners.insert(
@@ -75,34 +82,24 @@ SingleThreadedRunner<PipelineData, SharedData, GlobalData>::~SingleThreadedRunne
   {
     delete data.first;
   }
+  myRunnerEventSupport.notify(event::makeDestroyedEvent(*this));
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
-void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::attach(StartBlockType & pipe)
+void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::attach(PipeType & pipe)
 {
   if(isAttached())
     detach();
 
   myPipeline = &pipe;
-  for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
-    end = myPipeline->endPreorder(); it != end; ++it)
-  {
-    it->notifyAttached(*this);
-  }
+  this->notifyAttached(*myPipeline, *this);
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
-typename SingleThreadedRunner<PipelineData, SharedData, GlobalData>::StartBlockType *
-SingleThreadedRunner<PipelineData, SharedData, GlobalData>::detach()
+void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::detach()
 {
-  for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
-    end = myPipeline->endPreorder(); it != end; ++it)
-  {
-    it->notifyDetached();
-  }
-  StartBlockType * const pipe = myPipeline;
+  this->notifyDetached(*myPipeline);
   clear();
-  return pipe;
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
@@ -114,14 +111,18 @@ bool SingleThreadedRunner<PipelineData, SharedData, GlobalData>::isAttached() co
 template <typename PipelineData, typename SharedData, typename GlobalData>
 void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::run()
 {
+  PIPELIB_ASSERT(isAttached());
+
   changeState(PipelineState::INITIALISED);
   changeState(PipelineState::RUNNING);
   changeState(PipelineState::FINISHED);
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
-void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::run(StartBlockType & pipe)
+void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::run(PipeType & pipe)
 {
+  PIPELIB_ASSERT(pipe.getStartBlock());
+
   attach(pipe);
   run();
   detach();
@@ -131,6 +132,20 @@ template <typename PipelineData, typename SharedData, typename GlobalData>
 PipelineState::Value SingleThreadedRunner<PipelineData, SharedData, GlobalData>::getState() const
 {
   return myState;
+}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+SingleThreadedRunner<PipelineData, SharedData, GlobalData> *
+SingleThreadedRunner<PipelineData, SharedData, GlobalData>::getParent()
+{
+  return myParent;
+}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+const SingleThreadedRunner<PipelineData, SharedData, GlobalData> *
+SingleThreadedRunner<PipelineData, SharedData, GlobalData>::getParent() const
+{
+  return myParent;
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
@@ -204,7 +219,7 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::out(
     // So this data is finished, check if we have a sink, otherwise delete
     typename DataStore::iterator it = findData(data);
     
-    PIPELIB_ASSERT_MSG(it != myDataStore.end(), "Couldn't find date in data store");
+    PIPELIB_ASSERT_MSG(it != myDataStore.end(), "Couldn't find data in data store");
 
     it->second.dataState = DataState::FINISHED;
     decreaseReferenceCount(it);
@@ -213,14 +228,14 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::out(
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
 typename SingleThreadedRunner<PipelineData, SharedData, GlobalData>::RunnerAccessType *
-SingleThreadedRunner<PipelineData, SharedData, GlobalData>::getParent()
+SingleThreadedRunner<PipelineData, SharedData, GlobalData>::getParentAccess()
 {
   return myParent;
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
 const typename SingleThreadedRunner<PipelineData, SharedData, GlobalData>::RunnerAccessType *
-SingleThreadedRunner<PipelineData, SharedData, GlobalData>::getParent() const
+SingleThreadedRunner<PipelineData, SharedData, GlobalData>::getParentAccess() const
 {
   return myParent;
 }
@@ -238,7 +253,7 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::dropData(
   // So this data is finished, check if we have a sink, otherwise delete
   typename DataStore::iterator it = findData(data);
   
-  PIPELIB_ASSERT_MSG(it != myDataStore.end(), "Couldn't find date in data store");
+  PIPELIB_ASSERT_MSG(it != myDataStore.end(), "Couldn't find data in data store");
 
   it->second.dataState = DataState::DROPPED;
   decreaseReferenceCount(it);
@@ -325,7 +340,7 @@ SingleThreadedRunner<PipelineData, SharedData, GlobalData>::createChildRunner()
 template <typename PipelineData, typename SharedData, typename GlobalData>
 typename SingleThreadedRunner<PipelineData, SharedData, GlobalData>::ChildRunnerPtr
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::createChildRunner(
-  StartBlockType & subpipe)
+  PipeType & subpipe)
 {
   return myChildren.insert(
     myChildren.end(),
@@ -369,10 +384,9 @@ myMaxReleases(maxReleases)
   init();
 }
 
-
 template <typename PipelineData, typename SharedData, typename GlobalData>
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::SingleThreadedRunner(
-  StartBlockType & startBlock,
+  PipeType & pipe,
   unsigned int maxReleases):
 myGlobalData(new GlobalData()),
 myRoot(this),   // The top most pipe is its own root but has no parent
@@ -380,8 +394,9 @@ myParent(NULL),
 myMaxReleases(maxReleases)
 {
   init();
-  attach(startBlock);
+  attach(pipe);
 }
+
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::SingleThreadedRunner(
@@ -399,7 +414,7 @@ template <typename PipelineData, typename SharedData, typename GlobalData>
 SingleThreadedRunner<PipelineData, SharedData, GlobalData>::SingleThreadedRunner(
   SingleThreadedRunner & root,
   SingleThreadedRunner & parent,
-  StartBlockType & pipe,
+  PipeType & pipe,
   const unsigned int maxReleases):
 myRoot(&root),
 myParent(&parent),
@@ -421,7 +436,7 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::init()
 template <typename PipelineData, typename SharedData, typename GlobalData>
 void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::doRun()
 {
-  myPipeline->start();
+  myPipeline->getStartBlock()->start();
   
   // Release any barriers that are waiting
   unsigned int numReleases = 0;
@@ -442,29 +457,18 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::changeState(
   {
   case PipelineState::INITIALISED:
 
-    for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
-      end = myPipeline->endPreorder(); it != end; ++it)
-    {
-      it->notifyInitialising(*this);
-    }
-    myState = PipelineState::INITIALISED;
     // Tell the blocks
-    for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
-      end = myPipeline->endPreorder(); it != end; ++it)
-    {
-      it->notifyInitialised();
-    }
+    this->notifyInitialising(*myPipeline, *this);
+    myState = PipelineState::INITIALISED;
+    this->notifyInitialised(*myPipeline);
+
     // Tell any listeners
     myRunnerEventSupport.notify(event::makeStateChangedEvent(*this, oldState, myState));
     break;
 
   case PipelineState::RUNNING:
 
-    for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
-      end = myPipeline->endPreorder(); it != end; ++it)
-    {
-      it->notifyStarting();
-    }
+    this->notifyStarting(*myPipeline);
     myState = PipelineState::RUNNING;
     myRunnerEventSupport.notify(event::makeStateChangedEvent(*this, oldState, myState));
     doRun();
@@ -477,17 +481,11 @@ void SingleThreadedRunner<PipelineData, SharedData, GlobalData>::changeState(
     break;
   case PipelineState::FINISHED:
 
-    for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
-      end = myPipeline->endPreorder(); it != end; ++it)
-    {
-      it->notifyFinishing();
-    }
+    this->notifyFinishing(*myPipeline);
     myState = PipelineState::FINISHED;
-    for(typename BlockType::PreorderIterator it = myPipeline->beginPreorder(),
-      end = myPipeline->endPreorder(); it != end; ++it)
-    {
-      it->notifyFinished(*this);
-    }
+    mySharedData.reset(new SharedData());
+    this->notifyFinished(*myPipeline, *this);
+
     // Tell any listeners
     myRunnerEventSupport.notify(event::makeStateChangedEvent(*this, oldState, myState));
     break;
@@ -590,5 +588,9 @@ SingleThreadedRunner<PipelineData, SharedData, GlobalData>::decreaseReferenceCou
 }
 
 }
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
 
 #endif /* SINGLE_THREADED_ENGINE_DETAIL_H */

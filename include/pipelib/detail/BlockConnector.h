@@ -20,10 +20,11 @@ template <
   typename PipelineData,
   typename SharedData,
   typename GlobalData,
-  class ConnectingType
+  class OutputType,
+  class InputType
 >
-BlockConnector<PipelineData, SharedData, GlobalData, ConnectingType>::BlockConnector(
-  ConnectingType & block,
+BlockConnector<PipelineData, SharedData, GlobalData, OutputType, InputType>::BlockConnector(
+  OutputType & block,
   const Channel channel):
 myBlock(block),
 myChannel(channel)
@@ -33,10 +34,11 @@ template <
   typename PipelineData,
   typename SharedData,
   typename GlobalData,
-  class ConnectingType
+  class OutputType,
+  class InputType
 >
-ConnectingType &
-BlockConnector<PipelineData, SharedData, GlobalData, ConnectingType>::operator |=(PipeBlockType & toConnect)
+OutputType &
+BlockConnector<PipelineData, SharedData, GlobalData, OutputType, InputType>::operator |=(InputType & toConnect)
 {
   myBlock.setOutput(toConnect, myChannel);
   return myBlock;

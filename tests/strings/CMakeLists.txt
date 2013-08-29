@@ -1,5 +1,5 @@
 
-project(Strings)
+project(strings)
 
 # Add the pipelib header directory
 include_directories(${PIPELIB_INCLUDE_DIRS})
@@ -14,4 +14,6 @@ set(strings_SRCS
 )
 
 
-add_executable(Strings ${strings_SRCS})
+add_executable(strings_bin ${strings_SRCS})
+
+add_library(strings ${strings_SRCS})

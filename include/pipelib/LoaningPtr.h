@@ -31,6 +31,7 @@ public:
 
   T & operator* () const;
   T * operator-> () const;
+  T * get() const;
   void reset(T * const ptr = 0);
   LoanPtrType loan();
 
@@ -56,6 +57,7 @@ class LoaningPtr : public detail::LoaningPtrBase<T>
 {
 public:
   explicit LoaningPtr(T * const ptr, Notifiee * notifiee = NULL);
+  virtual ~LoaningPtr() {}
   
 protected:
   virtual void loanReturned();
@@ -84,6 +86,7 @@ public:
 
   T & operator* () const;
   T * operator-> () const;
+  T * get() const;
   LoanPtr<T> & operator= (LoanPtr<T> & rhs);
   LoanPtr<T> & operator= (LoanPtrRef<T> rhs);
   void reset();

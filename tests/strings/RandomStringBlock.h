@@ -18,15 +18,17 @@ typedef ::pipelib::NoSharedGlobal< ::std::string>::StartBlockType StringStartBlo
 
 class RandomStringBlock : public StringStartBlock
 {
+  typedef pipelib::Block< ::std::string, const void *, const void *> BlockType;
   typedef StringStartBlock Base;
-  typedef Base::BlockType BlockType;
 public:
-	RandomStringBlock(const size_t numStrings);
+  RandomStringBlock(const size_t numStrings);
+  virtual ~RandomStringBlock() {}
 
-	virtual void start();
+  virtual void
+  start();
 
 private:
-	const size_t	myNumStrings;
+  const size_t myNumStrings;
 
 };
 

@@ -50,9 +50,9 @@ size_t Block<PipelineData, SharedData, GlobalData>::getNumOutputs() const
 template <typename PipelineData, typename SharedData, typename GlobalData>
 bool Block<PipelineData, SharedData, GlobalData>::clearOutput(const Channel channel)
 {
-  ASSERT(channel < getNumOutputs());
+  PIPELIB_ASSERT(channel < static_cast<Channel>(getNumOutputs()));
 
-  const bool wasSet = myOutputs[channel];
+  const bool wasSet = (myOutputs[channel] != NULL);
   myOutputs[channel] = NULL;
   return wasSet;
 }
@@ -152,7 +152,7 @@ template <typename PipelineData, typename SharedData, typename GlobalData>
 void Block<PipelineData, SharedData, GlobalData>::notifyInitialising(RunnerAccessType & access)
 {
   myRunner = &access;
-  pipelineInitialised();
+  pipelineInitialising();
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
@@ -225,6 +225,19 @@ void Block<PipelineData, SharedData, GlobalData>::setOutput(
 
   myOutputs[channel] = &output;
 }
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+bool Block<PipelineData, SharedData, GlobalData>::isPipeBlock() const
+{
+  return asPipeBlock() != NULL;
+}
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+bool Block<PipelineData, SharedData, GlobalData>::isStartBlock() const
+{
+  return asStartBlock() != NULL;
+}
+
 
 }
 

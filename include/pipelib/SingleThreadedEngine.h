@@ -31,22 +31,22 @@ class SingleThreadedEngine : public PipeEngine<PipelineData, SharedData, GlobalD
 {
   typedef PipeEngine<PipelineData, SharedData, GlobalData> Base;
 public:
-  typedef StartBlock<PipelineData, SharedData, GlobalData> StartBlockType;
-  typedef Base::RunnerPtr RunnerPtr;
+  typedef typename Base::PipeType PipeType;
+  typedef typename Base::RunnerPtr RunnerPtr;
 
-  virtual void run(StartBlockType & startBlock);
+  virtual void run(PipeType & pipe);
   virtual RunnerPtr createRunner();
-  virtual RunnerPtr createRunner(StartBlockType & subpipe);
+  virtual RunnerPtr createRunner(PipeType & subpipe);
 
 private:
-  typedef LoaningPtr<Base::RunnerType, SingleThreadedEngine> RunnerOwningPtr;
+  typedef LoaningPtr<typename Base::RunnerType, SingleThreadedEngine> RunnerOwningPtr;
   typedef ::boost::ptr_vector<RunnerOwningPtr> Runners;
 
   void loanReturned(const RunnerOwningPtr & runnerPtr);
 
   Runners myRunners;
 
-  friend class LoaningPtr<Base::RunnerType, SingleThreadedEngine>;;
+  friend class LoaningPtr<typename Base::RunnerType, SingleThreadedEngine>;
 };
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
@@ -66,8 +66,8 @@ class SingleThreadedRunner :
   static const unsigned int DEFAULT_MAX_RELEASES = 10000;
 public:
   // Pipeline
+  typedef Pipe<PipelineData, SharedData, GlobalData> PipeType;
   typedef PipeBlock<PipelineData, SharedData, GlobalData> PipeBlockType;
-  typedef typename RunnerBase::StartBlockType StartBlockType;
   typedef typename SetupBase::BarrierType BarrierType;
   typedef typename SetupBase::ChildRunnerPtr ChildRunnerPtr;
   // Access
@@ -77,17 +77,19 @@ public:
   typedef FinishedSink<PipelineData> FinishedSinkType;
   typedef DroppedSink<PipelineData> DroppedSinkType;
   // Event
-  typedef event::PipeRunnerListener<RunnerBase> ListenerType;
+  typedef typename RunnerAccessType::ListenerType ListenerType;
 
   virtual ~SingleThreadedRunner();
 
   // From PipeRunner ////////////////////////
-  virtual void attach(StartBlockType & pipe);
-  virtual StartBlockType * detach();
+  virtual void attach(PipeType & pipe);
+  virtual void detach();
   virtual bool isAttached() const;
   virtual void run();
-  virtual void run(StartBlockType & pipe);
+  virtual void run(PipeType & pipe);
   virtual PipelineState::Value getState() const;
+  virtual SingleThreadedRunner * getParent();
+  virtual const SingleThreadedRunner * getParent() const;
   // Sinks
   virtual void setFinishedDataSink(FinishedSinkType * sink);
   virtual void setDroppedDataSink(DroppedSinkType * sink);
@@ -106,8 +108,8 @@ public:
   // From RunnerAccess /////////////////////////
   // Pipeline methods
   virtual void out(PipelineData & data, const BlockType & outBlock, const Channel channel);
-  virtual RunnerAccessType * getParent();
-  virtual const RunnerAccessType * getParent() const;
+  virtual RunnerAccessType * getParentAccess();
+  virtual const RunnerAccessType * getParentAccess() const;
   // Data methods
   virtual PipelineData & createData();
   virtual void dropData(PipelineData & toDrop);
@@ -122,7 +124,7 @@ public:
 
   // From RunnerSetup ////////////////////////////
   virtual ChildRunnerPtr createChildRunner();
-  virtual ChildRunnerPtr createChildRunner(StartBlockType & subpipe);
+  virtual ChildRunnerPtr createChildRunner(PipeType & subpipe);
   virtual void registerBarrier(BarrierType & barrier);
   // End from RunnerSetup /////////////////////////
 
@@ -150,7 +152,7 @@ private:
   
   SingleThreadedRunner(unsigned int maxReleases = DEFAULT_MAX_RELEASES);
   SingleThreadedRunner(
-    StartBlockType & startBlock,
+    PipeType & pipe,
     unsigned int maxReleases = DEFAULT_MAX_RELEASES
   );
   SingleThreadedRunner(
@@ -160,7 +162,7 @@ private:
   SingleThreadedRunner(
     SingleThreadedRunner & root,
     SingleThreadedRunner & parent,
-    StartBlockType & subpipe,
+    PipeType & subpipe,
     const unsigned int maxReleases);
 
   void init();
@@ -194,7 +196,7 @@ private:
   PipelineDataHandle myLastHandle;
 
   // Pipeline
-  StartBlockType * myPipeline;
+  PipeType * myPipeline;
 
   // State
   PipelineState::Value myState;

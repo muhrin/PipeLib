@@ -25,7 +25,7 @@ template <typename PipelineData, typename SharedData, typename GlobalData>
 class Barrier;
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
-class StartBlock;
+class Pipe;
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
 class PipeBlock;
@@ -51,35 +51,6 @@ public:
   virtual const GlobalData & global() const = 0;
 };
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-class PipeRunner
-{
-public:
-  typedef StartBlock<PipelineData, SharedData, GlobalData> StartBlockType;
-  typedef event::PipeRunnerListener<PipeRunner> ListenerType;
-
-  virtual ~PipeRunner() {}
-
-  virtual void attach(StartBlockType & pipe) = 0;
-  virtual StartBlockType * detach() = 0;
-  virtual bool isAttached() const = 0;
-  virtual void run() = 0;
-  virtual void run(StartBlockType & pipe) = 0;
-  virtual PipelineState::Value getState() const = 0;
-
-  // Sinks
-  virtual void setFinishedDataSink(FinishedSink<PipelineData> * sink) = 0;
-  virtual void setDroppedDataSink(DroppedSink<PipelineData> * sink) = 0;
-
-  // Memory methods
-  virtual MemoryAccess<SharedData, GlobalData> & memory() = 0;
-  virtual const MemoryAccess<SharedData, GlobalData> & memory() const = 0;
-
-  // Event
-  virtual void addListener(ListenerType & listener) = 0;
-  virtual void removeListener(ListenerType & listener) = 0;
-};
-
 /**
 /* Methods needed by a blocks whilst the pipeline is running.
 /*
@@ -90,15 +61,14 @@ class RunnerAccess
 public:
   typedef Block<PipelineData, SharedData, GlobalData> BlockType;
   typedef typename UniquePtr<PipelineData>::Type PipelineDataPtr;
-  typedef PipeRunner<PipelineData, SharedData, GlobalData> RunnerType;
-  typedef event::PipeRunnerListener<RunnerType> ListenerType;
+  typedef event::PipeRunnerListener<RunnerAccess> ListenerType;
 
   virtual ~RunnerAccess() {}
 
   // Pipeline methods
   virtual void out(PipelineData & data, const BlockType & outBlock, const Channel channel) = 0;
-  virtual RunnerAccess * getParent() = 0;
-  virtual const RunnerAccess * getParent() const = 0;
+  virtual RunnerAccess * getParentAccess() = 0;
+  virtual const RunnerAccess * getParentAccess() const = 0;
   virtual PipelineState::Value getState() const = 0;
 
   // Pipeline data methods
@@ -118,6 +88,55 @@ public:
   virtual void removeListener(ListenerType & listener) = 0;
 };
 
+template <typename PipelineData, typename SharedData, typename GlobalData>
+class RunnerSetup;
+
+template <typename PipelineData, typename SharedData, typename GlobalData>
+class PipeRunner
+{
+public:
+  typedef Pipe<PipelineData, SharedData, GlobalData> PipeType;
+
+  virtual ~PipeRunner() {}
+
+  virtual void attach(PipeType & pipe) = 0;
+  virtual void detach() = 0;
+  virtual bool isAttached() const = 0;
+  virtual void run() = 0;
+  virtual void run(PipeType & pipe) = 0;
+  virtual PipelineState::Value getState() const = 0;
+  virtual PipeRunner * getParent() = 0;
+  virtual const PipeRunner * getParent() const = 0;
+
+  // Sinks
+  virtual void setFinishedDataSink(FinishedSink<PipelineData> * sink) = 0;
+  virtual void setDroppedDataSink(DroppedSink<PipelineData> * sink) = 0;
+
+  // Memory methods
+  virtual MemoryAccess<SharedData, GlobalData> & memory() = 0;
+  virtual const MemoryAccess<SharedData, GlobalData> & memory() const = 0;
+
+protected:
+
+  typedef RunnerAccess<PipelineData, SharedData, GlobalData> RunnerAccessType;
+  typedef RunnerSetup<PipelineData, SharedData, GlobalData> RunnerSetupType;
+
+  void notifyAttached(PipeType & pipe, RunnerSetupType & setup)
+  { pipe.notifyAttached(setup); }
+  void notifyInitialising(PipeType & pipe, RunnerAccessType & access)
+  { pipe.notifyInitialising(access); }
+  void notifyInitialised(PipeType & pipe)
+  { pipe.notifyInitialised(); }
+  void notifyStarting(PipeType & pipe)
+  { pipe.notifyStarting(); }
+  void notifyFinishing(PipeType & pipe)
+  { pipe.notifyFinishing(); }
+  void notifyFinished(PipeType & pipe, RunnerAccessType & access)
+  { pipe.notifyFinished(access); }
+  void notifyDetached(PipeType & pipe)
+  { pipe.notifyDetached(); }
+};
+
 /**
 /* Class template that defines the methods needed by blocks
 /* when the runner is being attached to the pipe to perform
@@ -127,15 +146,15 @@ template <typename PipelineData, typename SharedData, typename GlobalData>
 class RunnerSetup
 {
 public:
+  typedef Pipe<PipelineData, SharedData, GlobalData> PipeType;
   typedef PipeRunner<PipelineData, SharedData, GlobalData> RunnerType;
-  typedef StartBlock<PipelineData, SharedData, GlobalData> StartBlockType;
   typedef Barrier<PipelineData, SharedData, GlobalData> BarrierType;
   typedef LoanPtr<RunnerType> ChildRunnerPtr;
 
   virtual ~RunnerSetup() {}
 
   virtual ChildRunnerPtr createChildRunner() = 0;
-  virtual ChildRunnerPtr createChildRunner(StartBlockType & subpipe) = 0;
+  virtual ChildRunnerPtr createChildRunner(PipeType & subpipe) = 0;
   virtual void registerBarrier(BarrierType & barrier) = 0;
 };
 

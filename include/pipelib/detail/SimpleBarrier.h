@@ -33,20 +33,20 @@ size_t SimpleBarrier<PipelineData, SharedData, GlobalData>::release()
 {
 	const size_t bufferSize = myBuffer.size();
   BOOST_FOREACH(PipelineData * const data, myBuffer)
-	{
-    out(*data);
-	}
+  {
+    this->out(*data);
+  }
 
-	// Done our job, so clear the buffer
-	myBuffer.clear();
-
-	return bufferSize;
+  // Done our job, so clear the buffer
+  myBuffer.clear();
+  
+  return bufferSize;
 }
 
 template <typename PipelineData, typename SharedData, typename GlobalData>
 bool SimpleBarrier<PipelineData, SharedData, GlobalData>::hasData() const
 {
-	return !myBuffer.empty();
+  return !myBuffer.empty();
 }
 
 }
