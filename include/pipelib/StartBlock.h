@@ -16,20 +16,36 @@
 
 namespace pipelib {
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-class StartBlock : public virtual Block<PipelineData, SharedData, GlobalData>
-{
-protected:
-  typedef Block<PipelineData, SharedData, GlobalData> BlockType;
+template< typename PipelineData, typename SharedData, typename GlobalData>
+  class StartBlock : public virtual Block< PipelineData, SharedData, GlobalData>
+  {
+  protected:
+    typedef Block< PipelineData, SharedData, GlobalData> BlockType;
 
-public:
-  StartBlock(const size_t numOutputs = 1): BlockType("Start block", numOutputs) {}
+  public:
+    StartBlock(const size_t numOutputs = 1) :
+        BlockType("Start block", numOutputs)
+    {
+    }
+    virtual
+    ~StartBlock()
+    {
+    }
 
-	virtual void start() = 0;
+    virtual void
+    start() = 0;
 
-  virtual StartBlock * asStartBlock() { return this; }
-  virtual const StartBlock * asStartBlock() const { return this; }
-};
+    virtual StartBlock *
+    asStartBlock()
+    {
+      return this;
+    }
+    virtual const StartBlock *
+    asStartBlock() const
+    {
+      return this;
+    }
+  };
 
 }
 
