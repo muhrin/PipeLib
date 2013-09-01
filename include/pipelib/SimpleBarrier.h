@@ -16,25 +16,28 @@
 
 namespace pipelib {
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-class SimpleBarrier :	public Barrier<PipelineData, SharedData, GlobalData>
-{
-public:
+template< typename Pipe, typename Shared, typename Global>
+  class SimpleBarrier : public Barrier< Pipe, Shared, Global>
+  {
+  public:
 
-	SimpleBarrier();
+    SimpleBarrier();
+    virtual ~SimpleBarrier() {}
 
-	virtual void in(PipelineData & data);
+    virtual void
+    in(Pipe * const data);
 
-	virtual size_t release();
+    virtual size_t
+    release();
 
-	virtual bool hasData() const;
+    virtual bool
+    hasData() const;
 
-protected:
+  protected:
+    typedef ::std::vector< Pipe *> Buffer;
 
-	typedef ::std::vector<PipelineData *>	Buffer;
-
-	Buffer	myBuffer;
-};
+    Buffer myBuffer;
+  };
 
 }
 

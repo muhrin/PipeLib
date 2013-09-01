@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.6)
 project(Pipelib)
 
 set(PIPELIB_VERSION_MAJOR 0)
-set(PIPELIB_VERSION_MINOR 4)
+set(PIPELIB_VERSION_MINOR 5)
 set(PIPELIB_VERSION_PATCH 0)
 set(PIPELIB_VERSION "${PIPELIB_VERSION_MAJOR}.${PIPELIB_VERSION_MINOR}.${PIPELIB_VERSION_PATCH}")
 message(STATUS "Configuring Pipelib ${PIPELIB_VERSION}")
@@ -17,8 +17,6 @@ set(BOOST_ROOT "" CACHE FILEPATH "Path to boost library")
 
 # Build options ###
 set(PIPELIB_ENABLE_TESTING FALSE CACHE BOOL "Build pipelib tests")
-
-
 
 ## FIND PACKAGES ########################################
 
@@ -36,17 +34,17 @@ find_package(Boost 1.36.0 REQUIRED)
 ## pipelib
 
 set(pipelib_Header_Files__
+  include/pipelib/AbsPipeEngine.h
   include/pipelib/Barrier.h
   include/pipelib/Block.h
   include/pipelib/BlockConnector.h
+  include/pipelib/BlockHandle.h
   include/pipelib/BlockIterator.h
   include/pipelib/LoaningPtr.h
   include/pipelib/pipelib.h
-  include/pipelib/Pipe.h
   include/pipelib/PipelineState.h
   include/pipelib/PipeBlock.h
   include/pipelib/PipeEngine.h
-  include/pipelib/PipeRunner.h
   include/pipelib/Pipeline.h
   include/pipelib/SimpleBarrier.h
   include/pipelib/SingleThreadedEngine.h
@@ -59,11 +57,12 @@ source_group("Header Files\\" FILES ${pipelib_Header_Files__})
 ## pipelib/detail
 
 set(pipelib_Header_Files__detail
+  include/pipelib/detail/AbsPipeEngine.h
   include/pipelib/detail/Block.h
   include/pipelib/detail/BlockConnector.h
   include/pipelib/detail/BlockIterator.h
   include/pipelib/detail/LoaningPtr.h
-  include/pipelib/detail/Pipe.h
+  include/pipelib/detail/PipeEngine.h
   include/pipelib/detail/SimpleBarrier.h
   include/pipelib/detail/SingleThreadedEngine.h
 )
@@ -73,15 +72,16 @@ source_group("Header Files\\detail" FILES ${pipelib_Header_Files__detail})
 
 set(pipelib_Header_Files__event
   include/pipelib/event/EventSupport.h
-  include/pipelib/event/PipeRunnerListener.h
-  include/pipelib/event/PipeRunnerEvents.h
+  include/pipelib/event/PipeEngineListener.h
+  include/pipelib/event/PipeEngineEvents.h
+  include/pipelib/event/PipeEngineStateChanged.h
 )
 source_group("Header Files\\event" FILES ${pipelib_Header_Files__event})
 
 ## pipelib/event/detail
 
 set(pipelib_Header_Files__event__detail
-  include/pipelib/event/detail/PipeRunnerEvents.h
+  include/pipelib/event/detail/PipeEngineEvents.h
 )
 source_group("Header Files\\event\\detail" FILES ${pipelib_Header_Files__event__detail})
 
@@ -106,7 +106,6 @@ set(PIPELIB_INCLUDE_DIRS
 include_directories(${PIPELIB_INCLUDE_DIRS})
 
 add_library(pipelib ${pipelib_Files})
-
 
 
 ###########

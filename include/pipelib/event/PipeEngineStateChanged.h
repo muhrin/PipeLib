@@ -1,5 +1,5 @@
 /*
- * PipeRunnerStateChanged.h
+ * PipeEngineStateChanged.h
  *
  *
  *  Created on: Feb 17, 2012
@@ -15,16 +15,16 @@
 namespace pipelib {
 
 template <typename T, typename U, typename V>
-class PipeRunner;
+class PipeEngine;
 
 namespace event {
 
 
 template <class Runner>
-class PipeRunnerStateChanged
+class PipeEngineStateChanged
 {
 public:
-  PipeRunnerStateChanged(
+  PipeEngineStateChanged(
     const Runner & runner,
     const ::pipelib::PipelineState::Value  oldState,
     const ::pipelib::PipelineState::Value  newState);
@@ -44,7 +44,7 @@ private:
 // IMPLEMENTATION ///////////////////////////////////////////////////
 
 template <class Runner>
-PipeRunnerStateChanged<Runner>::PipeRunnerStateChanged(
+PipeEngineStateChanged<Runner>::PipeEngineStateChanged(
   const Runner & runner,
   const ::pipelib::PipelineState::Value oldState,
   const ::pipelib::PipelineState::Value newState):
@@ -55,33 +55,33 @@ myNewState(newState)
 
 template <class Runner>
 const Runner &
-PipeRunnerStateChanged<Runner>::getRunner() const
+PipeEngineStateChanged<Runner>::getRunner() const
 {
   return myRunner;
 }
 
 template <class Runner>
 ::pipelib::PipelineState::Value
-PipeRunnerStateChanged<Runner>::getOldState() const
+PipeEngineStateChanged<Runner>::getOldState() const
 {
   return myOldState;
 }
 
 template <class Runner>
 ::pipelib::PipelineState::Value
-PipeRunnerStateChanged<Runner>::getNewState() const
+PipeEngineStateChanged<Runner>::getNewState() const
 {
   return myNewState;
 }
 
 template <class T, class U, class V>
-PipeRunnerStateChanged<PipeRunner<T, U, V> >
+PipeEngineStateChanged<PipeEngine<T, U, V> >
 makeStateChangedEvent(
-  const PipeRunner<T, U, V> & runner,
+  const PipeEngine<T, U, V> & runner,
   const ::pipelib::PipelineState::Value  oldState,
   const ::pipelib::PipelineState::Value  newState)
 {
-  return PipeRunnerStateChanged<PipeRunner<T, U, V> >(runner, oldState, newState);
+  return PipeEngineStateChanged<PipeEngine<T, U, V> >(runner, oldState, newState);
 }
 
 }

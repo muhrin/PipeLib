@@ -11,8 +11,8 @@ void RandomStringBlock::start()
 {
   for(size_t i = 0; i < myNumStrings; ++i)
   {
-    std::string & str = getRunner()->createData();
-    str = "random";
+    std::string * const str = getEngine()->createData();
+    *str = "random";
     out(str);
   }
 }

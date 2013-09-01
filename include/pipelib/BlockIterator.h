@@ -15,54 +15,53 @@
 
 #include <boost/iterator/iterator_facade.hpp>
 
+#include "pipelib/Block.h"
+
 namespace pipelib {
 
-template <class BlockType, class Incrementer>
-class BlockIterator :
-  public ::boost::iterator_facade<
-    BlockIterator<BlockType, Incrementer>,
-    BlockType,
-    ::boost::forward_traversal_tag
-  >
-{
-public:
-  BlockIterator();
-  BlockIterator(BlockType & block);
+template< class BlockType, class Incrementer>
+  class BlockIterator : public ::boost::iterator_facade< BlockIterator< BlockType, Incrementer>,
+      typename BlockType::HandleType, ::boost::forward_traversal_tag>
+  {
+    typedef typename BlockType::HandleType BlockHandleType;
+  public:
+    BlockIterator();
+    BlockIterator(BlockHandleType block);
 
-private:
-  typedef ::std::list<BlockType *> ToVisit;
-  typedef ::std::set<BlockType *> Visited;
+  private:
+    typedef ::std::list< BlockHandleType> ToVisit;
+    typedef ::std::set< BlockHandleType> Visited;
 
-  void increment();
+    void
+    increment();
 
-  BlockType & dereference() const;
+    BlockHandleType &
+    dereference() const;
 
-  bool equal(const BlockIterator & other) const;
+    bool
+    equal(const BlockIterator & other) const;
 
-  Incrementer myIncrementer;
-  typename ToVisit::iterator myVisiting;
-  ToVisit myToVisit;
-  Visited myVisited;
+    Incrementer myIncrementer;
+    typename ToVisit::iterator myVisiting;
+    ToVisit myToVisit;
+    Visited myVisited;
 
-  friend class boost::iterator_core_access;
-};
+    friend class boost::iterator_core_access;
+  };
 
-template <class BlockType>
-class PreorderIncrementer
-{
-public:
-  typedef ::std::list<BlockType *> ToVisit;
-  typedef ::std::set<BlockType *> Visited;
+template< class BlockType>
+  class PreorderIncrementer
+  {
+    typedef typename BlockType::HandleType BlockHandleType;
+  public:
+    typedef ::std::list< BlockHandleType> ToVisit;
+    typedef ::std::set< BlockHandleType> Visited;
 
-  template <class InputIterator>
-  void operator() (
-    typename ToVisit::iterator & visiting,
-    ToVisit & toVisit,
-    Visited & visited,
-    InputIterator first,
-    InputIterator last
-  ) const;
-};
+    template< class InputIterator>
+      void
+      operator()(typename ToVisit::iterator & visiting, ToVisit & toVisit, Visited & visited,
+          InputIterator first, InputIterator last) const;
+  };
 
 }
 

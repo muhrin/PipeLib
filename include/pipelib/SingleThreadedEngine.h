@@ -13,7 +13,7 @@
 #include "pipelib/Pipeline.h"
 
 #include <map>
-#include <set>
+#include <vector>
 
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -21,149 +21,88 @@
 
 #include "pipelib/PipelineState.h"
 #include "pipelib/PipeEngine.h"
-#include "pipelib/PipeRunner.h"
 #include "pipelib/event/EventSupport.h"
 
 namespace pipelib {
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-class SingleThreadedEngine : public PipeEngine<PipelineData, SharedData, GlobalData>
+template <typename Pipe, typename Shared, typename Global>
+class SingleThreadedEngine :
+  public virtual PipeEngine<Pipe, Shared, Global>,
+  public pipelib::EngineSetup<Pipe, Shared, Global>,
+  public virtual pipelib::EngineAccess<Pipe, Shared, Global>
 {
-  typedef PipeEngine<PipelineData, SharedData, GlobalData> Base;
-public:
-  typedef typename Base::PipeType PipeType;
-  typedef typename Base::RunnerPtr RunnerPtr;
-
-  virtual void run(PipeType & pipe);
-  virtual RunnerPtr createRunner();
-  virtual RunnerPtr createRunner(PipeType & subpipe);
-
-private:
-  typedef LoaningPtr<typename Base::RunnerType, SingleThreadedEngine> RunnerOwningPtr;
-  typedef ::boost::ptr_vector<RunnerOwningPtr> Runners;
-
-  void loanReturned(const RunnerOwningPtr & runnerPtr);
-
-  Runners myRunners;
-
-  friend class LoaningPtr<typename Base::RunnerType, SingleThreadedEngine>;
-};
-
-template <typename PipelineData, typename SharedData, typename GlobalData>
-class SingleThreadedRunner :
-  public virtual PipeRunner<PipelineData, SharedData, GlobalData>,
-  public pipelib::MemoryAccess<SharedData, GlobalData>,
-  public pipelib::RunnerSetup<PipelineData, SharedData, GlobalData>,
-  public virtual pipelib::RunnerAccess<PipelineData, SharedData, GlobalData>
-{
-  typedef Block<PipelineData, SharedData, GlobalData> BlockType;
-  typedef PipeRunner<PipelineData, SharedData, GlobalData> RunnerBase;
-  typedef SingleThreadedEngine<PipelineData, SharedData, GlobalData> EngineType;
-  typedef pipelib::MemoryAccess<SharedData, GlobalData> MemoryAccessBase;
-  typedef pipelib::RunnerSetup<PipelineData, SharedData, GlobalData> SetupBase;
-  typedef LoaningPtr<RunnerBase, SingleThreadedRunner> ChildRunnerOwningPtr;
+  typedef Block<Pipe, Shared, Global> BlockType;
+  typedef typename BlockType::HandleType BlockHandleType;
+  typedef PipeEngine<Pipe, Shared, Global> EngineBase;
+  typedef SingleThreadedEngine<Pipe, Shared, Global> Base;
+  typedef pipelib::EngineSetup<Pipe, Shared, Global> SetupBase;
 
   static const unsigned int DEFAULT_MAX_RELEASES = 10000;
 public:
   // Pipeline
-  typedef Pipe<PipelineData, SharedData, GlobalData> PipeType;
-  typedef PipeBlock<PipelineData, SharedData, GlobalData> PipeBlockType;
+  typedef PipeBlock<Pipe, Shared, Global> PipeBlockType;
   typedef typename SetupBase::BarrierType BarrierType;
-  typedef typename SetupBase::ChildRunnerPtr ChildRunnerPtr;
   // Access
-  typedef pipelib::RunnerAccess<PipelineData, SharedData, GlobalData> RunnerAccessType;
-  typedef typename RunnerAccessType::PipelineDataPtr PipelineDataPtr;
+  typedef pipelib::EngineAccess<Pipe, Shared, Global> EngineAccessType;
+  typedef typename EngineAccessType::PipePtr PipePtr;
   // Sinks
-  typedef FinishedSink<PipelineData> FinishedSinkType;
-  typedef DroppedSink<PipelineData> DroppedSinkType;
+  typedef FinishedSink<Pipe> FinishedSinkType;
+  typedef DroppedSink<Pipe> DroppedSinkType;
   // Event
-  typedef typename RunnerAccessType::ListenerType ListenerType;
+  typedef typename EngineAccessType::ListenerType ListenerType;
 
-  virtual ~SingleThreadedRunner();
+  SingleThreadedEngine();
+  SingleThreadedEngine(BlockHandleType & startBlock);
+  virtual ~SingleThreadedEngine();
 
-  // From PipeRunner ////////////////////////
-  virtual void attach(PipeType & pipe);
-  virtual void detach();
+  // From PipeEngine ////////////////////////
+  virtual void attach(BlockHandleType & startBlock);
+  virtual bool detach();
   virtual bool isAttached() const;
   virtual void run();
-  virtual void run(PipeType & pipe);
+  virtual void run(BlockHandleType & startBlock);
   virtual PipelineState::Value getState() const;
-  virtual SingleThreadedRunner * getParent();
-  virtual const SingleThreadedRunner * getParent() const;
+  virtual const BlockHandleType & getStartBlock() const;
   // Sinks
   virtual void setFinishedDataSink(FinishedSinkType * sink);
   virtual void setDroppedDataSink(DroppedSinkType * sink);
   // Event
   virtual void addListener(ListenerType & listener);
   virtual void removeListener(ListenerType & listener);
-  // End from PipeRunner ////////////////////
+  // End from PipeEngine ////////////////////
 
-  // From MemoryAccess ////////////////////////
-  virtual SharedData & shared();
-  virtual const SharedData & shared() const;
-  virtual GlobalData & global();
-  virtual const GlobalData & global() const;
-  // End from MemoryAccess ///////////////////
+  virtual Shared & sharedData();
+  virtual const Shared & sharedData() const;
+  virtual Global & globalData();
+  virtual const Global & globalData() const;
 
-  // From RunnerAccess /////////////////////////
+  // From EngineAccess /////////////////////////
   // Pipeline methods
-  virtual void out(PipelineData & data, const BlockType & outBlock, const Channel channel);
-  virtual RunnerAccessType * getParentAccess();
-  virtual const RunnerAccessType * getParentAccess() const;
+  virtual void out(Pipe * data, const BlockType & outBlock, const Channel channel);
   // Data methods
-  virtual PipelineData & createData();
-  virtual void dropData(PipelineData & toDrop);
-  virtual PipelineData & registerData(PipelineDataPtr data);
-  virtual PipelineDataHandle createDataHandle(PipelineData & data);
-  virtual void releaseDataHandle(const PipelineDataHandle & handle);
-  virtual PipelineData & getData(const PipelineDataHandle & handle);
-  // Memory methods 
-  virtual MemoryAccessBase & memory();
-  virtual const MemoryAccessBase & memory() const;
-  // End from RunnerAccess //////////////////////
+  virtual Pipe * createData();
+  virtual void dropData(Pipe * toDrop);
+  virtual Pipe * registerData(PipePtr data);
+  // End from EngineAccess //////////////////////
 
-  // From RunnerSetup ////////////////////////////
-  virtual ChildRunnerPtr createChildRunner();
-  virtual ChildRunnerPtr createChildRunner(PipeType & subpipe);
-  virtual void registerBarrier(BarrierType & barrier);
-  // End from RunnerSetup /////////////////////////
+  // From EngineSetup ////////////////////////////
+  virtual EngineBase * createEngine();
+  virtual void releaseEngine(EngineBase * engine);
+
+  virtual void registerBarrier(BarrierType * const barrier);
+  // End from EngineSetup /////////////////////////
 
 private:
 
-  struct DataState
-  {
-    enum Value { FRESH, FINISHED, DROPPED };
-  };
-
-  struct Metadata
-  {
-    Metadata(): dataState(DataState::FRESH), referenceCount(1) {}
-    typename DataState::Value dataState;
-    unsigned int referenceCount;
-  };
-
-  typedef ::boost::shared_ptr<GlobalData> GlobalDataPtr;
-  typedef ::boost::scoped_ptr<SharedData> SharedDataPtr;
-  typedef ::boost::ptr_vector<ChildRunnerOwningPtr> ChildRunners;
-  typedef ::std::map<PipelineData *, Metadata> DataStore;
-  typedef ::std::set<BarrierType *> Barriers;
-  typedef ::std::map<PipelineDataHandle, PipelineData *> HandleMap;
-  typedef event::EventSupport<ListenerType> RunnerEventSupport;
+  typedef ::boost::shared_ptr<Global> GlobalPtr;
+  typedef ::boost::scoped_ptr<Shared> SharedPtr;
+  typedef ::boost::ptr_vector<EngineBase> ChildEngines;
+  typedef ::boost::ptr_vector<Pipe> DataStore;
+  typedef ::std::vector<BarrierType *> Barriers;
+  typedef event::EventSupport<ListenerType> EngineEventSupport;
   
-  SingleThreadedRunner(unsigned int maxReleases = DEFAULT_MAX_RELEASES);
-  SingleThreadedRunner(
-    PipeType & pipe,
-    unsigned int maxReleases = DEFAULT_MAX_RELEASES
-  );
-  SingleThreadedRunner(
-    SingleThreadedRunner & root,
-    SingleThreadedRunner & parent,
-    const unsigned int maxReleases);
-  SingleThreadedRunner(
-    SingleThreadedRunner & root,
-    SingleThreadedRunner & parent,
-    PipeType & subpipe,
-    const unsigned int maxReleases);
+  SingleThreadedEngine(::boost::shared_ptr<Global> & global);
+  SingleThreadedEngine(::boost::shared_ptr<Global> & global, BlockHandleType & subpipe);
 
   void init();
 
@@ -171,18 +110,12 @@ private:
   void changeState(const PipelineState::Value newState);
   void clear();
   bool releaseNextBarrier();
-  typename DataStore::iterator findData(const PipelineData & data);
-  typename DataStore::const_iterator findData(const PipelineData & data) const;
-  PipelineDataHandle generateHandle();
-  void increaseReferenceCount(const typename DataStore::iterator & it);
-  void decreaseReferenceCount(const typename DataStore::iterator & it);
-
-  void loanReturned(ChildRunnerOwningPtr & childRunner);
+  typename DataStore::iterator findData(const Pipe * const data);
+  typename DataStore::const_iterator findData(const Pipe * const data) const;
 
   // Parent/Children
-  SingleThreadedRunner * const myRoot;
-  SingleThreadedRunner * const myParent;
-  ChildRunners myChildren;
+  const bool myIsRoot;
+  ChildEngines myChildren;
 
   // Barriers
   unsigned int myMaxReleases;
@@ -190,13 +123,10 @@ private:
 
   // Data
   DataStore myDataStore;
-  GlobalDataPtr myGlobalData;
-  SharedDataPtr mySharedData;
-  HandleMap myHandles;
-  PipelineDataHandle myLastHandle;
+  GlobalPtr myGlobal;
+  SharedPtr myShared;
 
-  // Pipeline
-  PipeType * myPipeline;
+  BlockHandleType myStartBlock;
 
   // State
   PipelineState::Value myState;
@@ -206,10 +136,7 @@ private:
   DroppedSinkType * myDroppedSink;
 
   // Event
-  RunnerEventSupport myRunnerEventSupport;
-
-  friend class SingleThreadedEngine<PipelineData, SharedData, GlobalData>;
-  friend class LoaningPtr<RunnerBase, SingleThreadedRunner>;
+  EngineEventSupport myEventSupport;
 };
 
 }

@@ -1,5 +1,5 @@
 /*
- * PipeRunnerListener.h
+ * PipeEngineListener.h
  *
  *
  *  Created on: Feb 17, 2012
@@ -18,17 +18,18 @@ namespace event {
 // FORWARD DECLARATIONS ////////////////////////////////////
 
 template <class Runner>
-class PipeRunnerDestroyed;
+class PipeEngineDestroyed;
 template <class Runner>
-class PipeRunnerStateChanged;
+class PipeEngineStateChanged;
 
 template <class Runner>
-class PipeRunnerListener
+class PipeEngineListener
 {
 public:
-  virtual void notify(const PipeRunnerStateChanged<Runner> & evt) {}
-  virtual void notify(const PipeRunnerDestroyed<Runner> & evt) {}
+  virtual ~PipeEngineListener() {}
 
+  virtual void notify(const PipeEngineStateChanged<Runner> & evt) {}
+  virtual void notify(const PipeEngineDestroyed<Runner> & evt) {}
 };
 
 }

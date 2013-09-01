@@ -1,4 +1,3 @@
-
 #include <pipelib/Pipeline.h>
 
 #include "PrintStringBlock.h"
@@ -8,18 +7,19 @@
 
 using namespace pipelib;
 
-PrintStringBlock::PrintStringBlock(const int & num):
-BlockType("Print string"),
-myNum(num)
-{}
-
-void PrintStringBlock::in(std::string & data)
+PrintStringBlock::PrintStringBlock(const int & num) :
+    BlockType("Print string"), myNum(num)
 {
-	std::cout << myNum << " " << data << std::endl;
+}
+
+void
+PrintStringBlock::in(std::string * const data)
+{
+  std::cout << myNum << " " << *data << std::endl;
 
   ::std::stringstream ss;
-  ss << data << " " << myNum;
-  data = ss.str();
+  ss << *data << " " << myNum;
+  *data = ss.str();
 
   out(data);
 }

@@ -12,11 +12,13 @@
 // INCLUDES /////////////////////////////////////////////
 #include "pipelib/Pipeline.h"
 #include "pipelib/BlockConnector.h"
-#include "pipelib/PipeRunner.h"
+#include "pipelib/BlockHandle.h"
+#include "pipelib/PipeEngine.h"
 
 #include <string>
+#include <vector>
 
-#include <boost/scoped_array.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 namespace pipelib {
 
@@ -27,50 +29,58 @@ template< class BlockType>
 template< class BlockType, class Incrementer>
   class BlockIterator;
 
-template< typename PipelineData, typename SharedData, typename GlobalData>
+template< typename Pipe, typename Shared, typename Global>
   class PipeBlock;
 
-template< typename PipelineData, typename SharedData, typename GlobalData>
+template< typename Pipe, typename Shared, typename Global>
+  class StartEngine;
+
+template< typename Pipe, typename Shared, typename Global>
   class StartBlock;
 
-template< typename PipelineData, typename SharedData, typename GlobalData>
-  class Block
+template< typename Pipe, typename Shared, typename Global>
+  class Block : public ::boost::enable_shared_from_this<Block<Pipe, Shared, Global> >
   {
+    typedef Connector<Pipe, Shared, Global> ConnectorType;
   public:
 
-    typedef PipelineData PipelineDataType;
-    typedef SharedData SharedDataType;
-    typedef GlobalData GlobalDataType;
+    typedef Pipe PipeType;
+    typedef Shared SharedType;
+    typedef Global GlobalType;
+    typedef Block<Pipe, Shared, Global> Self;
+    typedef typename BlockHandle<PipeType, SharedType, GlobalType>::Type HandleType;
 
-    typedef PipeBlock< PipelineData, SharedData, GlobalData> PipeBlockType;
-    typedef StartBlock< PipelineData, SharedData, GlobalData> StartBlockType;
-    typedef BlockConnector< PipelineData, SharedData, GlobalData> ConnectorType;
+    typedef PipeBlock< Pipe, Shared, Global> PipeBlockType;
+    typedef StartBlock< Pipe, Shared, Global> StartBlockType;
 
   private:
 
-    typedef ::boost::scoped_array< PipeBlockType *> Outputs;
+    typedef ::std::vector<HandleType> Outputs;
 
   protected:
 
-    typedef typename PipeRunnerTypes< Block>::Setup RunnerSetupType;
-    typedef typename PipeRunnerTypes< Block>::Access RunnerAccessType;
+    typedef typename PipeEngineTypes< Block>::Setup EngineSetupType;
+    typedef typename PipeEngineTypes< Block>::Access EngineAccessType;
 
   public:
     typedef BlockIterator< Block, PreorderIncrementer< Block> > PreorderIterator;
     typedef BlockIterator< Block, PreorderIncrementer< const Block> > ConstPreorderIterator;
 
-    typedef typename Outputs::element_type * OutputIterator;
-    typedef const typename Outputs::element_type * ConstOutputIterator;
+    typedef typename Outputs::iterator OutputIterator;
+    typedef const typename Outputs::const_iterator ConstOutputIterator;
 
     explicit
-    Block(const ::std::string & name, const size_t numOutputs = 1);
+    Block(const ::std::string & name);
+    Block(const ::std::string & name, const size_t numOutputs);
     virtual
     ~Block()
     {
     }
 
-    const std::string &
+    const ::std::string &
     getName() const;
+
+    ConnectorType connect;
 
     /**
      /* Get the number of outputs that this block has.
@@ -85,9 +95,9 @@ template< typename PipelineData, typename SharedData, typename GlobalData>
     clearOutput(const Channel channel = CHANNEL_DEFAULT);
 
     /**
-     /* Get the output on a particular channel.  Can be NULL if not set.
+     /* Get the output on a particular channel.
      /**/
-    PipeBlockType *
+    HandleType
     getOutput(const Channel channel = CHANNEL_DEFAULT) const;
 
     OutputIterator
@@ -100,11 +110,6 @@ template< typename PipelineData, typename SharedData, typename GlobalData>
     ConstOutputIterator
     endOutputs() const;
 
-    Block &
-    operator |=(PipeBlockType & toConnect);
-    ConnectorType
-    operator[](const Channel channel);
-
     PreorderIterator
     beginPreorder();
     PreorderIterator
@@ -114,30 +119,6 @@ template< typename PipelineData, typename SharedData, typename GlobalData>
     beginPreorder() const;
     ConstPreorderIterator
     endPreorder() const;
-
-    ////////////////////////////////////////////
-    // Pipeline runner messages to blocks
-    ////////////////////////////////////////////
-    void
-    notifyAttached(RunnerSetupType & setup);
-    void
-    notifyInitialising(RunnerAccessType & access);
-    void
-    notifyInitialised();
-    void
-    notifyStarting();
-    void
-    notifyFinishing();
-    void
-    notifyFinished(RunnerAccessType & access);
-    void
-    notifyDetached();
-
-    /**
-     /* Set the output block for a particular channel.
-     /**/
-    void
-    setOutput(PipeBlockType & output, const Channel channel = CHANNEL_DEFAULT);
 
     bool
     isPipeBlock() const;
@@ -166,24 +147,32 @@ template< typename PipelineData, typename SharedData, typename GlobalData>
       return NULL;
     }
 
+    template< typename Visitor>
+    void visitBlocks(Visitor & visitor);
+
   protected:
 
     /**
-     /* Get the PipeRunner driving this block.  Can return NULL if not running.
+     /* Get the PipeEngine driving this block.  Can return NULL if not running.
      /**/
-    RunnerAccessType *
-    getRunner();
-    const RunnerAccessType *
-    getRunner() const;
+    EngineAccessType *
+    getEngine();
+    const EngineAccessType *
+    getEngine() const;
 
     void
-    out(PipelineData & data, const Channel channel = CHANNEL_DEFAULT) const;
+    out(Pipe * const data) const;
+    void
+    out(Pipe * const data, const Channel channel) const;
+
+    void
+    drop(Pipe * const data) const;
 
     ////////////////////////////////////////////
     // Pipeline runner messages to blocks
     ////////////////////////////////////////////
     virtual void
-    runnerAttached(RunnerSetupType & /*setup*/)
+    engineAttached(EngineSetupType * /*setup*/)
     {
     }
     virtual void
@@ -207,16 +196,50 @@ template< typename PipelineData, typename SharedData, typename GlobalData>
     {
     }
     virtual void
-    runnerDetached()
+    engineDetached()
     {
     }
 
   private:
 
+    HandleType
+    doConnect(HandleType & to);
+    /**
+     /* Set the output block for a particular channel.
+     /**/
+    HandleType
+    doConnect(HandleType & to, const Channel channel);
+
+    HandleType getHandle();
+
+    ////////////////////////////////////////////
+    // Pipeline runner messages to blocks
+    ////////////////////////////////////////////
+    void
+    notifyAttached(EngineSetupType * const setup);
+    void
+    notifyInitialising(EngineAccessType * const access);
+    void
+    notifyInitialised();
+    void
+    notifyStarting();
+    void
+    notifyFinishing();
+    void
+    notifyFinished(EngineAccessType * const access);
+    void
+    notifyDetached();
+
+    template< typename Visitor>
+    bool visitBlocks(Visitor & visitor, const int depth);
+
     const ::std::string myName;
-    RunnerAccessType * myRunner;
-    const size_t myNumOutputs;
+    EngineAccessType * myEngine;
     Outputs myOutputs;
+
+    friend class Connector<Pipe, Shared, Global>;
+    friend class ChannelConnector<Pipe, Shared, Global>;
+    friend class PipeEngine<Pipe, Shared, Global>;
   };
 
 }

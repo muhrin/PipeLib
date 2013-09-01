@@ -13,41 +13,7 @@
 #include <list>
 #include <set>
 
-#include <boost/iterator/filter_iterator.hpp>
-
-
 namespace pipelib {
-namespace detail {
-
-/**
-/* Predicate that returns true if a block has not been visited before
-/* and false otherwise.
-/*
-/**/
-template <typename BlockType>
-class NotVisitedPredicate
-{
-public:
-  typedef ::std::set<BlockType *> Visited;
-
-  NotVisitedPredicate(const Visited & visited):
-    myVisited(visited)
-  {}
-
-  bool operator ()(BlockType * const block) const
-  {
-    // If the block is non-null and we haven't visited it
-    // then return true.  Otherwise false.
-    if(block && myVisited.find(block) == myVisited.end())
-      return true;
-
-    return false;
-  }
-private:
-  const Visited & myVisited;
-};
-
-} // namespace detail
 
 template <class BlockType, class Incrementer>
 BlockIterator<BlockType, Incrementer>::BlockIterator()
@@ -56,10 +22,10 @@ BlockIterator<BlockType, Incrementer>::BlockIterator()
 }
 
 template <class BlockType, class Incrementer>
-BlockIterator<BlockType, Incrementer>::BlockIterator(BlockType & block)
+BlockIterator<BlockType, Incrementer>::BlockIterator(BlockHandleType block)
 {
   // Put the current block at the end of the list
-  myVisiting = myToVisit.insert(myToVisit.end(), &block);
+  myVisiting = myToVisit.insert(myToVisit.end(), block);
 }
 
 template <class BlockType, class Incrementer>
@@ -76,10 +42,10 @@ BlockIterator<BlockType, Incrementer>::increment()
 }
 
 template <class BlockType, class Incrementer>
-BlockType &
+typename BlockIterator<BlockType, Incrementer>::BlockHandleType &
 BlockIterator<BlockType, Incrementer>::dereference() const
 {
-  return *(*myVisiting);
+  return *myVisiting;
 }
 
 template <class BlockType, class Incrementer>
@@ -112,12 +78,8 @@ PreorderIncrementer<BlockType>::operator() (
   InputIterator last
 ) const
 {
-  typedef detail::NotVisitedPredicate<BlockType> NotVisitedPred;
-  typedef ::boost::filter_iterator<NotVisitedPred, InputIterator> FilterIter;
-  NotVisitedPred filter(visited);
-
-  // Save pointer to the one we're visiting
-  BlockType * const block = *visiting;
+  // Save handle to the one we're visiting
+  BlockHandleType block = *visiting;
 
   // Erase it from the to visit list
   typename ToVisit::iterator it = toVisit.erase(visiting);
@@ -125,12 +87,20 @@ PreorderIncrementer<BlockType>::operator() (
   // Add it to the visited list
   visited.insert(block);
 
-  // Insert all its not yet visisted outputs
-  FilterIter filteredStart(filter, first, last);
-  FilterIter filteredEnd(filter, last, last);
-  toVisit.insert(it, filteredStart, filteredEnd);
+  // Insert all its not yet visited outputs
+  for(InputIterator out = first; out != last; ++out)
+  {
+    if(out->get() != NULL && visited.find(*out) == visited.end())
+      toVisit.push_back(*out);
+  }
+
   if(!toVisit.empty())
+  {
     visiting = toVisit.begin();
+    if(visited.find(*visiting) != visited.end())
+      this->operator ()(visiting, toVisit, visited, (*visiting)->beginOutputs(),
+          (*visiting)->endOutputs());
+  }
   else
     visiting = toVisit.end();
 }

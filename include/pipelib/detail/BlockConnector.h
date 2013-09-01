@@ -16,34 +16,40 @@
 
 namespace pipelib {
 
-template <
-  typename PipelineData,
-  typename SharedData,
-  typename GlobalData,
-  class OutputType,
-  class InputType
->
-BlockConnector<PipelineData, SharedData, GlobalData, OutputType, InputType>::BlockConnector(
-  OutputType & block,
-  const Channel channel):
-myBlock(block),
-myChannel(channel)
-{}
+template< typename Pipe, typename Shared, typename Global>
+  ChannelConnector< Pipe, Shared, Global>::ChannelConnector(BlockType * const block,
+      const Channel channel) :
+      myBlock(block), myChannel(channel)
+  {
+  }
 
-template <
-  typename PipelineData,
-  typename SharedData,
-  typename GlobalData,
-  class OutputType,
-  class InputType
->
-OutputType &
-BlockConnector<PipelineData, SharedData, GlobalData, OutputType, InputType>::operator |=(InputType & toConnect)
-{
-  myBlock.setOutput(toConnect, myChannel);
-  return myBlock;
-}
+template< typename Pipe, typename Shared, typename Global>
+  typename ChannelConnector< Pipe, Shared, Global>::BlockHandleType
+  ChannelConnector< Pipe, Shared, Global>::operator ()(BlockHandleType & to)
+  {
+    return myBlock->doConnect(to, myChannel);
+  }
 
+template< typename Pipe, typename Shared, typename Global>
+  Connector< Pipe, Shared, Global>::Connector(BlockType * const block) :
+      myBlock(block)
+  {
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  typename Connector< Pipe, Shared, Global>::BlockHandleType
+  Connector< Pipe, Shared, Global>::operator ()(
+      Connector< Pipe, Shared, Global>::BlockHandleType & block)
+  {
+    return myBlock->doConnect(block, CHANNEL_DEFAULT);
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  ChannelConnector< Pipe, Shared, Global>
+  Connector< Pipe, Shared, Global>::operator [](const Channel channel)
+  {
+    return ChannelConnector<Pipe, Shared, Global>(myBlock, channel);
+  }
 
 }
 

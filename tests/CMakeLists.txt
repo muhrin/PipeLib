@@ -17,7 +17,6 @@ set(tests_Header_Files__
 source_group("Header Files" FILES ${tests_Header_Files__})
 
 set(tests_Source_Files__
-  BasicTests.cpp
 )
 source_group("Source Files" FILES ${tests_Source_Files__})
 

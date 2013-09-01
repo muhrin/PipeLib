@@ -13,232 +13,288 @@
 #include <list>
 #include <set>
 
+#include <boost/foreach.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/filter_iterator.hpp>
 
 #include "pipelib/Pipeline.h"
 #include "pipelib/BlockConnector.h"
 #include "pipelib/BlockIterator.h"
-#include "pipelib/PipeRunner.h"
+#include "pipelib/PipeEngine.h"
 
 namespace pipelib {
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-Block<PipelineData, SharedData, GlobalData>::Block(
-  const ::std::string & name, const size_t numOutputs):
-myName(name),
-myNumOutputs(numOutputs),
-myOutputs(new PipeBlockType *[numOutputs])
-{
-  // Null all outputs
-  for(size_t i = 0; i < numOutputs; ++i)
-    myOutputs[i] = NULL;
-}
+template< typename Pipe, typename Shared, typename Global>
+  Block< Pipe, Shared, Global>::Block(const ::std::string & name) :
+      myName(name), myOutputs(1), connect(this)
+  {
+  }
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-const ::std::string & Block<PipelineData, SharedData, GlobalData>::getName() const
-{
-	return myName;
-}
+template< typename Pipe, typename Shared, typename Global>
+  Block< Pipe, Shared, Global>::Block(const ::std::string & name, const size_t numOutputs) :
+      myName(name), myOutputs(numOutputs), connect(*this)
+  {
+  }
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-size_t Block<PipelineData, SharedData, GlobalData>::getNumOutputs() const
-{
-  return myNumOutputs;
-}
+template< typename Pipe, typename Shared, typename Global>
+  const ::std::string &
+  Block< Pipe, Shared, Global>::getName() const
+  {
+    return myName;
+  }
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-bool Block<PipelineData, SharedData, GlobalData>::clearOutput(const Channel channel)
-{
-  PIPELIB_ASSERT(channel < static_cast<Channel>(getNumOutputs()));
+template< typename Pipe, typename Shared, typename Global>
+  size_t
+  Block< Pipe, Shared, Global>::getNumOutputs() const
+  {
+    return myOutputs.size();
+  }
 
-  const bool wasSet = (myOutputs[channel] != NULL);
-  myOutputs[channel] = NULL;
-  return wasSet;
-}
+template< typename Pipe, typename Shared, typename Global>
+  bool
+  Block< Pipe, Shared, Global>::clearOutput(const Channel channel)
+  {
+    PIPELIB_ASSERT(channel < static_cast<Channel>(getNumOutputs()));
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-typename Block<PipelineData, SharedData, GlobalData>::PipeBlockType *
-Block<PipelineData, SharedData, GlobalData>::getOutput(const Channel channel) const
-{
-  PIPELIB_ASSERT(channel < (int)getNumOutputs());
+    const bool wasSet = (myOutputs[channel] != NULL);
+    myOutputs[channel] = NULL;
+    return wasSet;
+  }
 
-  return myOutputs[channel];
-}
+template< typename Pipe, typename Shared, typename Global>
+  typename Block< Pipe, Shared, Global>::HandleType
+  Block< Pipe, Shared, Global>::getOutput(const Channel channel) const
+  {
+    PIPELIB_ASSERT(channel < (int)getNumOutputs());
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-typename Block<PipelineData, SharedData, GlobalData>::OutputIterator
-Block<PipelineData, SharedData, GlobalData>::beginOutputs()
-{
-  return myOutputs.get();
-}
+    return myOutputs[channel];
+  }
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-typename Block<PipelineData, SharedData, GlobalData>::OutputIterator
-Block<PipelineData, SharedData, GlobalData>::endOutputs()
-{
-  return myOutputs.get() + myNumOutputs;
-}
+template< typename Pipe, typename Shared, typename Global>
+  typename Block< Pipe, Shared, Global>::OutputIterator
+  Block< Pipe, Shared, Global>::beginOutputs()
+  {
+    return myOutputs.begin();
+  }
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-typename Block<PipelineData, SharedData, GlobalData>::ConstOutputIterator
-Block<PipelineData, SharedData, GlobalData>::beginOutputs() const
-{
-  return myOutputs.get();
-}
+template< typename Pipe, typename Shared, typename Global>
+  typename Block< Pipe, Shared, Global>::OutputIterator
+  Block< Pipe, Shared, Global>::endOutputs()
+  {
+    return myOutputs.end();
+  }
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-typename Block<PipelineData, SharedData, GlobalData>::ConstOutputIterator
-Block<PipelineData, SharedData, GlobalData>::endOutputs() const
-{
-  return myOutputs.get() + myNumOutputs;
-}
+template< typename Pipe, typename Shared, typename Global>
+  typename Block< Pipe, Shared, Global>::ConstOutputIterator
+  Block< Pipe, Shared, Global>::beginOutputs() const
+  {
+    return myOutputs.begin();
+  }
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-Block<PipelineData, SharedData, GlobalData> &
-Block<PipelineData, SharedData, GlobalData>::operator |= (
-  PipeBlockType & toConnect)
-{
-  setOutput(toConnect);
-  return *this;
-}
+template< typename Pipe, typename Shared, typename Global>
+  typename Block< Pipe, Shared, Global>::ConstOutputIterator
+  Block< Pipe, Shared, Global>::endOutputs() const
+  {
+    return myOutputs.end();
+  }
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-typename Block<PipelineData, SharedData, GlobalData>::ConnectorType
-Block<PipelineData, SharedData, GlobalData>::operator [] (const Channel channel)
-{
-  return ConnectorType(*this, channel);
-}
+template< typename Pipe, typename Shared, typename Global>
+  typename Block< Pipe, Shared, Global>::PreorderIterator
+  Block< Pipe, Shared, Global>::beginPreorder()
+  {
+    return PreorderIterator(getHandle());
+  }
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-typename Block<PipelineData, SharedData, GlobalData>::PreorderIterator
-Block<PipelineData, SharedData, GlobalData>::beginPreorder()
-{
-  return PreorderIterator(*this);
-}
+template< typename Pipe, typename Shared, typename Global>
+  typename Block< Pipe, Shared, Global>::PreorderIterator
+  Block< Pipe, Shared, Global>::endPreorder()
+  {
+    return PreorderIterator();
+  }
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-typename Block<PipelineData, SharedData, GlobalData>::PreorderIterator
-Block<PipelineData, SharedData, GlobalData>::endPreorder()
-{
-  return PreorderIterator();
-}
+template< typename Pipe, typename Shared, typename Global>
+  typename Block< Pipe, Shared, Global>::ConstPreorderIterator
+  Block< Pipe, Shared, Global>::beginPreorder() const
+  {
+    ConstPreorderIterator (
+    getHandle());}
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-typename Block<PipelineData, SharedData, GlobalData>::ConstPreorderIterator
-Block<PipelineData, SharedData, GlobalData>::beginPreorder() const
-{
-  ConstPreorderIterator(*this);
-}
+template< typename Pipe, typename Shared, typename Global>
+  typename Block< Pipe, Shared, Global>::ConstPreorderIterator
+  Block< Pipe, Shared, Global>::endPreorder() const
+  {
+    ConstPreorderIterator();
+  }
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-typename Block<PipelineData, SharedData, GlobalData>::ConstPreorderIterator
-Block<PipelineData, SharedData, GlobalData>::endPreorder() const
-{
-  ConstPreorderIterator();
-}
+template< typename Pipe, typename Shared, typename Global>
+  typename Block< Pipe, Shared, Global>::EngineAccessType *
+  Block< Pipe, Shared, Global>::getEngine()
+  {
+    return myEngine;
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  const typename Block< Pipe, Shared, Global>::EngineAccessType *
+  Block< Pipe, Shared, Global>::getEngine() const
+  {
+    return myEngine;
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  void
+  Block< Pipe, Shared, Global>::out(Pipe * const data) const
+  {
+    // Tell the engine to pass on the data
+    myEngine->out(data, *this, CHANNEL_DEFAULT);
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  void
+  Block< Pipe, Shared, Global>::out(Pipe * const data, const Channel channel) const
+  {
+    // Tell the engine to pass on the data
+    myEngine->out(data, *this, channel);
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  void
+  Block< Pipe, Shared, Global>::drop(Pipe * const data) const
+  {
+    // Tell the engine to pass on the data
+    myEngine->dropData(data);
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  bool
+  Block< Pipe, Shared, Global>::isPipeBlock() const
+  {
+    return asPipeBlock() != NULL;
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  bool
+  Block< Pipe, Shared, Global>::isStartBlock() const
+  {
+    return asStartBlock() != NULL;
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  template< typename Visitor>
+    void
+    Block< Pipe, Shared, Global>::visitBlocks(Visitor & visitor)
+    {
+      visitBlocks(visitor, 0);
+    }
+
+template< typename Pipe, typename Shared, typename Global>
+  typename Block< Pipe, Shared, Global>::HandleType
+  Block< Pipe, Shared, Global>::doConnect(HandleType & to)
+  {
+    PIPELIB_ASSERT_MSG(!getEngine(), "Can't connect pipe blocks while engine is attached.");
+    PIPELIB_ASSERT_MSG(to->asPipeBlock(), "Can only blocks to pipe blocks.");
+
+    myOutputs[CHANNEL_DEFAULT] = to;
+    return to;
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  typename Block< Pipe, Shared, Global>::HandleType
+  Block< Pipe, Shared, Global>::doConnect(HandleType & to, const Channel channel)
+  {
+    PIPELIB_ASSERT_MSG(channel < (int)getNumOutputs(), "Channel out of range");
+    PIPELIB_ASSERT_MSG(!getEngine(), "Can't connect pipe blocks while engine is attached.");
+    PIPELIB_ASSERT_MSG(to->asPipeBlock(), "Can only blocks to pipe blocks.");
+
+    myOutputs[channel] = to;
+    return to;
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  typename Block< Pipe, Shared, Global>::HandleType
+  Block< Pipe, Shared, Global>::getHandle()
+  {
+    return this->shared_from_this();
+  }
 
 /////////////////////////////////////
-// PipeRunner messages //////////////
+// PipeEngine messages //////////////
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-void Block<PipelineData, SharedData, GlobalData>::notifyAttached(RunnerSetupType & setup)
-{
-  // Pass on the message
-  runnerAttached(setup);
-}
+template< typename Pipe, typename Shared, typename Global>
+  void
+  Block< Pipe, Shared, Global>::notifyAttached(EngineSetupType * const setup)
+  {
+    // Pass on the message
+    engineAttached(setup);
+  }
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-void Block<PipelineData, SharedData, GlobalData>::notifyInitialising(RunnerAccessType & access)
-{
-  myRunner = &access;
-  pipelineInitialising();
-}
+template< typename Pipe, typename Shared, typename Global>
+  void
+  Block< Pipe, Shared, Global>::notifyInitialising(EngineAccessType * const access)
+  {
+    myEngine = access;
+    pipelineInitialising();
+  }
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-void Block<PipelineData, SharedData, GlobalData>::notifyInitialised()
-{
-  // Pass on the message
-  pipelineInitialised();
-}
+template< typename Pipe, typename Shared, typename Global>
+  void
+  Block< Pipe, Shared, Global>::notifyInitialised()
+  {
+    // Pass on the message
+    pipelineInitialised();
+  }
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-void Block<PipelineData, SharedData, GlobalData>::notifyStarting()
-{
-  // Pass on the message
-  pipelineStarting();
-}
+template< typename Pipe, typename Shared, typename Global>
+  void
+  Block< Pipe, Shared, Global>::notifyStarting()
+  {
+    // Pass on the message
+    pipelineStarting();
+  }
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-void Block<PipelineData, SharedData, GlobalData>::notifyFinishing()
-{
-  // Pass on the message
-  pipelineFinishing();
-}
+template< typename Pipe, typename Shared, typename Global>
+  void
+  Block< Pipe, Shared, Global>::notifyFinishing()
+  {
+    // Pass on the message
+    pipelineFinishing();
+  }
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-void Block<PipelineData, SharedData, GlobalData>::notifyFinished(RunnerAccessType & access)
-{
-  PIPELIB_ASSERT(myRunner == &access);
-  
-  myRunner = NULL;
-  // Pass on the message
-  pipelineFinished();
-}
+template< typename Pipe, typename Shared, typename Global>
+  void
+  Block< Pipe, Shared, Global>::notifyFinished(EngineAccessType * access)
+  {
+    PIPELIB_ASSERT(myEngine == access);
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-void Block<PipelineData, SharedData, GlobalData>::notifyDetached()
-{
-  myRunner = NULL;
-  // Pass on the message
-  runnerDetached();
-}
+    myEngine = NULL;
+    // Pass on the message
+    pipelineFinished();
+  }
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-typename Block<PipelineData, SharedData, GlobalData>::RunnerAccessType *
-Block<PipelineData, SharedData, GlobalData>::getRunner()
-{
-	return myRunner;
-}
+template< typename Pipe, typename Shared, typename Global>
+  void
+  Block< Pipe, Shared, Global>::notifyDetached()
+  {
+    myEngine = NULL;
+    // Pass on the message
+    engineDetached();
+  }
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-const typename Block<PipelineData, SharedData, GlobalData>::RunnerAccessType *
-Block<PipelineData, SharedData, GlobalData>::getRunner() const
-{
-	return myRunner;
-}
+template< typename Pipe, typename Shared, typename Global>
+  template< typename Visitor>
+    bool
+    Block< Pipe, Shared, Global>::visitBlocks(Visitor & visitor, const int depth)
+    {
+      if(!visitor(getHandle(), depth))
+        return false;
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-void Block<PipelineData, SharedData, GlobalData>::out(
-  PipelineData & data,
-  const Channel channel) const
-{
-  // Tell the runner to pass on the data
-  myRunner->out(data, *this, channel);
-}
+      BOOST_FOREACH(HandleType & output, myOutputs)
+      {
+        if(output.get() && !output->visitBlocks(visitor, depth + 1))
+          return false;
+      }
+      return true;
+    }
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-void Block<PipelineData, SharedData, GlobalData>::setOutput(
-  PipeBlockType & output, const Channel channel)
-{
-  PIPELIB_ASSERT(channel < (int)getNumOutputs());
-
-  myOutputs[channel] = &output;
-}
-
-template <typename PipelineData, typename SharedData, typename GlobalData>
-bool Block<PipelineData, SharedData, GlobalData>::isPipeBlock() const
-{
-  return asPipeBlock() != NULL;
-}
-
-template <typename PipelineData, typename SharedData, typename GlobalData>
-bool Block<PipelineData, SharedData, GlobalData>::isStartBlock() const
-{
-  return asStartBlock() != NULL;
-}
-
-
-}
+} // namespace pipelib
 
 #endif /* BLOCK_H */

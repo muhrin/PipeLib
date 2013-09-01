@@ -17,16 +17,16 @@
 namespace pipelib {
 
 // FORWARD DECLARES ///////////////////////////////
-template <typename PipelineData, typename SharedData, typename GlobalData>
+template <typename Pipe, typename Shared, typename Global>
 class Block;
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
+template <typename Pipe, typename Shared, typename Global>
 class PipeBlock;
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
+template <typename Pipe, typename Shared, typename Global>
 class SingleThreadedEngine;
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
+template <typename Pipe, typename Shared, typename Global>
 class StartBlock;
 
 // Channel 
@@ -36,19 +36,16 @@ static const int CHANNEL_ANY  = -2;
 static const int CHANNEL_ALL  = -1;
 static const int CHANNEL_DEFAULT = 0;
 
-// Data handle
-typedef size_t PipelineDataHandle;
-
-template <typename PipelineData>
+template <typename Pipe>
 struct NoSharedGlobal
 {
-  typedef PipeBlock<PipelineData, const void *, const void *> PipeBlockType;
-  typedef StartBlock<PipelineData, const void *, const void *> StartBlockType;
-  typedef SingleThreadedEngine<PipelineData, const void *, const void *> SingleThreadedEngineType;
+  typedef PipeBlock<Pipe, const void *, const void *> PipeBlockType;
+  typedef StartBlock<Pipe, const void *, const void *> StartBlockType;
+  typedef SingleThreadedEngine<Pipe, const void *, const void *> SingleThreadedEngineType;
 };
 
 // If C++11 is available then use std::unique_ptr, otherwise
-// std::auto_ptr is used.  This means that the user should taylor
+// std::auto_ptr is used.  This means that the user should tailor
 // their code using the define if they want to use any specific
 // behaviour
 template <typename T>
@@ -76,7 +73,7 @@ private:
 template <typename T>
 inline PIPELIB_UNIQUE_PTR(T) makeUniquePtr(T * ptr)
 {
-  return UniquePtr<T>::Type(ptr);
+  return typename UniquePtr<T>::Type(ptr);
 }
 
 }

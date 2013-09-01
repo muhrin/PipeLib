@@ -16,34 +16,37 @@
 
 namespace pipelib {
 
-template <typename PipelineData, typename SharedData, typename GlobalData>
-class PipeBlock : public virtual Block<PipelineData, SharedData, GlobalData>
-{
-protected:
-  typedef Block<PipelineData, SharedData, GlobalData> BlockType;
-
-public:
-  typedef BlockConnector<PipelineData, SharedData, GlobalData, PipeBlock> ConnectorType;
-
-  PipeBlock(const size_t numOutputs = 1): BlockType("Pipe block", numOutputs) {}
-
-  // Hide Block's operator |= so that we can return a PipeBlock reference
-  PipeBlock & operator |= (PipeBlock & toConnect)
+template< typename Pipe, typename Shared, typename Global>
+  class PipeBlock : public virtual Block< Pipe, Shared, Global>
   {
-    BlockType::operator |= (toConnect);
-    return *this;
-  }
+  protected:
+    typedef Block< Pipe, Shared, Global> Base;
 
-  ConnectorType operator[] (const Channel channel)
-  {
-    return ConnectorType(*this, channel);
-  }
+  public:
 
-	virtual void in(PipelineData & data) = 0;
+    PipeBlock() :
+        Base("Pipe block")
+    {
+    }
+    virtual
+    ~PipeBlock()
+    {
+    }
 
-  virtual PipeBlock * asPipeBlock() { return this; }
-  virtual const PipeBlock * asPipeBlock() const { return this; }
-};
+    virtual void
+    in(Pipe * data) = 0;
+
+    virtual PipeBlock *
+    asPipeBlock()
+    {
+      return this;
+    }
+    virtual const PipeBlock *
+    asPipeBlock() const
+    {
+      return this;
+    }
+  };
 
 }
 

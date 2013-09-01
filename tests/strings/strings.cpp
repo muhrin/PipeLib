@@ -12,32 +12,27 @@ main()
   using namespace pipelib;
   using std::string;
 
-  typedef ::pipelib::Pipe< string, const void *, const void *> PipeType;
+  typedef pipelib::Block< string, const void *, const void *> BlockType;
+  typedef pipelib::BlockHandle< string, const void *, const void *>::Type BlockHandle;
   typedef pipelib::SimpleBarrier< string, const void *, const void *> Barrier;
-  typedef PipeType::BlockType BlockType;
 
   // Create the pipeline
   NoSharedGlobal< string>::SingleThreadedEngineType engine;
 
   // Create the start block
-  PipeType pipe;
-  RandomStringBlock * const start = pipe.addBlock(new RandomStringBlock(10));
-  pipe.setStartBlock(start);
+  BlockHandle start(new RandomStringBlock(3));
 
   // Create pipeline blocks
-  PrintStringBlock * const b1 = pipe.addBlock(new PrintStringBlock(1));
-  PrintStringBlock * const b2 = pipe.addBlock(new PrintStringBlock(2));
-  Barrier * const barrier = pipe.addBlock(new Barrier());
-  PrintStringBlock * const b3 = pipe.addBlock(new PrintStringBlock(3));
+  BlockHandle b1(new PrintStringBlock(1));
+  BlockHandle b2(new PrintStringBlock(2));
+  BlockHandle barrier(new Barrier());
+  BlockHandle b3(new PrintStringBlock(3));
 
   // Connect everything
-  pipe.connect(start, b1);
-  pipe.connect(b1, b2);
-  pipe.connect(b2, barrier);
-  pipe.connect(barrier, b3);
+  start->connect(b1)->connect(b2)->connect(barrier)->connect(b3);
 
   // Run the pipe
-  engine.run(pipe);
+  engine.run(start);
 
   return 0;
 }

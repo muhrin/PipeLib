@@ -29,7 +29,7 @@ public:
   virtual ~PrintStringBlock() {}
 
   virtual void
-  in(::std::string & data);
+  in(::std::string * const data);
 
 private:
   const int myNum;

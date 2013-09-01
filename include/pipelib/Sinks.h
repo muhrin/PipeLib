@@ -15,27 +15,35 @@
 // FORWARD DECLARATIONS ////////////////////////////////////
 namespace pipelib {
 
-template <class PipelineData>
-class FinishedSink
-{
-public:
-  typedef typename UniquePtr<PipelineData>::Type PipelineDataPtr;
+template< class Pipe>
+  class FinishedSink
+  {
+  public:
+    typedef typename UniquePtr< Pipe>::Type PipePtr;
 
-	virtual ~FinishedSink() {}
+    virtual
+    ~FinishedSink()
+    {
+    }
 
-	virtual void finished(PipelineDataPtr data) = 0;
-};
+    virtual void
+    finished(PipePtr data) = 0;
+  };
 
-template <class PipelineData>
-class DroppedSink
-{
-public:
-  typedef typename UniquePtr<PipelineData>::Type PipelineDataPtr;
+template< class Pipe>
+  class DroppedSink
+  {
+  public:
+    typedef typename UniquePtr< Pipe>::Type PipePtr;
 
-	virtual ~DroppedSink() {}
+    virtual
+    ~DroppedSink()
+    {
+    }
 
-	virtual void dropped(PipelineDataPtr data) = 0;
-};
+    virtual void
+    dropped(PipePtr data) = 0;
+  };
 
 }
 
