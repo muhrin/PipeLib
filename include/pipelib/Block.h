@@ -169,7 +169,7 @@ template< typename Pipe, typename Shared, typename Global>
     drop(Pipe * const data) const;
 
     ////////////////////////////////////////////
-    // Pipeline runner messages to blocks
+    // Pipeline engine messages to blocks
     ////////////////////////////////////////////
     virtual void
     engineAttached(EngineSetupType * /*setup*/)
@@ -213,7 +213,7 @@ template< typename Pipe, typename Shared, typename Global>
     HandleType getHandle();
 
     ////////////////////////////////////////////
-    // Pipeline runner messages to blocks
+    // Pipeline engine messages to blocks
     ////////////////////////////////////////////
     void
     notifyAttached(EngineSetupType * const setup);

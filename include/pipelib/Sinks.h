@@ -19,7 +19,7 @@ template< class Pipe>
   class FinishedSink
   {
   public:
-    typedef typename UniquePtr< Pipe>::Type PipePtr;
+    typedef typename UniquePtr< Pipe>::Type PipeUniquePtr;
 
     virtual
     ~FinishedSink()
@@ -27,14 +27,14 @@ template< class Pipe>
     }
 
     virtual void
-    finished(PipePtr data) = 0;
+    finished(PipeUniquePtr data) = 0;
   };
 
 template< class Pipe>
   class DroppedSink
   {
   public:
-    typedef typename UniquePtr< Pipe>::Type PipePtr;
+    typedef typename UniquePtr< Pipe>::Type PipeUniquePtr;
 
     virtual
     ~DroppedSink()
@@ -42,7 +42,7 @@ template< class Pipe>
     }
 
     virtual void
-    dropped(PipePtr data) = 0;
+    dropped(PipeUniquePtr data) = 0;
   };
 
 }

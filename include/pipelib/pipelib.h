@@ -6,7 +6,7 @@
 #include "pipelib/PipeBlock.h"
 #include "pipelib/StartBlock.h"
 #include "pipelib/SimpleBarrier.h"
-#include "pipelib/SingleThreadedEngine.h"
+#include "pipelib/SerialEngine.h"
 #include "pipelib/Sinks.h"
 
 

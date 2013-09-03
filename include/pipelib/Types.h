@@ -24,15 +24,13 @@ template <typename Pipe, typename Shared, typename Global>
 class PipeBlock;
 
 template <typename Pipe, typename Shared, typename Global>
-class SingleThreadedEngine;
+class SerialEngine;
 
 template <typename Pipe, typename Shared, typename Global>
 class StartBlock;
 
 // Channel 
 typedef int Channel;
-static const int CHANNEL_NONE = -3;
-static const int CHANNEL_ANY  = -2;
 static const int CHANNEL_ALL  = -1;
 static const int CHANNEL_DEFAULT = 0;
 
@@ -41,7 +39,7 @@ struct NoSharedGlobal
 {
   typedef PipeBlock<Pipe, const void *, const void *> PipeBlockType;
   typedef StartBlock<Pipe, const void *, const void *> StartBlockType;
-  typedef SingleThreadedEngine<Pipe, const void *, const void *> SingleThreadedEngineType;
+  typedef SerialEngine<Pipe, const void *, const void *> SerialEngineType;
 };
 
 // If C++11 is available then use std::unique_ptr, otherwise

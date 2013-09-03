@@ -12,47 +12,47 @@
 namespace pipelib {
 namespace event {
 
-template <class Runner>
-PipeEngineStateChanged<Runner>::PipeEngineStateChanged(
-  const Runner & runner,
-  const ::pipelib::PipelineState::Value oldState,
-  const ::pipelib::PipelineState::Value newState):
-myRunner(runner),
-myOldState(oldState),
-myNewState(newState)
-{}
+template< class Engine>
+  PipeEngineStateChanged< Engine>::PipeEngineStateChanged(const Engine & engine,
+      const ::pipelib::PipelineState::Value oldState,
+      const ::pipelib::PipelineState::Value newState) :
+      myEngine(engine), myOldState(oldState), myNewState(newState)
+  {
+  }
 
-template <class Runner>
-const Runner &
-PipeEngineStateChanged<Runner>::getRunner() const
-{
-  return myRunner;
-}
+template< class Engine>
+  const Engine &
+  PipeEngineStateChanged< Engine>::getEngine() const
+  {
+    return myEngine;
+  }
 
-template <class Runner>
-::pipelib::PipelineState::Value
-PipeEngineStateChanged<Runner>::getOldState() const
-{
-  return myOldState;
-}
+template< class Engine>
+  ::pipelib::PipelineState::Value
+  PipeEngineStateChanged< Engine>::getOldState() const
+  {
+    return myOldState;
+  }
 
-template <class Runner>
-::pipelib::PipelineState::Value
-PipeEngineStateChanged<Runner>::getNewState() const
-{
-  return myNewState;
-}
+template< class Engine>
+  ::pipelib::PipelineState::Value
+  PipeEngineStateChanged< Engine>::getNewState() const
+  {
+    return myNewState;
+  }
 
-template <class Runner>
-PipeEngineDestroyed<Runner>::PipeEngineDestroyed(const Runner & runner):
-myRunner(runner)
-{}
+template< class Engine>
+  PipeEngineDestroyed< Engine>::PipeEngineDestroyed(const Engine & engine) :
+      myEngine(engine)
+  {
+  }
 
-template <class Runner>
-const Runner & PipeEngineDestroyed<Runner>::getRunner() const
-{
-  return myRunner;
-}
+template< class Engine>
+  const Engine &
+  PipeEngineDestroyed< Engine>::getEngine() const
+  {
+    return myEngine;
+  }
 
 }
 }

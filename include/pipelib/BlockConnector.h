@@ -29,7 +29,7 @@ class ChannelConnector
   typedef typename BlockType::HandleType BlockHandleType;
 public:
   ChannelConnector(BlockType * const block, const Channel channel);
-  BlockHandleType operator ()(BlockHandleType & to);
+  BlockHandleType operator ()(BlockHandleType to);
 protected:
   BlockType * const myBlock;
   const Channel myChannel;
@@ -42,7 +42,7 @@ class Connector
   typedef typename BlockType::HandleType BlockHandleType;
 public:
   Connector(BlockType * const block);
-  BlockHandleType operator ()(BlockHandleType & block);
+  BlockHandleType operator ()(BlockHandleType block);
   ChannelConnector<Pipe, Shared, Global> operator [](const Channel channel);
 private:
   BlockType * const myBlock;

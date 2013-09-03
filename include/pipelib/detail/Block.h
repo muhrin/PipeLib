@@ -26,13 +26,13 @@ namespace pipelib {
 
 template< typename Pipe, typename Shared, typename Global>
   Block< Pipe, Shared, Global>::Block(const ::std::string & name) :
-      myName(name), myOutputs(1), connect(this)
+      myEngine(NULL), myName(name), myOutputs(1), connect(this)
   {
   }
 
 template< typename Pipe, typename Shared, typename Global>
   Block< Pipe, Shared, Global>::Block(const ::std::string & name, const size_t numOutputs) :
-      myName(name), myOutputs(numOutputs), connect(*this)
+      myEngine(NULL), myName(name), myOutputs(numOutputs), connect(*this)
   {
   }
 
@@ -190,11 +190,7 @@ template< typename Pipe, typename Shared, typename Global>
   typename Block< Pipe, Shared, Global>::HandleType
   Block< Pipe, Shared, Global>::doConnect(HandleType & to)
   {
-    PIPELIB_ASSERT_MSG(!getEngine(), "Can't connect pipe blocks while engine is attached.");
-    PIPELIB_ASSERT_MSG(to->asPipeBlock(), "Can only blocks to pipe blocks.");
-
-    myOutputs[CHANNEL_DEFAULT] = to;
-    return to;
+    return doConnect(to, CHANNEL_DEFAULT);
   }
 
 template< typename Pipe, typename Shared, typename Global>
@@ -205,7 +201,11 @@ template< typename Pipe, typename Shared, typename Global>
     PIPELIB_ASSERT_MSG(!getEngine(), "Can't connect pipe blocks while engine is attached.");
     PIPELIB_ASSERT_MSG(to->asPipeBlock(), "Can only blocks to pipe blocks.");
 
-    myOutputs[channel] = to;
+    if(channel == CHANNEL_ALL)
+      myOutputs.assign(getNumOutputs(), to);
+    else
+      myOutputs[channel] = to;
+
     return to;
   }
 

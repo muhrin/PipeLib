@@ -21,53 +21,53 @@ template< typename T, typename U, typename V>
 
 namespace event {
 
-template< class Runner>
+template< class Engine>
   class PipeEngineStateChanged
   {
   public:
-    PipeEngineStateChanged(const Runner & runner, const ::pipelib::PipelineState::Value oldState,
+    PipeEngineStateChanged(const Engine & engine, const ::pipelib::PipelineState::Value oldState,
         const ::pipelib::PipelineState::Value newState);
 
-    const Runner &
-    getRunner() const;
+    const Engine &
+    getEngine() const;
     ::pipelib::PipelineState::Value
     getOldState() const;
     ::pipelib::PipelineState::Value
     getNewState() const;
 
   private:
-    const Runner & myRunner;
+    const Engine & myEngine;
     const ::pipelib::PipelineState::Value myOldState;
     const ::pipelib::PipelineState::Value myNewState;
   };
 
 template< class T, class U, class V>
   PipeEngineStateChanged< EngineAccess< T, U, V> >
-  makeStateChangedEvent(const EngineAccess< T, U, V> & runner,
+  makeStateChangedEvent(const EngineAccess< T, U, V> & engine,
       const ::pipelib::PipelineState::Value oldState,
       const ::pipelib::PipelineState::Value newState)
   {
-    return PipeEngineStateChanged< EngineAccess< T, U, V> >(runner, oldState, newState);
+    return PipeEngineStateChanged< EngineAccess< T, U, V> >(engine, oldState, newState);
   }
 
-template< class Runner>
+template< class Engine>
   class PipeEngineDestroyed
   {
   public:
-    PipeEngineDestroyed(const Runner & runner);
+    PipeEngineDestroyed(const Engine & engine);
 
-    const Runner &
-    getRunner() const;
+    const Engine &
+    getEngine() const;
 
   private:
-    const Runner & myRunner;
+    const Engine & myEngine;
   };
 
 template< class T, class U, class V>
   PipeEngineDestroyed< EngineAccess< T, U, V> >
-  makeDestroyedEvent(const EngineAccess< T, U, V> & runner)
+  makeDestroyedEvent(const EngineAccess< T, U, V> & engine)
   {
-    return PipeEngineDestroyed< EngineAccess< T, U, V> >(runner);
+    return PipeEngineDestroyed< EngineAccess< T, U, V> >(engine);
   }
 
 }

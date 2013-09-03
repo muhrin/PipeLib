@@ -34,20 +34,18 @@ find_package(Boost 1.36.0 REQUIRED)
 ## pipelib
 
 set(pipelib_Header_Files__
-  include/pipelib/AbsPipeEngine.h
   include/pipelib/Barrier.h
   include/pipelib/Block.h
   include/pipelib/BlockConnector.h
   include/pipelib/BlockHandle.h
   include/pipelib/BlockIterator.h
-  include/pipelib/LoaningPtr.h
   include/pipelib/pipelib.h
   include/pipelib/PipelineState.h
   include/pipelib/PipeBlock.h
   include/pipelib/PipeEngine.h
   include/pipelib/Pipeline.h
+  include/pipelib/SerialEngine.h
   include/pipelib/SimpleBarrier.h
-  include/pipelib/SingleThreadedEngine.h
   include/pipelib/Sinks.h
   include/pipelib/StartBlock.h
   include/pipelib/Types.h
@@ -57,14 +55,12 @@ source_group("Header Files\\" FILES ${pipelib_Header_Files__})
 ## pipelib/detail
 
 set(pipelib_Header_Files__detail
-  include/pipelib/detail/AbsPipeEngine.h
   include/pipelib/detail/Block.h
   include/pipelib/detail/BlockConnector.h
   include/pipelib/detail/BlockIterator.h
-  include/pipelib/detail/LoaningPtr.h
   include/pipelib/detail/PipeEngine.h
+  include/pipelib/detail/SerialEngine.h
   include/pipelib/detail/SimpleBarrier.h
-  include/pipelib/detail/SingleThreadedEngine.h
 )
 source_group("Header Files\\detail" FILES ${pipelib_Header_Files__detail})
 

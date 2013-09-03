@@ -85,6 +85,8 @@ class PipeEngine : public DataAccess<Shared, Global>
 public:
   typedef Block<Pipe, Shared, Global> BlockType;
   typedef typename BlockType::HandleType BlockHandleType;
+  typedef EngineAccess<Pipe, Shared, Global> AccessType;
+  typedef EngineSetup<Pipe, Shared, Global> SetupType;
 
   virtual ~PipeEngine() {}
 
@@ -101,8 +103,6 @@ public:
   virtual void setDroppedDataSink(DroppedSink<Pipe> * sink) = 0;
 
 protected:
-  typedef EngineAccess<Pipe, Shared, Global> AccessType;
-  typedef EngineSetup<Pipe, Shared, Global> SetupType;
   typedef Barrier<Pipe, Shared, Global> BarrierType;
   typedef ::std::vector<BarrierType *> Barriers;
 
