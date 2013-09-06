@@ -24,6 +24,9 @@ template <typename Pipe, typename Shared, typename Global>
 class PipeBlock;
 
 template <typename Pipe, typename Shared, typename Global>
+class BoostThreadEngine;
+
+template <typename Pipe, typename Shared, typename Global>
 class SerialEngine;
 
 template <typename Pipe, typename Shared, typename Global>
@@ -40,6 +43,7 @@ struct NoSharedGlobal
   typedef PipeBlock<Pipe, const void *, const void *> PipeBlockType;
   typedef StartBlock<Pipe, const void *, const void *> StartBlockType;
   typedef SerialEngine<Pipe, const void *, const void *> SerialEngineType;
+  typedef BoostThreadEngine<Pipe, const void *, const void *> BoostThreadEngineType;
 };
 
 // If C++11 is available then use std::unique_ptr, otherwise

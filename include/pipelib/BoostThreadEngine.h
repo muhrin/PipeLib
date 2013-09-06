@@ -1,32 +1,32 @@
 /*
- * SerialEngine.h
+ * BoostThreadEngine.h
  *
  *
- *  Created on: Feb 17, 2012
+ *  Created on: Sep 6, 2013
  *      Author: Martin Uhrin
  */
 
-#ifndef SERIAL_ENGINE_H
-#define SERIAL_ENGINE_H
+#ifndef BOOST_THREAD_ENGINE_H
+#define BOOST_THREAD_ENGINE_H
 
-// INCLUDES /////////////////////////////////////////////
 #include "pipelib/Pipeline.h"
 
-#include <map>
-#include <vector>
+#ifdef PIPELIB_USE_BOOST_THREAD
 
+#include <boost/asio.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/thread.hpp>
 
-#include "pipelib/PipelineState.h"
 #include "pipelib/PipeEngine.h"
 #include "pipelib/event/EventSupport.h"
+#include "pipelib/PipelineState.h"
 
 namespace pipelib {
 
 template< typename Pipe, typename Shared, typename Global>
-  class SerialEngine : public virtual PipeEngine< Pipe, Shared, Global>,
+  class BoostThreadEngine : public virtual PipeEngine< Pipe, Shared, Global>,
       public pipelib::EngineSetup< Pipe, Shared, Global>,
       public virtual pipelib::EngineAccess< Pipe, Shared, Global>
   {
@@ -34,7 +34,7 @@ template< typename Pipe, typename Shared, typename Global>
     typedef typename BlockType::HandleType BlockHandleType;
     typedef pipelib::EngineSetup< Pipe, Shared, Global> SetupBase;
     typedef PipeEngine< Pipe, Shared, Global> Base;
-    typedef SerialEngine< Pipe, Shared, Global> Self;
+    typedef BoostThreadEngine< Pipe, Shared, Global> Self;
 
     static const unsigned int DEFAULT_MAX_RELEASES = 10000;
   public:
@@ -50,10 +50,9 @@ template< typename Pipe, typename Shared, typename Global>
     // Event
     typedef typename EngineAccessType::ListenerType ListenerType;
 
-    SerialEngine();
-    SerialEngine(BlockHandleType & startBlock);
-    virtual
-    ~SerialEngine();
+    BoostThreadEngine();
+    BoostThreadEngine(BlockHandleType & startBlock);
+    virtual ~BoostThreadEngine();
 
     // From PipeEngine ////////////////////////
     virtual void
@@ -122,8 +121,8 @@ template< typename Pipe, typename Shared, typename Global>
     typedef ::std::vector< BarrierType *> Barriers;
     typedef event::EventSupport< ListenerType> EngineEventSupport;
 
-    SerialEngine(::boost::shared_ptr< Global> & global);
-    SerialEngine(::boost::shared_ptr< Global> & global,
+    BoostThreadEngine(::boost::shared_ptr< Global> & global);
+    BoostThreadEngine(::boost::shared_ptr< Global> & global,
         BlockHandleType & subpipe);
 
     void
@@ -169,6 +168,7 @@ template< typename Pipe, typename Shared, typename Global>
 
 }
 
-#include "pipelib/detail/SerialEngine.h"
+#include "pipelib/detail/BoostThreadEngine.h"
 
-#endif /* SINGLE_THREADED_ENGINE_H */
+#endif /* PIPELIB_USE_BOOST_THREAD */
+#endif /* BOOST_THREAD_ENGINE_H */

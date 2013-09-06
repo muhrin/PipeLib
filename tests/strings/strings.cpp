@@ -17,7 +17,7 @@ main()
   typedef pipelib::SimpleBarrier< string, const void *, const void *> Barrier;
 
   // Create the pipeline
-  NoSharedGlobal< string>::SerialEngineType engine;
+  NoSharedGlobal< string>::BoostThreadEngineType engine;
 
   // Create the start block
   BlockHandle start(new RandomStringBlock(3));
