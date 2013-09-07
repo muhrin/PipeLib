@@ -12,7 +12,8 @@
 // INCLUDES /////////////////////////////////////////////
 #include "pipelib/Pipeline.h"
 
-#include <pipelib/BlockHandle.h>
+#include "pipelib/BlockHandle.h"
+#include "pipelib/Types.h"
 
 namespace pipelib {
 

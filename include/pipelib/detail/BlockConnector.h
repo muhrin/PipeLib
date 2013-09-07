@@ -11,6 +11,7 @@
 
 // INCLUDES /////////////////////////////////////////////
 #include "pipelib/Pipeline.h"
+#include "pipelib/Types.h"
 
 #include "pipelib/Block.h"
 

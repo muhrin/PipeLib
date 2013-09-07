@@ -40,6 +40,7 @@ template< typename Pipe, typename Shared, typename Global>
   public:
     // Pipeline
     typedef PipeBlock< Pipe, Shared, Global> PipeBlockType;
+    typedef StartBlock< Pipe, Shared, Global> StartBlockType;
     typedef typename SetupBase::BarrierType BarrierType;
     // Access
     typedef pipelib::EngineAccess< Pipe, Shared, Global> EngineAccessType;
@@ -50,8 +51,8 @@ template< typename Pipe, typename Shared, typename Global>
     // Event
     typedef typename EngineAccessType::ListenerType ListenerType;
 
-    BoostThreadEngine();
-    BoostThreadEngine(BlockHandleType & startBlock);
+    BoostThreadEngine(const size_t numThreads);
+    BoostThreadEngine(const size_t numThreads, BlockHandleType & startBlock);
     virtual ~BoostThreadEngine();
 
     // From PipeEngine ////////////////////////
@@ -121,9 +122,8 @@ template< typename Pipe, typename Shared, typename Global>
     typedef ::std::vector< BarrierType *> Barriers;
     typedef event::EventSupport< ListenerType> EngineEventSupport;
 
-    BoostThreadEngine(::boost::shared_ptr< Global> & global);
-    BoostThreadEngine(::boost::shared_ptr< Global> & global,
-        BlockHandleType & subpipe);
+    BoostThreadEngine(Self * root);
+    BoostThreadEngine(Self * root, BlockHandleType & subpipe);
 
     void
     init();
@@ -140,9 +140,26 @@ template< typename Pipe, typename Shared, typename Global>
     findData(const Pipe * const data);
     typename DataStore::const_iterator
     findData(const Pipe * const data) const;
+    bool
+    isRoot() const;
+
+    void runTillFinished() const;
+
+    void incrementNumRunning();
+    void decrementNumRunning();
+
+    template<typename Task>
+    void
+    postTask(Task task);
+    void
+    startTask(StartBlockType * const startBlock);
+    void
+    outTask(Pipe * const data, PipeBlockType * const inBlock);
+    void
+    releaseBarrierTask(BarrierType * const barrier);
 
     // Parent/Children
-    const bool myIsRoot;
+    Self * const myRoot;
     ChildEngines myChildren;
 
     // Barriers
@@ -164,6 +181,19 @@ template< typename Pipe, typename Shared, typename Global>
 
     // Event
     EngineEventSupport myEventSupport;
+
+    const size_t myNumThreads;
+    size_t myNumRunning;
+    ::boost::mutex myNumRunningMutex;
+
+    // Threading stuff
+    struct Threading
+    {
+      ::boost::thread_group threads;
+      ::boost::asio::io_service threadService;
+    };
+
+    ::boost::scoped_ptr<Threading> myThreading;
   };
 
 }

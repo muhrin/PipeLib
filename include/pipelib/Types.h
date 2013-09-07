@@ -14,6 +14,8 @@
 
 #include <boost/noncopyable.hpp>
 
+#include "pipelib/PipelibConfig.h"
+
 namespace pipelib {
 
 // FORWARD DECLARES ///////////////////////////////
@@ -43,7 +45,9 @@ struct NoSharedGlobal
   typedef PipeBlock<Pipe, const void *, const void *> PipeBlockType;
   typedef StartBlock<Pipe, const void *, const void *> StartBlockType;
   typedef SerialEngine<Pipe, const void *, const void *> SerialEngineType;
+#ifdef PIPELIB_USE_BOOST_THREAD
   typedef BoostThreadEngine<Pipe, const void *, const void *> BoostThreadEngineType;
+#endif
 };
 
 // If C++11 is available then use std::unique_ptr, otherwise

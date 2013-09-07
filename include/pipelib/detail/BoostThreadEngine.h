@@ -19,15 +19,19 @@
 namespace pipelib {
 
 template< typename Pipe, typename Shared, typename Global>
-  BoostThreadEngine< Pipe, Shared, Global>::BoostThreadEngine() :
-      myGlobal(new Global()), myIsRoot(true), myMaxReleases(DEFAULT_MAX_RELEASES)
+  BoostThreadEngine< Pipe, Shared, Global>::BoostThreadEngine(
+      const size_t numThreads) :
+      myNumThreads(numThreads), myRoot(this), myMaxReleases(
+          DEFAULT_MAX_RELEASES)
   {
     init();
   }
 
 template< typename Pipe, typename Shared, typename Global>
-  BoostThreadEngine< Pipe, Shared, Global>::BoostThreadEngine(BlockHandleType & startBlock) :
-      myGlobal(new Global()), myIsRoot(true), myMaxReleases(DEFAULT_MAX_RELEASES)
+  BoostThreadEngine< Pipe, Shared, Global>::BoostThreadEngine(
+      const size_t numThreads, BlockHandleType & startBlock) :
+      myNumThreads(numThreads), myRoot(this), myMaxReleases(
+          DEFAULT_MAX_RELEASES)
   {
     init();
     attach(startBlock);
@@ -103,7 +107,7 @@ template< typename Pipe, typename Shared, typename Global>
   }
 
 template< typename Pipe, typename Shared, typename Global>
-const typename BoostThreadEngine< Pipe, Shared, Global>::BlockHandleType &
+  const typename BoostThreadEngine< Pipe, Shared, Global>::BlockHandleType &
   BoostThreadEngine< Pipe, Shared, Global>::getStartBlock() const
   {
     return myStartBlock;
@@ -111,14 +115,16 @@ const typename BoostThreadEngine< Pipe, Shared, Global>::BlockHandleType &
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  BoostThreadEngine< Pipe, Shared, Global>::setFinishedDataSink(FinishedSinkType * sink)
+  BoostThreadEngine< Pipe, Shared, Global>::setFinishedDataSink(
+      FinishedSinkType * sink)
   {
     myFinishedSink = sink;
   }
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  BoostThreadEngine< Pipe, Shared, Global>::setDroppedDataSink(DroppedSinkType * sink)
+  BoostThreadEngine< Pipe, Shared, Global>::setDroppedDataSink(
+      DroppedSinkType * sink)
   {
     myDroppedSink = sink;
   }
@@ -132,7 +138,8 @@ template< typename Pipe, typename Shared, typename Global>
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  BoostThreadEngine< Pipe, Shared, Global>::removeListener(ListenerType & listener)
+  BoostThreadEngine< Pipe, Shared, Global>::removeListener(
+      ListenerType & listener)
   {
     myEventSupport.remove(listener);
   }
@@ -155,7 +162,7 @@ template< typename Pipe, typename Shared, typename Global>
   Global &
   BoostThreadEngine< Pipe, Shared, Global>::globalData()
   {
-    return *myGlobal;
+    return *myRoot->myGlobal;
   }
 
 template< typename Pipe, typename Shared, typename Global>
@@ -165,24 +172,25 @@ template< typename Pipe, typename Shared, typename Global>
     return *myGlobal;
   }
 
-
 template< typename Pipe, typename Shared, typename Global>
   void
-  BoostThreadEngine< Pipe, Shared, Global>::out(Pipe * data, const BlockType & outBlock,
-      const Channel channel)
+  BoostThreadEngine< Pipe, Shared, Global>::out(Pipe * data,
+      const BlockType & outBlock, const Channel channel)
   {
     const BlockHandleType & inBlock = outBlock.getOutput(channel);
     if(inBlock.get())
-      inBlock->asPipeBlock()->in(data);
+      postTask(::boost::bind(&Self::outTask, this, data, inBlock->asPipeBlock()));
     else
     {
       // So this data is finished, check if we have a sink, otherwise delete
       typename DataStore::iterator it = findData(data);
 
-      PIPELIB_ASSERT_MSG(it != myDataStore.end(), "Couldn't find data in data store");
+      PIPELIB_ASSERT_MSG(it != myDataStore.end(),
+          "Couldn't find data in data store");
 
       if(myFinishedSink)
-        myFinishedSink->finished(makeUniquePtr(myDataStore.release(it).release()));
+        myFinishedSink->finished(
+            makeUniquePtr(myDataStore.release(it).release()));
       else
         myDataStore.erase(it);
     }
@@ -203,7 +211,8 @@ template< typename Pipe, typename Shared, typename Global>
     // So this data is finished, check if we have a sink, otherwise delete
     typename DataStore::iterator it = findData(data);
 
-    PIPELIB_ASSERT_MSG(it != myDataStore.end(), "Couldn't find data in data store");
+    PIPELIB_ASSERT_MSG(it != myDataStore.end(),
+        "Couldn't find data in data store");
 
     if(myDroppedSink)
       myDroppedSink->dropped(makeUniquePtr(myDataStore.release(it).release()));
@@ -223,7 +232,7 @@ template< typename Pipe, typename Shared, typename Global>
   typename BoostThreadEngine< Pipe, Shared, Global>::Base *
   BoostThreadEngine< Pipe, Shared, Global>::createEngine()
   {
-    myChildren.push_back(new BoostThreadEngine(myGlobal));
+    myChildren.push_back(new BoostThreadEngine(this));
     return &myChildren.back();
   }
 
@@ -232,8 +241,8 @@ template< typename Pipe, typename Shared, typename Global>
   BoostThreadEngine< Pipe, Shared, Global>::releaseEngine(Base * engine)
   {
     bool found = false;
-    for(typename ChildEngines::iterator it = myChildren.begin(), end = myChildren.end(); it != end;
-        ++it)
+    for(typename ChildEngines::iterator it = myChildren.begin(), end =
+        myChildren.end(); it != end; ++it)
     {
       if(&(*it) == engine)
       {
@@ -247,22 +256,25 @@ template< typename Pipe, typename Shared, typename Global>
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  BoostThreadEngine< Pipe, Shared, Global>::registerBarrier(BarrierType * const barrier)
+  BoostThreadEngine< Pipe, Shared, Global>::registerBarrier(
+      BarrierType * const barrier)
   {
     myBarriers.push_back(barrier);
   }
 
 template< typename Pipe, typename Shared, typename Global>
-  BoostThreadEngine< Pipe, Shared, Global>::BoostThreadEngine(::boost::shared_ptr<Global> & global) :
-      myGlobal(global), myIsRoot(false), myMaxReleases(DEFAULT_MAX_RELEASES)
+  BoostThreadEngine< Pipe, Shared, Global>::BoostThreadEngine(Self * root) :
+      myRoot(root), myMaxReleases(DEFAULT_MAX_RELEASES),
+      myNumThreads(0) // Only root has threads
   {
     init();
   }
 
 template< typename Pipe, typename Shared, typename Global>
-  BoostThreadEngine< Pipe, Shared, Global>::BoostThreadEngine(::boost::shared_ptr<Global> & global,
+  BoostThreadEngine< Pipe, Shared, Global>::BoostThreadEngine(Self * root,
       BlockHandleType & pipe) :
-      myGlobal(global), myIsRoot(false), myMaxReleases(DEFAULT_MAX_RELEASES)
+      myRoot(root), myMaxReleases(DEFAULT_MAX_RELEASES),
+      myNumThreads(0) // Only root has threads
   {
     init();
     attach(pipe);
@@ -281,21 +293,43 @@ template< typename Pipe, typename Shared, typename Global>
   void
   BoostThreadEngine< Pipe, Shared, Global>::doRun()
   {
-    myStartBlock->asStartBlock()->start();
+    namespace asio = ::boost::asio;
+
+    if(isRoot())
+    {
+      myThreading.reset(new Threading());
+
+      for(size_t i = 1; i < myNumThreads; ++i)
+        myThreading->threads.create_thread(
+            ::boost::bind(&asio::io_service::run, &myThreading->threadService));
+    }
+
+    postTask(::boost::bind(&Self::startTask, this, myStartBlock->asStartBlock()));
+
+    runTillFinished();
 
     // Release any barriers that are waiting
     unsigned int numReleases = 0;
     while(releaseNextBarrier())
     {
+      runTillFinished();
+
       ++numReleases;
       if(numReleases >= myMaxReleases)
         break;
+    }
+
+    if(isRoot())
+    {
+      myThreading->threads.join_all();
+      myThreading.reset();
     }
   }
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  BoostThreadEngine< Pipe, Shared, Global>::changeState(const PipelineState::Value newState)
+  BoostThreadEngine< Pipe, Shared, Global>::changeState(
+      const PipelineState::Value newState)
   {
     const PipelineState::Value oldState = myState;
     switch (newState)
@@ -303,45 +337,54 @@ template< typename Pipe, typename Shared, typename Global>
     case PipelineState::INITIALISED:
 
       // Tell the blocks
-      ::std::for_each(myStartBlock->beginPreorder(), myStartBlock->endPreorder(),
+      ::std::for_each(myStartBlock->beginPreorder(),
+          myStartBlock->endPreorder(),
           ::boost::bind(&Self::notifyInitialising, this, _1, this));
 
       // Sort the barriers so when we release at the end they're in the correct order
       this->sortBarriers(&myBarriers);
 
       myState = PipelineState::INITIALISED;
-      ::std::for_each(myStartBlock->beginPreorder(), myStartBlock->endPreorder(),
+      ::std::for_each(myStartBlock->beginPreorder(),
+          myStartBlock->endPreorder(),
           ::boost::bind(&Self::notifyInitialised, this, _1));
 
       // Tell any listeners
-      myEventSupport.notify(event::makeStateChangedEvent(*this, oldState, myState));
+      myEventSupport.notify(
+          event::makeStateChangedEvent(*this, oldState, myState));
       break;
 
     case PipelineState::RUNNING:
 
-      ::std::for_each(myStartBlock->beginPreorder(), myStartBlock->endPreorder(),
+      ::std::for_each(myStartBlock->beginPreorder(),
+          myStartBlock->endPreorder(),
           ::boost::bind(&Self::notifyStarting, this, _1));
       myState = PipelineState::RUNNING;
-      myEventSupport.notify(event::makeStateChangedEvent(*this, oldState, myState));
+      myEventSupport.notify(
+          event::makeStateChangedEvent(*this, oldState, myState));
       doRun();
 
       break;
     case PipelineState::STOPPED:
       myState = PipelineState::STOPPED;
       // Tell any listeners
-      myEventSupport.notify(event::makeStateChangedEvent(*this, oldState, myState));
+      myEventSupport.notify(
+          event::makeStateChangedEvent(*this, oldState, myState));
       break;
     case PipelineState::FINISHED:
 
-      ::std::for_each(myStartBlock->beginPreorder(), myStartBlock->endPreorder(),
+      ::std::for_each(myStartBlock->beginPreorder(),
+          myStartBlock->endPreorder(),
           ::boost::bind(&Self::notifyFinishing, this, _1));
       myState = PipelineState::FINISHED;
       myShared.reset(new Shared());
-      ::std::for_each(myStartBlock->beginPreorder(), myStartBlock->endPreorder(),
+      ::std::for_each(myStartBlock->beginPreorder(),
+          myStartBlock->endPreorder(),
           ::boost::bind(&Self::notifyFinished, this, _1, this));
 
       // Tell any listeners
-      myEventSupport.notify(event::makeStateChangedEvent(*this, oldState, myState));
+      myEventSupport.notify(
+          event::makeStateChangedEvent(*this, oldState, myState));
       break;
     }
   }
@@ -351,7 +394,7 @@ template< typename Pipe, typename Shared, typename Global>
   BoostThreadEngine< Pipe, Shared, Global>::clear()
   {
     myStartBlock.reset();
-    if(myIsRoot)
+    if(isRoot())
       myGlobal.reset(new Global());
     myShared.reset(new Shared());
     myState = PipelineState::UNINITIALISED;
@@ -359,6 +402,7 @@ template< typename Pipe, typename Shared, typename Global>
     myDataStore.clear();
     myBarriers.clear();
     myMaxReleases = DEFAULT_MAX_RELEASES;
+    myNumRunning = 0;
   }
 
 template< typename Pipe, typename Shared, typename Global>
@@ -369,7 +413,7 @@ template< typename Pipe, typename Shared, typename Global>
     {
       if(barrier->hasData())
       {
-        barrier->release();
+        postTask(::boost::bind(&Self::releaseBarrierTask, this, barrier));
         return true;
       }
     }
@@ -391,7 +435,8 @@ template< typename Pipe, typename Shared, typename Global>
 
 template< typename Pipe, typename Shared, typename Global>
   typename BoostThreadEngine< Pipe, Shared, Global>::DataStore::const_iterator
-  BoostThreadEngine< Pipe, Shared, Global>::findData(const Pipe * const data) const
+  BoostThreadEngine< Pipe, Shared, Global>::findData(
+      const Pipe * const data) const
   {
     typename DataStore::const_iterator it, end = myDataStore.end();
     for(it = myDataStore.begin(); it != end; ++it)
@@ -400,6 +445,80 @@ template< typename Pipe, typename Shared, typename Global>
         break;
     }
     return it;
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  bool
+  BoostThreadEngine< Pipe, Shared, Global>::isRoot() const
+  {
+    return myRoot == this;
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  void
+  BoostThreadEngine< Pipe, Shared, Global>::runTillFinished() const
+  {
+    while(myNumRunning > 0)
+    {
+      if(myRoot->myThreading->threadService.stopped())
+        myRoot->myThreading->threadService.reset();
+
+      const size_t numRan = myRoot->myThreading->threadService.run_one();
+      if(numRan != 0)
+        ::boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    }
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+void
+BoostThreadEngine < Pipe, Shared, Global>::incrementNumRunning()
+{
+  ::boost::lock_guard< ::boost::mutex> guard(myNumRunningMutex);
+  ++myNumRunning;
+}
+
+template< typename Pipe, typename Shared, typename Global>
+void
+BoostThreadEngine < Pipe, Shared, Global>::decrementNumRunning()
+{
+  ::boost::lock_guard< ::boost::mutex> guard(myNumRunningMutex);
+  --myNumRunning;
+}
+
+template< typename Pipe, typename Shared, typename Global>
+template<typename Task>
+void
+BoostThreadEngine < Pipe, Shared, Global>::postTask(Task task)
+{
+  incrementNumRunning();
+  myRoot->myThreading->threadService.post(task);
+}
+
+template< typename Pipe, typename Shared, typename Global>
+  void
+  BoostThreadEngine< Pipe, Shared, Global>::startTask(
+      StartBlockType * const startBlock)
+  {
+    startBlock->start();
+    decrementNumRunning();
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  void
+  BoostThreadEngine< Pipe, Shared, Global>::outTask(Pipe * const data,
+      PipeBlockType * const inBlock)
+  {
+    inBlock->in(data);
+    decrementNumRunning();
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  void
+  BoostThreadEngine< Pipe, Shared, Global>::releaseBarrierTask(
+      BarrierType * const barrier)
+  {
+    barrier->release();
+    decrementNumRunning();
   }
 
 }

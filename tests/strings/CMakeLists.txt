@@ -15,5 +15,8 @@ set(strings_SRCS
 
 
 add_executable(strings_bin ${strings_SRCS})
-
 add_library(strings ${strings_SRCS})
+
+add_dependencies(strings_bin pipelib)
+target_link_libraries(strings_bin pipelib)
+
