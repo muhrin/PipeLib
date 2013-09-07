@@ -35,7 +35,7 @@ find_package(Boost 1.36.0 REQUIRED)
 
 if(PIPELIB_USE_BOOST_THREAD)
   set(Boost_USE_MULTITHREADED ON)
-  find_package(Boost 1.36.0 REQUIRED COMPONENTS thread)
+  find_package(Boost 1.36.0 COMPONENTS system thread REQUIRED)
   find_package(Threads REQUIRED)
 endif(PIPELIB_USE_BOOST_THREAD)
 

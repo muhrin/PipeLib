@@ -17,10 +17,10 @@ main()
   typedef pipelib::SimpleBarrier< string, const void *, const void *> Barrier;
 
   // Create the pipeline
-  NoSharedGlobal< string>::BoostThreadEngineType engine;
+  NoSharedGlobal< string>::BoostThreadEngineType engine(4);
 
   // Create the start block
-  BlockHandle start(new RandomStringBlock(3));
+  BlockHandle start(new RandomStringBlock(2));
 
   // Create pipeline blocks
   BlockHandle b1(new PrintStringBlock(1));

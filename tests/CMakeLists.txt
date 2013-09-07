@@ -50,10 +50,11 @@ add_executable(pipelibtest
   pipelibtest.cpp
 )
 
-add_dependencies(pipelibtest spipe)
+add_dependencies(pipelibtest pipelib)
 
 # Libraries we need to link to
 target_link_libraries(pipelibtest
+  pipelib
   ${Boost_LIBRARIES}
   strings
 )
