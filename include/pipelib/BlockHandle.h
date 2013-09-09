@@ -2,7 +2,7 @@
  * BlockHandle.h
  *
  *
- *  Created on: Feb 17, 2012
+ *  Created on: Aug 29, 2013
  *      Author: Martin Uhrin
  */
 
@@ -26,20 +26,20 @@ template< typename Pipe, typename Shared, typename Global>
 struct BlockHandle
 {
 private:
-  typedef ::boost::shared_ptr< Block<Pipe, Shared, Global> > HandleType;
+  typedef ::boost::shared_ptr< Block< Pipe, Shared, Global> > HandleType;
+  
   BlockHandle() {}
 public:
   typedef HandleType Type;
 };
 
-template<class TypedBlock>
+template< typename TypedBlock>
 struct TypedBlockHandle
 {
 private:
-  typedef Block< typename TypedBlock::PipeType, typename TypedBlock::SharedType,
-      typename TypedBlock::GlobalType> BlockType;
   typedef ::boost::shared_ptr<TypedBlock> HandleType;
-
+  typedef Block< typename TypedBlock::PipelineData, typename TypedBlock::SharedData,
+      typename TypedBlock::GlobalDataType> BlockType;
   BOOST_STATIC_ASSERT((::boost::is_base_of<BlockType, TypedBlock>::value));
 
   TypedBlockHandle() {}
@@ -51,3 +51,4 @@ public:
 
 
 #endif /* BLOCK_HANDLE_H */
+

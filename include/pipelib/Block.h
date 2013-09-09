@@ -54,7 +54,6 @@ template< typename Pipe, typename Shared, typename Global>
     typedef StartBlock< Pipe, Shared, Global> StartBlockType;
 
   private:
-
     typedef ::std::vector<HandleType> Outputs;
 
   protected:

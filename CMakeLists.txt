@@ -45,6 +45,7 @@ set(pipelib_Header_Files__
 #  ${PROJECT_BINARY_DIR}/include/pipelib/PipelibConfig.h
   include/pipelib/Barrier.h
   include/pipelib/Block.h
+  include/pipelib/BlockHandle.h
   include/pipelib/BlockConnector.h
   include/pipelib/BlockHandle.h
   include/pipelib/BlockIterator.h
