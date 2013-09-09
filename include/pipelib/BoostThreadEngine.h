@@ -143,10 +143,11 @@ template< typename Pipe, typename Shared, typename Global>
     bool
     isRoot() const;
 
-    void runTillFinished() const;
+    void runTillFinished();
 
     void incrementNumRunning();
     void decrementNumRunning();
+    size_t getNumRunning();
 
     template<typename Task>
     void
@@ -194,6 +195,7 @@ template< typename Pipe, typename Shared, typename Global>
     };
 
     ::boost::scoped_ptr<Threading> myThreading;
+    ::boost::mutex myDataStoreMutex;
   };
 
 }

@@ -169,7 +169,7 @@ template< typename Pipe, typename Shared, typename Global>
   const Global &
   BoostThreadEngine< Pipe, Shared, Global>::globalData() const
   {
-    return *myGlobal;
+    return *myRoot->myGlobal;
   }
 
 template< typename Pipe, typename Shared, typename Global>
@@ -182,6 +182,8 @@ template< typename Pipe, typename Shared, typename Global>
       postTask(::boost::bind(&Self::outTask, this, data, inBlock->asPipeBlock()));
     else
     {
+      boost::lock_guard<boost::mutex> guard(myDataStoreMutex);
+
       // So this data is finished, check if we have a sink, otherwise delete
       typename DataStore::iterator it = findData(data);
 
@@ -200,6 +202,8 @@ template< typename Pipe, typename Shared, typename Global>
   Pipe *
   BoostThreadEngine< Pipe, Shared, Global>::createData()
   {
+    boost::lock_guard<boost::mutex> guard(myDataStoreMutex);
+
     myDataStore.push_back(new Pipe());
     return &myDataStore.back();
   }
@@ -208,6 +212,8 @@ template< typename Pipe, typename Shared, typename Global>
   void
   BoostThreadEngine< Pipe, Shared, Global>::dropData(Pipe * data)
   {
+    boost::lock_guard<boost::mutex> guard(myDataStoreMutex);
+
     // So this data is finished, check if we have a sink, otherwise delete
     typename DataStore::iterator it = findData(data);
 
@@ -224,6 +230,8 @@ template< typename Pipe, typename Shared, typename Global>
   Pipe *
   BoostThreadEngine< Pipe, Shared, Global>::registerData(PipePtr data)
   {
+    boost::lock_guard<boost::mutex> guard(myDataStoreMutex);
+
     myDataStore.push_back(data.release());
     return &myDataStore.back();
   }
@@ -456,15 +464,15 @@ template< typename Pipe, typename Shared, typename Global>
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  BoostThreadEngine< Pipe, Shared, Global>::runTillFinished() const
+  BoostThreadEngine< Pipe, Shared, Global>::runTillFinished()
   {
-    while(myNumRunning > 0)
+    while(getNumRunning() > 0)
     {
       if(myRoot->myThreading->threadService.stopped())
         myRoot->myThreading->threadService.reset();
 
-      const size_t numRan = myRoot->myThreading->threadService.run_one();
-      if(numRan != 0)
+      const size_t numRan = myRoot->myThreading->threadService.poll_one();
+      if(numRan == 0)
         ::boost::this_thread::sleep(boost::posix_time::milliseconds(100));
     }
   }
@@ -483,6 +491,16 @@ BoostThreadEngine < Pipe, Shared, Global>::decrementNumRunning()
 {
   ::boost::lock_guard< ::boost::mutex> guard(myNumRunningMutex);
   --myNumRunning;
+}
+
+template< typename Pipe, typename Shared, typename Global>
+size_t
+BoostThreadEngine < Pipe, Shared, Global>::getNumRunning()
+{
+  myNumRunningMutex.lock();
+  const size_t numRunning = myNumRunning;
+  myNumRunningMutex.unlock();
+  return numRunning;
 }
 
 template< typename Pipe, typename Shared, typename Global>
