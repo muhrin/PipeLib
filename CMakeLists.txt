@@ -124,13 +124,13 @@ install(DIRECTORY
   include/pipelib
   DESTINATION "${INSTALL_INCLUDE_DIR}"
   COMPONENT dev
+  PATTERN "*.in" EXCLUDE
 )
 install(DIRECTORY
   "${PROJECT_BINARY_DIR}/include/pipelib"
   DESTINATION "${INSTALL_INCLUDE_DIR}"
   COMPONENT dev
 )
-# TODO: Remove all *.in files that were installed
 install(FILES
   ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PipelibConfig.cmake
   ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PipelibConfigVersion.cmake
