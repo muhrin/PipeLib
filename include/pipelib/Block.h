@@ -54,11 +54,9 @@ template< typename Pipe, typename Shared, typename Global>
     typedef StartBlock< Pipe, Shared, Global> StartBlockType;
 
   private:
-
     typedef ::std::vector<HandleType> Outputs;
 
   protected:
-
     typedef typename PipeEngineTypes< Block>::Setup EngineSetupType;
     typedef typename PipeEngineTypes< Block>::Access EngineAccessType;
 
@@ -69,34 +67,20 @@ template< typename Pipe, typename Shared, typename Global>
     typedef typename Outputs::iterator OutputIterator;
     typedef const typename Outputs::const_iterator ConstOutputIterator;
 
-    explicit
-    Block(const ::std::string & name);
-    Block(const ::std::string & name, const size_t numOutputs);
-    virtual
-    ~Block()
-    {
-    }
-
     const ::std::string &
     getName() const;
 
     ConnectorType connect;
 
-    /**
-     /* Get the number of outputs that this block has.
-     /**/
+    // Get the number of outputs that this block has.
     size_t
     getNumOutputs() const;
 
-    /**
-     /* Clear the output on a particular channel.
-     /**/
+    // Clear the output on a particular channel.
     bool
     clearOutput(const Channel channel = CHANNEL_DEFAULT);
 
-    /**
-     /* Get the output on a particular channel.
-     /**/
+    // Get the output on a particular channel.
     HandleType
     getOutput(const Channel channel = CHANNEL_DEFAULT) const;
 
@@ -151,10 +135,15 @@ template< typename Pipe, typename Shared, typename Global>
     void visitBlocks(Visitor & visitor);
 
   protected:
+    explicit
+    Block(const ::std::string & name);
+    Block(const ::std::string & name, const size_t numOutputs);
+    virtual
+    ~Block()
+    {
+    }
 
-    /**
-     /* Get the PipeEngine driving this block.  Can return NULL if not running.
-     /**/
+    // Get the PipeEngine driving this block.  Can return NULL if not running.
     EngineAccessType *
     getEngine();
     const EngineAccessType *
@@ -204,9 +193,8 @@ template< typename Pipe, typename Shared, typename Global>
 
     HandleType
     doConnect(HandleType & to);
-    /**
-     /* Set the output block for a particular channel.
-     /**/
+
+    // Set the output block for a particular channel.
     HandleType
     doConnect(HandleType & to, const Channel channel);
 

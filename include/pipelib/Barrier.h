@@ -26,10 +26,7 @@ public:
   Barrier() : BlockType("Barrier") {}
   virtual ~Barrier() {}
 
-  /**
-  /* Release all the data that this barrier is holding back.
-  /*
-  /**/
+  // Release all the data that this barrier is holding back.
   virtual size_t release() = 0;
 
   virtual bool hasData() const = 0;

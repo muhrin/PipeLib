@@ -1,6 +1,11 @@
-#include <pipelib/Pipeline.h>
+
+#include <pipelib/pipelib.h>
 
 #include "PrintStringBlock.h"
+
+#ifdef PIPELIB_USE_BOOST_THREAD
+#include <boost/thread/thread.hpp>
+#endif
 
 #include <iostream>
 #include <sstream>
@@ -15,6 +20,10 @@ PrintStringBlock::PrintStringBlock(const int & num) :
 void
 PrintStringBlock::in(std::string * const data)
 {
+#ifdef PIPELIB_USE_BOOST_THREAD
+  std::cout << "Hello from thread: " << boost::this_thread::get_id() << "\n";
+#endif
+
   std::cout << myNum << " " << *data << std::endl;
 
   ::std::stringstream ss;

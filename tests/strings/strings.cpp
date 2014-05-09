@@ -1,26 +1,32 @@
 // PipelineLibTest.cpp : Defines the entry point for the console application.
 //
 
+#include <string>
+
 #include <pipelib/pipelib.h>
 
 #include "PrintStringBlock.h"
 #include "RandomStringBlock.h"
 
-int
-main()
+#include "pipelibtest.h"
+
+BOOST_AUTO_TEST_CASE(Strings)
 {
   using namespace pipelib;
   using std::string;
 
-  typedef pipelib::Block< string, const void *, const void *> BlockType;
   typedef pipelib::BlockHandle< string, const void *, const void *>::Type BlockHandle;
   typedef pipelib::SimpleBarrier< string, const void *, const void *> Barrier;
 
   // Create the pipeline
+#ifdef PIPELIB_USE_BOOST_THREAD
+  NoSharedGlobal< string>::BoostThreadEngineType engine(4);
+#else
   NoSharedGlobal< string>::SerialEngineType engine;
+#endif
 
   // Create the start block
-  BlockHandle start(new RandomStringBlock(3));
+  BlockHandle start(new RandomStringBlock(2));
 
   // Create pipeline blocks
   BlockHandle b1(new PrintStringBlock(1));
@@ -33,7 +39,5 @@ main()
 
   // Run the pipe
   engine.run(start);
-
-  return 0;
 }
 

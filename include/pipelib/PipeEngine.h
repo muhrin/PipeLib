@@ -32,10 +32,7 @@ template <typename Engine>
 class PipeEngineListener;
 }
 
-/**
-/*  Methods needed to access a engine's data.
-/*
-/**/
+// Methods needed to access a engine's data.
 template <typename Shared, typename Global>
 class DataAccess
 {
@@ -48,10 +45,7 @@ public:
   virtual const Global & globalData() const = 0;
 };
 
-/**
-/* Methods needed by a blocks while the pipeline is running.
-/*
-/**/
+// Methods needed by a blocks while the pipeline is running.
 template <typename Pipe, typename Shared, typename Global>
 class EngineAccess : public DataAccess<Shared, Global>
 {
@@ -124,11 +118,9 @@ protected:
   { block->notifyDetached(); }
 };
 
-/**
-/* Class template that defines the methods needed by blocks
-/* when the engine is being attached to the pipe to perform
-/* any required set up.
-/**/
+// Class template that defines the methods needed by blocks
+// when the engine is being attached to the pipe to perform
+// any required set up.
 template <typename Pipe, typename Shared, typename Global>
 class EngineSetup
 {

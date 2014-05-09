@@ -12,12 +12,10 @@
 // INCLUDES ////////////////////////////////////////////////
 #include <boost/assert.hpp>
 
-#include "pipelib/Types.h"
-
 // DEFINES /////////////////////////////////////////////////
 
 #ifndef NULL
-	#define NULL	0
+#  define NULL	0
 #endif
 
 #define PIPELIB_ASSERT( B ) BOOST_ASSERT( B )
@@ -27,7 +25,5 @@
 #else
 #  define PIPELIB_ASSERT_MSG( B, Msg ) BOOST_ASSERT( B )
 #endif
-
-
 
 #endif /* PIPELINE_H */

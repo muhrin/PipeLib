@@ -54,7 +54,7 @@ template< class Engine>
   class PipeEngineDestroyed
   {
   public:
-    PipeEngineDestroyed(const Engine & engine);
+  PipeEngineDestroyed(const Engine & engine);
 
     const Engine &
     getEngine() const;
@@ -64,8 +64,8 @@ template< class Engine>
   };
 
 template< class T, class U, class V>
-  PipeEngineDestroyed< EngineAccess< T, U, V> >
-  makeDestroyedEvent(const EngineAccess< T, U, V> & engine)
+PipeEngineDestroyed< EngineAccess< T, U, V> >
+  makeDetachedEvent(const EngineAccess< T, U, V> & engine)
   {
     return PipeEngineDestroyed< EngineAccess< T, U, V> >(engine);
   }

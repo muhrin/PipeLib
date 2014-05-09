@@ -23,7 +23,6 @@ template< typename Pipe, typename Shared, typename Global>
     typedef Block< Pipe, Shared, Global> Base;
 
   public:
-
     PipeBlock() :
         Base("Pipe block")
     {

@@ -11,16 +11,12 @@
 
 // INCLUDES /////////////////////////////////////////////
 
+#include "pipelib/event/PipeEngineEvents.h"
 
 namespace pipelib {
 namespace event {
 
 // FORWARD DECLARATIONS ////////////////////////////////////
-
-template <class Runner>
-class PipeEngineDestroyed;
-template <class Runner>
-class PipeEngineStateChanged;
 
 template <class Runner>
 class PipeEngineListener

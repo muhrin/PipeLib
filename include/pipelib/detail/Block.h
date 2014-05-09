@@ -26,13 +26,13 @@ namespace pipelib {
 
 template< typename Pipe, typename Shared, typename Global>
   Block< Pipe, Shared, Global>::Block(const ::std::string & name) :
-      myEngine(NULL), myName(name), myOutputs(1), connect(this)
+    connect(this), myName(name), myEngine(NULL), myOutputs(1)
   {
   }
 
 template< typename Pipe, typename Shared, typename Global>
   Block< Pipe, Shared, Global>::Block(const ::std::string & name, const size_t numOutputs) :
-      myEngine(NULL), myName(name), myOutputs(numOutputs), connect(*this)
+    connect(*this), myName(name), myEngine(NULL), myOutputs(numOutputs)
   {
   }
 

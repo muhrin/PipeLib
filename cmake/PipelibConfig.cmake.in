@@ -1,0 +1,30 @@
+
+
+# Tell the user project where to find our headers
+get_filename_component(PIPELIB_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+set(PIPELIB_INCLUDE_DIR "${PIPELIB_CMAKE_DIR}/@PIPELIB_INCLUDE_DIR@")
+
+## FIND PACKAGES ########################################
+
+# Boost #
+# Disable auto-linking
+add_definitions(-DBOOST_ALL_NO_LIB)
+set(Boost_USE_MULTITHREADED ON)
+find_package(Boost 1.36.0 QUIET REQUIRED)
+
+set(PIPELIB_USE_BOOST_THREAD ON CACHE BOOL "Use boost thread for multithreaded pipeline support")
+
+if(PIPELIB_USE_BOOST_THREAD)
+  find_package(Boost 1.36.0 QUIET COMPONENTS thread system REQUIRED)
+  find_package(Threads QUIET REQUIRED)
+
+  if(NOT Boost_FOUND)
+    message(FATAL_ERROR "Could not find boost thread which is required when using PIPELIB_WITH_BOOST_THREAD")
+  elseif(NOT Threads_FOUND)
+    message(FATAL_ERROR "Could not find threads library which is required when using PIPELIB_WITH_BOOST_THREAD")
+  endif()
+endif()
+
+# Set things up for the user-project
+set(PIPELIB_INCLUDE_DIRS "${PIPELIB_INCLUDE_DIR}" ${Boost_INCLUDE_DIRS})
+set(PIPELIB_LIBRARIES ${Boost_LIBRARIES}) 

@@ -42,7 +42,7 @@ template< class Engine>
   }
 
 template< class Engine>
-  PipeEngineDestroyed< Engine>::PipeEngineDestroyed(const Engine & engine) :
+PipeEngineDestroyed< Engine>::PipeEngineDestroyed(const Engine & engine) :
       myEngine(engine)
   {
   }

@@ -12,6 +12,8 @@
 // INCLUDES /////////////////////////////////////////////
 #include "pipelib/Pipeline.h"
 
+#include "pipelib/Types.h"
+
 // FORWARD DECLARATIONS ////////////////////////////////////
 namespace pipelib {
 

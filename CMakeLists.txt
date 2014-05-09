@@ -5,38 +5,23 @@ project(Pipelib)
 
 set(PIPELIB_VERSION_MAJOR 0)
 set(PIPELIB_VERSION_MINOR 5)
-set(PIPELIB_VERSION_PATCH 2)
+set(PIPELIB_VERSION_PATCH 3)
 set(PIPELIB_VERSION "${PIPELIB_VERSION_MAJOR}.${PIPELIB_VERSION_MINOR}.${PIPELIB_VERSION_PATCH}")
 message(STATUS "Configuring Pipelib ${PIPELIB_VERSION}")
 
-
-## FIND PACKAGES ########################################
-
-#
-# Boost #
-# Disable auto-linking
-add_definitions(-DBOOST_ALL_NO_LIB)
-set(Boost_USE_MULTITHREADED ON)
-find_package(Boost 1.36.0 QUIET REQUIRED)
-
-find_package(Boost 1.36.0 QUIET COMPONENTS thread system)
-find_package(Threads QUIET)
-if(NOT DEFINED PIPELIB_WITH_BOOST_THREAD)
-  # If we found what we need to run with threads then do so
-  set(PIPELIB_USE_BOOST_THREAD Boost_FOUND AND Threads_FOUND)
-elseif(PIPELIB_WITH_BOOST_THREAD)
-  if(NOT Boost_FOUND)
-    message(FATAL_ERROR "Could not find boost thread which is required when using PIPELIB_WITH_BOOST_THREAD")
-  elseif(NOT Threads_FOUND)
-    message(FATAL_ERROR "Could not find threads library which is required when using PIPELIB_WITH_BOOST_THREAD")
-  endif()
-endif()
-
 ## CONFIGURATION SETTINGS ##############################
+
+set(INSTALL_INCLUDE_DIR include CACHE PATH "Installation directory for header files")
+if(WIN32 AND NOT CYGWIN)
+  set(DEF_INSTALL_CMAKE_DIR CMake)
+else()
+  set(DEF_INSTALL_CMAKE_DIR share/Pipelib/cmake)
+endif()
+set(INSTALL_CMAKE_DIR ${DEF_INSTALL_CMAKE_DIR} CACHE PATH
+  "Installation directory for CMake files")
 
 # Build options ###
 set(PIPELIB_BUILD_TESTS FALSE CACHE BOOL "Build pipelib tests")
-set(PIPELIB_USE_BOOST_THREAD ${PIPELIB_USE_BOOST_THREAD} CACHE INTERNAL  "Enable use of boost threads.")
 
 configure_file(
   "${PROJECT_SOURCE_DIR}/include/pipelib/PipelibConfig.h.in"
@@ -103,10 +88,6 @@ set(pipelib_Header_Files
   ${pipelib_Header_Files__event__detail}
 )
 
-set(pipelib_Files
-  ${pipelib_Header_Files}
-  src/Dummy.cpp      # Have to have a cpp file to make add_library work
-)
 
 set(PIPELIB_INCLUDE_DIRS
   ${Boost_INCLUDE_DIRS}
@@ -115,28 +96,49 @@ set(PIPELIB_INCLUDE_DIRS
   CACHE FILEPATH INTERNAL FORCE
 )
 
-include_directories(${PIPELIB_INCLUDE_DIRS})
 
-add_library(pipelib ${pipelib_Files})
-if(PIPELIB_USE_BOOST_THREAD)
-target_link_libraries(pipelib
-  ${CMAKE_THREAD_LIBS_INIT}
-  ${Boost_LIBRARIES}
+## CONFIG - set up export files for projects to use pipelib
+
+# Make relative paths absolute
+foreach(p INCLUDE CMAKE)
+  set(var INSTALL_${p}_DIR)
+  if(NOT IS_ABSOLUTE "${${var}}")
+    set(${var} "${CMAKE_INSTALL_PREFIX}/${${var}}")
+  endif()
+endforeach()
+
+# Find the relative path from the cmake to the include folder
+file(RELATIVE_PATH PIPELIB_INCLUDE_DIR "${INSTALL_CMAKE_DIR}"
+  "${INSTALL_INCLUDE_DIR}"
 )
-endif(PIPELIB_USE_BOOST_THREAD)
-
-# Save our include dirs to this variable so other projects can use it
-get_property(PIPELIB_INCLUDE_DIRS DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
-set(PIPELIB_INCLUDE_DIRS
-  ${PIPELIB_INCLUDE_DIRS}
-  CACHE FILEPATH INTERNAL FORCE
+configure_file(cmake/PipelibConfig.cmake.in 
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PipelibConfig.cmake" @ONLY
+)
+configure_file(cmake/PipelibConfigVersion.cmake.in
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PipelibConfigVersion.cmake" @ONLY
 )
 
+
+## INSTALL
+install(FILES 
+  ${pipelib_Header_Files} 
+  "${PROJECT_BINARY_DIR}/include/pipelib/PipelibConfig.h"
+  DESTINATION "${INSTALL_INCLUDE_DIR}/pipelib"
+  COMPONENT dev
+)
+install(FILES
+  ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PipelibConfig.cmake
+  ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PipelibConfigVersion.cmake
+  DESTINATION "${INSTALL_CMAKE_DIR}"
+  COMPONENT dev
+)
 
 ###########
 ## Tests ##
 ###########
-
 if(PIPELIB_BUILD_TESTS)
   add_subdirectory(tests)
 endif(PIPELIB_BUILD_TESTS)
+
+
+

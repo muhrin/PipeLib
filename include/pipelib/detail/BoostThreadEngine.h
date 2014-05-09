@@ -1,59 +1,62 @@
 /*
- * SerialEngine.h
+ * BoostThreadEngine.h
  *
  *
- *  Created on: Feb 17, 2012
+ *  Created on: Sep 6, 2013
  *      Author: Martin Uhrin
  */
 
-#ifndef SERIAL_ENGINE_DETAIL_H
-#define SERIAL_ENGINE_DETAIL_H
+#ifndef BOOST_THREAD_ENGINE_DETAIL_H
+#define BOOST_THREAD_ENGINE_DETAIL_H
 
 // INCLUDES /////////////////////////////////////////////
-#include <algorithm>
-
-#include <boost/bind.hpp>
-#include <boost/foreach.hpp>
 
 #include "pipelib/Barrier.h"
 #include "pipelib/event/EventSupport.h"
 #include "pipelib/event/PipeEngineEvents.h"
 #include "pipelib/event/PipeEngineListener.h"
 
-#ifdef _MSC_VER
-// Disable warning about passing this pointer in initialisation list
-#  pragma warning( push )
-#  pragma warning( disable : 4355 )
-#endif
-
 namespace pipelib {
 
 template< typename Pipe, typename Shared, typename Global>
-  SerialEngine< Pipe, Shared, Global>::SerialEngine() :
-      myIsRoot(true), myMaxReleases(DEFAULT_MAX_RELEASES), myGlobal(
-          new Global())
+  BoostThreadEngine< Pipe, Shared, Global>::BoostThreadEngine() :
+      myRoot(this), myMaxReleases(DEFAULT_MAX_RELEASES), myNumThreads(
+          ::boost::thread::hardware_concurrency() != 0 ?
+              ::boost::thread::hardware_concurrency() : 1)
   {
+    PIPELIB_ASSERT(myNumThreads != 0);
     init();
   }
 
 template< typename Pipe, typename Shared, typename Global>
-  SerialEngine< Pipe, Shared, Global>::SerialEngine(
-      BlockHandleType & startBlock) :
-      myIsRoot(true), myGlobal(new Global()), myMaxReleases(
+  BoostThreadEngine< Pipe, Shared, Global>::BoostThreadEngine(
+      const size_t numThreads) :
+      myRoot(this), myMaxReleases(DEFAULT_MAX_RELEASES), myNumThreads(
+          numThreads)
+  {
+    PIPELIB_ASSERT(myNumThreads != 0);
+    init();
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  BoostThreadEngine< Pipe, Shared, Global>::BoostThreadEngine(
+      const size_t numThreads, BlockHandleType & startBlock) :
+      myRoot(this), myNumThreads(numThreads), myMaxReleases(
           DEFAULT_MAX_RELEASES)
   {
+    PIPELIB_ASSERT(myNumThreads != 0);
     init();
     attach(startBlock);
   }
 
 template< typename Pipe, typename Shared, typename Global>
-  SerialEngine< Pipe, Shared, Global>::~SerialEngine()
+  BoostThreadEngine< Pipe, Shared, Global>::~BoostThreadEngine()
   {
   }
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  SerialEngine< Pipe, Shared, Global>::attach(BlockHandleType & startBlock)
+  BoostThreadEngine< Pipe, Shared, Global>::attach(BlockHandleType & startBlock)
   {
     PIPELIB_ASSERT(startBlock->asStartBlock());
 
@@ -67,7 +70,7 @@ template< typename Pipe, typename Shared, typename Global>
 
 template< typename Pipe, typename Shared, typename Global>
   bool
-  SerialEngine< Pipe, Shared, Global>::detach()
+  BoostThreadEngine< Pipe, Shared, Global>::detach()
   {
     if(!isAttached())
       return false;
@@ -85,14 +88,14 @@ template< typename Pipe, typename Shared, typename Global>
 
 template< typename Pipe, typename Shared, typename Global>
   bool
-  SerialEngine< Pipe, Shared, Global>::isAttached() const
+  BoostThreadEngine< Pipe, Shared, Global>::isAttached() const
   {
     return myStartBlock.get() != NULL;
   }
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  SerialEngine< Pipe, Shared, Global>::run()
+  BoostThreadEngine< Pipe, Shared, Global>::run()
   {
     PIPELIB_ASSERT(isAttached());
 
@@ -103,7 +106,7 @@ template< typename Pipe, typename Shared, typename Global>
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  SerialEngine< Pipe, Shared, Global>::run(BlockHandleType & startBlock)
+  BoostThreadEngine< Pipe, Shared, Global>::run(BlockHandleType & startBlock)
   {
     PIPELIB_ASSERT(startBlock->asStartBlock());
 
@@ -114,21 +117,21 @@ template< typename Pipe, typename Shared, typename Global>
 
 template< typename Pipe, typename Shared, typename Global>
   PipelineState::Value
-  SerialEngine< Pipe, Shared, Global>::getState() const
+  BoostThreadEngine< Pipe, Shared, Global>::getState() const
   {
     return myState;
   }
 
 template< typename Pipe, typename Shared, typename Global>
-  const typename SerialEngine< Pipe, Shared, Global>::BlockHandleType &
-  SerialEngine< Pipe, Shared, Global>::getStartBlock() const
+  const typename BoostThreadEngine< Pipe, Shared, Global>::BlockHandleType &
+  BoostThreadEngine< Pipe, Shared, Global>::getStartBlock() const
   {
     return myStartBlock;
   }
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  SerialEngine< Pipe, Shared, Global>::setFinishedDataSink(
+  BoostThreadEngine< Pipe, Shared, Global>::setFinishedDataSink(
       FinishedSinkType * sink)
   {
     myFinishedSink = sink;
@@ -136,7 +139,7 @@ template< typename Pipe, typename Shared, typename Global>
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  SerialEngine< Pipe, Shared, Global>::setDroppedDataSink(
+  BoostThreadEngine< Pipe, Shared, Global>::setDroppedDataSink(
       DroppedSinkType * sink)
   {
     myDroppedSink = sink;
@@ -144,56 +147,60 @@ template< typename Pipe, typename Shared, typename Global>
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  SerialEngine< Pipe, Shared, Global>::addListener(ListenerType & listener)
+  BoostThreadEngine< Pipe, Shared, Global>::addListener(ListenerType & listener)
   {
     myEventSupport.insert(listener);
   }
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  SerialEngine< Pipe, Shared, Global>::removeListener(ListenerType & listener)
+  BoostThreadEngine< Pipe, Shared, Global>::removeListener(
+      ListenerType & listener)
   {
     myEventSupport.remove(listener);
   }
 
 template< typename Pipe, typename Shared, typename Global>
   Shared &
-  SerialEngine< Pipe, Shared, Global>::sharedData()
+  BoostThreadEngine< Pipe, Shared, Global>::sharedData()
   {
     return *myShared;
   }
 
 template< typename Pipe, typename Shared, typename Global>
   const Shared &
-  SerialEngine< Pipe, Shared, Global>::sharedData() const
+  BoostThreadEngine< Pipe, Shared, Global>::sharedData() const
   {
     return *myShared;
   }
 
 template< typename Pipe, typename Shared, typename Global>
   Global &
-  SerialEngine< Pipe, Shared, Global>::globalData()
+  BoostThreadEngine< Pipe, Shared, Global>::globalData()
   {
-    return *myGlobal;
+    return *myRoot->myGlobal;
   }
 
 template< typename Pipe, typename Shared, typename Global>
   const Global &
-  SerialEngine< Pipe, Shared, Global>::globalData() const
+  BoostThreadEngine< Pipe, Shared, Global>::globalData() const
   {
-    return *myGlobal;
+    return *myRoot->myGlobal;
   }
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  SerialEngine< Pipe, Shared, Global>::out(Pipe * data,
+  BoostThreadEngine< Pipe, Shared, Global>::out(Pipe * data,
       const BlockType & outBlock, const Channel channel)
   {
     const BlockHandleType & inBlock = outBlock.getOutput(channel);
     if(inBlock.get())
-      inBlock->asPipeBlock()->in(data);
+      postTask(
+          ::boost::bind(&Self::outTask, this, data, inBlock->asPipeBlock()));
     else
     {
+      boost::lock_guard< boost::mutex> guard(myDataStoreMutex);
+
       // So this data is finished, check if we have a sink, otherwise delete
       typename DataStore::iterator it = findData(data);
 
@@ -210,16 +217,20 @@ template< typename Pipe, typename Shared, typename Global>
 
 template< typename Pipe, typename Shared, typename Global>
   Pipe *
-  SerialEngine< Pipe, Shared, Global>::createData()
+  BoostThreadEngine< Pipe, Shared, Global>::createData()
   {
+    boost::lock_guard< boost::mutex> guard(myDataStoreMutex);
+
     myDataStore.push_back(new Pipe());
     return &myDataStore.back();
   }
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  SerialEngine< Pipe, Shared, Global>::dropData(Pipe * data)
+  BoostThreadEngine< Pipe, Shared, Global>::dropData(Pipe * data)
   {
+    boost::lock_guard< boost::mutex> guard(myDataStoreMutex);
+
     // So this data is finished, check if we have a sink, otherwise delete
     typename DataStore::iterator it = findData(data);
 
@@ -234,23 +245,25 @@ template< typename Pipe, typename Shared, typename Global>
 
 template< typename Pipe, typename Shared, typename Global>
   Pipe *
-  SerialEngine< Pipe, Shared, Global>::registerData(PipePtr data)
+  BoostThreadEngine< Pipe, Shared, Global>::registerData(PipePtr data)
   {
+    boost::lock_guard< boost::mutex> guard(myDataStoreMutex);
+
     myDataStore.push_back(data.release());
     return &myDataStore.back();
   }
 
 template< typename Pipe, typename Shared, typename Global>
-  typename SerialEngine< Pipe, Shared, Global>::Base *
-  SerialEngine< Pipe, Shared, Global>::createEngine()
+  typename BoostThreadEngine< Pipe, Shared, Global>::Base *
+  BoostThreadEngine< Pipe, Shared, Global>::createEngine()
   {
-    myChildren.push_back(new SerialEngine(myGlobal));
+    myChildren.push_back(new BoostThreadEngine(myRoot));
     return &myChildren.back();
   }
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  SerialEngine< Pipe, Shared, Global>::releaseEngine(Base * engine)
+  BoostThreadEngine< Pipe, Shared, Global>::releaseEngine(Base * engine)
   {
     bool found = false;
     for(typename ChildEngines::iterator it = myChildren.begin(), end =
@@ -268,24 +281,23 @@ template< typename Pipe, typename Shared, typename Global>
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  SerialEngine< Pipe, Shared, Global>::registerBarrier(
+  BoostThreadEngine< Pipe, Shared, Global>::registerBarrier(
       BarrierType * const barrier)
   {
     myBarriers.push_back(barrier);
   }
 
 template< typename Pipe, typename Shared, typename Global>
-  SerialEngine< Pipe, Shared, Global>::SerialEngine(
-      ::boost::shared_ptr< Global> & global) :
-       myIsRoot(false), myMaxReleases(DEFAULT_MAX_RELEASES), myGlobal(global)
+  BoostThreadEngine< Pipe, Shared, Global>::BoostThreadEngine(Self * root) :
+      myRoot(root), myMaxReleases(DEFAULT_MAX_RELEASES), myNumThreads(0) // Only root has threads
   {
     init();
   }
 
 template< typename Pipe, typename Shared, typename Global>
-  SerialEngine< Pipe, Shared, Global>::SerialEngine(
-      ::boost::shared_ptr< Global> & global, BlockHandleType & pipe) :
-      myIsRoot(false), myMaxReleases(DEFAULT_MAX_RELEASES), myGlobal(global)
+  BoostThreadEngine< Pipe, Shared, Global>::BoostThreadEngine(Self * root,
+      BlockHandleType & pipe) :
+      myRoot(root), myMaxReleases(DEFAULT_MAX_RELEASES), myNumThreads(0) // Only root has threads
   {
     init();
     attach(pipe);
@@ -293,23 +305,35 @@ template< typename Pipe, typename Shared, typename Global>
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  SerialEngine< Pipe, Shared, Global>::init()
+  BoostThreadEngine< Pipe, Shared, Global>::init()
   {
     myFinishedSink = NULL;
     myDroppedSink = NULL;
     clear();
+    if(isRoot())
+    {
+      myThreading.reset(new Threading());
+      for(size_t i = 1; i < myNumThreads; ++i)
+        myThreading->threads.create_thread(
+            ::boost::bind(&boost::asio::io_service::run, &myThreading->threadService));
+    }
   }
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  SerialEngine< Pipe, Shared, Global>::doRun()
+  BoostThreadEngine< Pipe, Shared, Global>::doRun()
   {
-    myStartBlock->asStartBlock()->start();
+    postTask(
+        ::boost::bind(&Self::startTask, this, myStartBlock->asStartBlock()));
+
+    runTillFinished();
 
     // Release any barriers that are waiting
     unsigned int numReleases = 0;
     while(releaseNextBarrier())
     {
+      runTillFinished();
+
       ++numReleases;
       if(numReleases >= myMaxReleases)
         break;
@@ -318,11 +342,11 @@ template< typename Pipe, typename Shared, typename Global>
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  SerialEngine< Pipe, Shared, Global>::changeState(
+  BoostThreadEngine< Pipe, Shared, Global>::changeState(
       const PipelineState::Value newState)
   {
     const PipelineState::Value oldState = myState;
-    switch (newState)
+    switch(newState)
     {
     case PipelineState::INITIALISED:
 
@@ -385,10 +409,10 @@ template< typename Pipe, typename Shared, typename Global>
 
 template< typename Pipe, typename Shared, typename Global>
   void
-  SerialEngine< Pipe, Shared, Global>::clear()
+  BoostThreadEngine< Pipe, Shared, Global>::clear()
   {
     myStartBlock.reset();
-    if(myIsRoot)
+    if(isRoot())
       myGlobal.reset(new Global());
     myShared.reset(new Shared());
     myState = PipelineState::UNINITIALISED;
@@ -396,17 +420,18 @@ template< typename Pipe, typename Shared, typename Global>
     myDataStore.clear();
     myBarriers.clear();
     myMaxReleases = DEFAULT_MAX_RELEASES;
+    myNumRunning = 0;
   }
 
 template< typename Pipe, typename Shared, typename Global>
   bool
-  SerialEngine< Pipe, Shared, Global>::releaseNextBarrier()
+  BoostThreadEngine< Pipe, Shared, Global>::releaseNextBarrier()
   {
     BOOST_FOREACH(BarrierType * const barrier, myBarriers)
     {
       if(barrier->hasData())
       {
-        barrier->release();
+        postTask(::boost::bind(&Self::releaseBarrierTask, this, barrier));
         return true;
       }
     }
@@ -414,8 +439,8 @@ template< typename Pipe, typename Shared, typename Global>
   }
 
 template< typename Pipe, typename Shared, typename Global>
-  typename SerialEngine< Pipe, Shared, Global>::DataStore::iterator
-  SerialEngine< Pipe, Shared, Global>::findData(const Pipe * const data)
+  typename BoostThreadEngine< Pipe, Shared, Global>::DataStore::iterator
+  BoostThreadEngine< Pipe, Shared, Global>::findData(const Pipe * const data)
   {
     typename DataStore::iterator it, end = myDataStore.end();
     for(it = myDataStore.begin(); it != end; ++it)
@@ -427,8 +452,9 @@ template< typename Pipe, typename Shared, typename Global>
   }
 
 template< typename Pipe, typename Shared, typename Global>
-  typename SerialEngine< Pipe, Shared, Global>::DataStore::const_iterator
-  SerialEngine< Pipe, Shared, Global>::findData(const Pipe * const data) const
+  typename BoostThreadEngine< Pipe, Shared, Global>::DataStore::const_iterator
+  BoostThreadEngine< Pipe, Shared, Global>::findData(
+      const Pipe * const data) const
   {
     typename DataStore::const_iterator it, end = myDataStore.end();
     for(it = myDataStore.begin(); it != end; ++it)
@@ -439,10 +465,84 @@ template< typename Pipe, typename Shared, typename Global>
     return it;
   }
 
+template< typename Pipe, typename Shared, typename Global>
+  bool
+  BoostThreadEngine< Pipe, Shared, Global>::isRoot() const
+  {
+    return myRoot == this;
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  void
+  BoostThreadEngine< Pipe, Shared, Global>::runTillFinished()
+  {
+    while(getNumRunning() > 0)
+      myRoot->myThreading->threadService.poll_one();
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  void
+  BoostThreadEngine< Pipe, Shared, Global>::incrementNumRunning()
+  {
+    ::boost::lock_guard< ::boost::mutex> guard(myNumRunningMutex);
+    ++myNumRunning;
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  void
+  BoostThreadEngine< Pipe, Shared, Global>::decrementNumRunning()
+  {
+    ::boost::lock_guard< ::boost::mutex> guard(myNumRunningMutex);
+    --myNumRunning;
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  size_t
+  BoostThreadEngine< Pipe, Shared, Global>::getNumRunning()
+  {
+    myNumRunningMutex.lock();
+    const size_t numRunning = myNumRunning;
+    myNumRunningMutex.unlock();
+    return numRunning;
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  template< typename Task>
+    void
+    BoostThreadEngine< Pipe, Shared, Global>::postTask(Task task)
+    {
+      incrementNumRunning();
+      myRoot->myThreading->threadService.post(task);
+    }
+
+template< typename Pipe, typename Shared, typename Global>
+  void
+  BoostThreadEngine< Pipe, Shared, Global>::startTask(
+      StartBlockType * const startBlock)
+  {
+    startBlock->start();
+    decrementNumRunning();
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  void
+  BoostThreadEngine< Pipe, Shared, Global>::outTask(Pipe * const data,
+      PipeBlockType * const inBlock)
+  {
+    inBlock->in(data);
+    decrementNumRunning();
+  }
+
+template< typename Pipe, typename Shared, typename Global>
+  void
+  BoostThreadEngine< Pipe, Shared, Global>::releaseBarrierTask(
+      BarrierType * const barrier)
+  {
+    barrier->release();
+    decrementNumRunning();
+  }
+
 }
 
-#ifdef _MSC_VER
-#  pragma warning( pop )
-#endif
+#endif /* BOOST_THREAD_ENGINE_DETAIL_H */
 
-#endif /* SERIAL_ENGINE_DETAIL_H */

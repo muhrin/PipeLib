@@ -59,7 +59,6 @@ void PipeEngine<Pipe, Shared, Global>::sortBarriers(Barriers * const barriers) c
   barriers->clear();
   while(!visitor.barrierDepths.empty())
   {
-    int minDepth = ::std::numeric_limits<int>::max();
     typename SortVisitor::BarrierDepths::iterator next = visitor.barrierDepths.end();
     for(typename SortVisitor::BarrierDepths::iterator it = visitor.barrierDepths.begin(),
         end = visitor.barrierDepths.end(); it != end; ++it)
