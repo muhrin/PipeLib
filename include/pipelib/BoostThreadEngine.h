@@ -116,11 +116,11 @@ template< typename Pipe, typename Shared, typename Global>
     // End from EngineSetup /////////////////////////
 
   private:
-    typedef ::boost::shared_ptr< Global> GlobalPtr;
-    typedef ::boost::scoped_ptr< Shared> SharedPtr;
-    typedef ::boost::ptr_vector< Base> ChildEngines;
-    typedef ::boost::ptr_vector< Pipe> DataStore;
-    typedef ::std::vector< BarrierType *> Barriers;
+    typedef boost::shared_ptr< Global> GlobalPtr;
+    typedef boost::scoped_ptr< Shared> SharedPtr;
+    typedef boost::ptr_vector< Base> ChildEngines;
+    typedef boost::ptr_vector< Pipe> DataStore;
+    typedef std::vector< BarrierType *> Barriers;
     typedef event::EventSupport< ListenerType> EngineEventSupport;
 
     BoostThreadEngine(Self * root);
@@ -186,7 +186,7 @@ template< typename Pipe, typename Shared, typename Global>
 
     const size_t myNumThreads;
     size_t myNumRunning;
-    ::boost::mutex myNumRunningMutex;
+    boost::mutex myNumRunningMutex;
 
     // Threading stuff
     struct Threading
@@ -199,13 +199,13 @@ template< typename Pipe, typename Shared, typename Global>
         threadService.stop();
         threads.join_all();
       }
-      ::boost::thread_group threads;
-      ::boost::asio::io_service threadService;
-      ::boost::asio::io_service::work work;
+      boost::thread_group threads;
+      boost::asio::io_service threadService;
+      boost::asio::io_service::work work;
     };
 
-    ::boost::scoped_ptr<Threading> myThreading;
-    ::boost::mutex myDataStoreMutex;
+    boost::scoped_ptr<Threading> myThreading;
+    boost::mutex myDataStoreMutex;
   };
 
 }

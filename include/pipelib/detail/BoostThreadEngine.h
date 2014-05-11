@@ -21,8 +21,8 @@ namespace pipelib {
 template< typename Pipe, typename Shared, typename Global>
   BoostThreadEngine< Pipe, Shared, Global>::BoostThreadEngine() :
       myRoot(this), myMaxReleases(DEFAULT_MAX_RELEASES), myNumThreads(
-          ::boost::thread::hardware_concurrency() != 0 ?
-              ::boost::thread::hardware_concurrency() : 1)
+          boost::thread::hardware_concurrency() != 0 ?
+              boost::thread::hardware_concurrency() : 1)
   {
     PIPELIB_ASSERT(myNumThreads != 0);
     init();
@@ -64,8 +64,8 @@ template< typename Pipe, typename Shared, typename Global>
       detach();
 
     myStartBlock = startBlock;
-    ::std::for_each(myStartBlock->beginPreorder(), myStartBlock->endPreorder(),
-        ::boost::bind(&Self::notifyAttached, this, _1, this));
+    std::for_each(myStartBlock->beginPreorder(), myStartBlock->endPreorder(),
+        boost::bind(&Self::notifyAttached, this, _1, this));
   }
 
 template< typename Pipe, typename Shared, typename Global>
@@ -76,8 +76,8 @@ template< typename Pipe, typename Shared, typename Global>
       return false;
 
     // Tell all blocks
-    ::std::for_each(myStartBlock->beginPreorder(), myStartBlock->endPreorder(),
-        ::boost::bind(&Self::notifyDetached, this, _1));
+    std::for_each(myStartBlock->beginPreorder(), myStartBlock->endPreorder(),
+        boost::bind(&Self::notifyDetached, this, _1));
 
     // Tell any listeners
     myEventSupport.notify(event::makeDetachedEvent(*this));
@@ -196,7 +196,7 @@ template< typename Pipe, typename Shared, typename Global>
     const BlockHandleType & inBlock = outBlock.getOutput(channel);
     if(inBlock.get())
       postTask(
-          ::boost::bind(&Self::outTask, this, data, inBlock->asPipeBlock()));
+          boost::bind(&Self::outTask, this, data, inBlock->asPipeBlock()));
     else
     {
       boost::lock_guard< boost::mutex> guard(myDataStoreMutex);
@@ -315,7 +315,7 @@ template< typename Pipe, typename Shared, typename Global>
       myThreading.reset(new Threading());
       for(size_t i = 1; i < myNumThreads; ++i)
         myThreading->threads.create_thread(
-            ::boost::bind(&boost::asio::io_service::run, &myThreading->threadService));
+            boost::bind(&boost::asio::io_service::run, &myThreading->threadService));
     }
   }
 
@@ -324,7 +324,7 @@ template< typename Pipe, typename Shared, typename Global>
   BoostThreadEngine< Pipe, Shared, Global>::doRun()
   {
     postTask(
-        ::boost::bind(&Self::startTask, this, myStartBlock->asStartBlock()));
+        boost::bind(&Self::startTask, this, myStartBlock->asStartBlock()));
 
     runTillFinished();
 
@@ -351,17 +351,17 @@ template< typename Pipe, typename Shared, typename Global>
     case PipelineState::INITIALISED:
 
       // Tell the blocks
-      ::std::for_each(myStartBlock->beginPreorder(),
+      std::for_each(myStartBlock->beginPreorder(),
           myStartBlock->endPreorder(),
-          ::boost::bind(&Self::notifyInitialising, this, _1, this));
+          boost::bind(&Self::notifyInitialising, this, _1, this));
 
       // Sort the barriers so when we release at the end they're in the correct order
       this->sortBarriers(&myBarriers);
 
       myState = PipelineState::INITIALISED;
-      ::std::for_each(myStartBlock->beginPreorder(),
+      std::for_each(myStartBlock->beginPreorder(),
           myStartBlock->endPreorder(),
-          ::boost::bind(&Self::notifyInitialised, this, _1));
+          boost::bind(&Self::notifyInitialised, this, _1));
 
       // Tell any listeners
       myEventSupport.notify(
@@ -370,9 +370,9 @@ template< typename Pipe, typename Shared, typename Global>
 
     case PipelineState::RUNNING:
 
-      ::std::for_each(myStartBlock->beginPreorder(),
+      std::for_each(myStartBlock->beginPreorder(),
           myStartBlock->endPreorder(),
-          ::boost::bind(&Self::notifyStarting, this, _1));
+          boost::bind(&Self::notifyStarting, this, _1));
       myState = PipelineState::RUNNING;
       myEventSupport.notify(
           event::makeStateChangedEvent(*this, oldState, myState));
@@ -387,14 +387,14 @@ template< typename Pipe, typename Shared, typename Global>
       break;
     case PipelineState::FINISHED:
 
-      ::std::for_each(myStartBlock->beginPreorder(),
+      std::for_each(myStartBlock->beginPreorder(),
           myStartBlock->endPreorder(),
-          ::boost::bind(&Self::notifyFinishing, this, _1));
+          boost::bind(&Self::notifyFinishing, this, _1));
       myState = PipelineState::FINISHED;
       myShared.reset(new Shared());
-      ::std::for_each(myStartBlock->beginPreorder(),
+      std::for_each(myStartBlock->beginPreorder(),
           myStartBlock->endPreorder(),
-          ::boost::bind(&Self::notifyFinished, this, _1, this));
+          boost::bind(&Self::notifyFinished, this, _1, this));
 
       // Tell any listeners
       myEventSupport.notify(
@@ -484,7 +484,7 @@ template< typename Pipe, typename Shared, typename Global>
   void
   BoostThreadEngine< Pipe, Shared, Global>::incrementNumRunning()
   {
-    ::boost::lock_guard< ::boost::mutex> guard(myNumRunningMutex);
+    boost::lock_guard< boost::mutex> guard(myNumRunningMutex);
     ++myNumRunning;
   }
 
@@ -492,7 +492,7 @@ template< typename Pipe, typename Shared, typename Global>
   void
   BoostThreadEngine< Pipe, Shared, Global>::decrementNumRunning()
   {
-    ::boost::lock_guard< ::boost::mutex> guard(myNumRunningMutex);
+    boost::lock_guard< boost::mutex> guard(myNumRunningMutex);
     --myNumRunning;
   }
 

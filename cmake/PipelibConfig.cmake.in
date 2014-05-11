@@ -1,8 +1,12 @@
+# - Config file for the Pipelib package
+# It defines the following variables
+#  PIPELIB_INCLUDE_DIRS - include directories for Pipelib
+#  PIPELIB_LIBRARIES    - libraries to link against
 
 
 # Tell the user project where to find our headers
 get_filename_component(PIPELIB_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
-set(PIPELIB_INCLUDE_DIR "${PIPELIB_CMAKE_DIR}/@PIPELIB_INCLUDE_DIR@")
+set(PIPELIB_INCLUDE_DIR "@CONF_INCLUDE_DIRS@")
 
 ## FIND PACKAGES ########################################
 

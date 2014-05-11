@@ -107,15 +107,30 @@ foreach(p INCLUDE CMAKE)
   endif()
 endforeach()
 
-# Find the relative path from the cmake to the include folder
-file(RELATIVE_PATH PIPELIB_INCLUDE_DIR "${INSTALL_CMAKE_DIR}"
-  "${INSTALL_INCLUDE_DIR}"
+# Create the *Config.cmake and *ConfigVersion.cmake files
+file(RELATIVE_PATH REL_INCLUDE_DIR "${INSTALL_CMAKE_DIR}"
+   "${INSTALL_INCLUDE_DIR}")
+
+# ... for the build tree
+set(CONF_INCLUDE_DIRS
+  "${PROJECT_SOURCE_DIR}/include"  "${PROJECT_BINARY_DIR}/include"
 )
+configure_file(cmake/PipelibConfig.cmake.in
+  "${PROJECT_BINARY_DIR}/PipelibConfig.cmake" @ONLY)
+
+# ... for the install tree
+set(CONF_INCLUDE_DIRS "\${PIPELIB_CMAKE_DIR}/${REL_INCLUDE_DIR}")
+configure_file(cmake/PipelibConfig.cmake.in
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PipelibConfig.cmake" @ONLY)
+
+
+# ... for both
+configure_file(cmake/PipelibConfigVersion.cmake.in
+  "${PROJECT_BINARY_DIR}/PipelibConfigVersion.cmake" @ONLY)
+
+
 configure_file(cmake/PipelibConfig.cmake.in 
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PipelibConfig.cmake" @ONLY
-)
-configure_file(cmake/PipelibConfigVersion.cmake.in
-  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PipelibConfigVersion.cmake" @ONLY
 )
 
 
