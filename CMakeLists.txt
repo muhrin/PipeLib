@@ -15,7 +15,7 @@ set(INSTALL_INCLUDE_DIR include CACHE PATH "Installation directory for header fi
 if(WIN32 AND NOT CYGWIN)
   set(DEF_INSTALL_CMAKE_DIR CMake)
 else()
-  set(DEF_INSTALL_CMAKE_DIR share/Pipelib/cmake)
+  set(DEF_INSTALL_CMAKE_DIR share/${CMAKE_PROJECT_NAME}/cmake)
 endif()
 set(INSTALL_CMAKE_DIR ${DEF_INSTALL_CMAKE_DIR} CACHE PATH
   "Installation directory for CMake files")
@@ -123,11 +123,9 @@ set(CONF_INCLUDE_DIRS "\${PIPELIB_CMAKE_DIR}/${REL_INCLUDE_DIR}")
 configure_file(cmake/PipelibConfig.cmake.in
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PipelibConfig.cmake" @ONLY)
 
-
 # ... for both
 configure_file(cmake/PipelibConfigVersion.cmake.in
   "${PROJECT_BINARY_DIR}/PipelibConfigVersion.cmake" @ONLY)
-
 
 configure_file(cmake/PipelibConfig.cmake.in 
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PipelibConfig.cmake" @ONLY
@@ -148,7 +146,7 @@ install(DIRECTORY
 )
 install(FILES
   ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PipelibConfig.cmake
-  ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PipelibConfigVersion.cmake
+  ${PROJECT_BINARY_DIR}/PipelibConfigVersion.cmake
   DESTINATION "${INSTALL_CMAKE_DIR}"
   COMPONENT dev
 )
